@@ -1,0 +1,452 @@
+/*
+ * Copyright (C) 2017 Zvaigznu Planetarijs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ *
+ */
+
+//
+// includes
+//
+#include <QFileDialog>
+#include <QDebug>
+#include <QInputDialog>
+#include <QDesktopServices>
+#include <QPainter>
+#include <QMenu>
+#include <QStorageInfo>
+#include "folderview.h"
+#include "folderdelegate.h"
+#include "traywidget.h"
+#include "iconproxymodel.h"
+#include "stylesheetdialog.h"
+
+//
+// defines
+//
+#define PROXY_MODEL
+
+/**
+ * @brief FolderView::FolderView
+ * @param parent
+ * @param rootPath
+ */
+FolderView::FolderView( QWidget *parent, const QString &rootPath, HWND windowParent, TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView )/*, proxyModel( new IconProxyModel())*/, model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ) {
+    QDir dir( rootPath );
+    QFile styleSheet;
+
+    // set up UI
+    this->ui->setupUi( this );
+
+    // set up listView and its model
+    this->ui->view->setViewMode( QListView::IconMode );
+#ifdef PROXY_MODEL
+    this->proxyModel = new IconProxyModel( this );
+    this->proxyModel->setSourceModel( this->model );
+    this->ui->view->setModel( this->proxyModel );
+    this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( rootPath )));
+#else
+    this->ui->view->setModel( this->model );
+    this->ui->view->setRootIndex( /*this->proxyModel->mapFromSource( */this->model->setRootPath( rootPath/* )*/));
+#endif
+    this->ui->view->setDragDropMode( QAbstractItemView::NoDragDrop );
+    this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
+
+    // set up view delegate
+    this->delegate = new FolderDelegate( this->ui->view );
+    this->ui->view->setItemDelegate( this->delegate );
+
+    // set title
+    if ( dir.isRoot())
+        this->ui->title->setText( QStorageInfo( dir ).displayName());
+    else
+        this->ui->title->setText( dir.dirName());
+
+    // set default stylesheet
+    styleSheet.setFileName( ":/stylesheets/stylesheet.qss" );
+    if ( styleSheet.open( QFile::ReadOnly )) {
+        this->setStyleSheet( styleSheet.readAll().constData());
+        this->defaultStyleSheet = this->styleSheet();
+        styleSheet.close();
+    }
+
+    // get window handles and set as child window
+    this->setupFrame( windowParent );
+}
+
+/**
+ * @brief FolderView::~FolderView
+ */
+FolderView::~FolderView() {
+#ifdef PROXY_MODEL
+    delete this->proxyModel;
+#endif
+    delete this->delegate;
+    delete this->model;
+    delete this->ui;
+}
+
+/**
+ * @brief FolderView::currentStyleSheet
+ * @return
+ */
+QString FolderView::currentStyleSheet() const {
+    if ( this->customStyleSheet().isEmpty())
+        return this->styleSheet();
+
+    return this->customStyleSheet();
+}
+
+/**
+ * @brief FolderView::displayContextMenu
+ * @param point
+ */
+void FolderView::displayContextMenu( const QPoint &point ) {
+    QMenu menu;
+    menu.addAction( "Change directory", this, SLOT( changeDirectory()));
+    menu.addAction( "Rename view", this, SLOT( renameView()));
+    menu.addAction( "Hide", this, SLOT( hide()));
+    menu.addAction( "Edit stylesheet", this, SLOT( editStylesheet()));
+    menu.addAction( "List mode", this, SLOT( toggleViewMode()));
+    menu.actions().last()->setCheckable( true );
+
+    if ( this->viewMode() == QListView::ListMode )
+        menu.actions().last()->setChecked( true );
+    else
+        menu.actions().last()->setChecked( false );
+
+    menu.exec( this->mapToGlobal( point ));
+}
+
+/**
+ * @brief FolderView::setCustomTitle
+ * @param title
+ */
+void FolderView::setCustomTitle( const QString &title ) {
+    if ( title.isEmpty())
+        return;
+
+    this->m_customTitle = title;
+    this->ui->title->setText( this->customTitle());
+}
+
+/**
+ * @brief FolderView::setCustomStyleSheet
+ * @param stylesheet
+ */
+void FolderView::setCustomStyleSheet( const QString &stylesheet ) {
+    this->m_customStyleSheet = stylesheet;
+
+    if ( stylesheet.isEmpty())
+        this->setStyleSheet( this->defaultStyleSheet );
+    else
+        this->setStyleSheet( stylesheet );
+}
+
+/**
+ * @brief FolderView::changeDirectory
+ */
+void FolderView::changeDirectory() {
+    QDir dir;
+
+    dir.setPath( QFileDialog::getExistingDirectory( this->parentWidget(), this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
+
+    if ( dir.exists()) {
+        this->model->setRootPath( dir.absolutePath());
+#ifdef PROXY_MODEL
+        this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->index( dir.absolutePath())));
+#else
+        this->ui->view->setRootIndex( this->model->index( dir.absolutePath()));
+#endif
+        this->delegate->clearCache();
+    }
+}
+
+/**
+ * @brief FolderView::renameView
+ */
+void FolderView::renameView() {
+    QString title;
+    bool ok;
+
+    title = QInputDialog::getText( this->parentWidget(), this->tr( "Rename view" ), this->tr( "Title:" ), QLineEdit::Normal, this->model->rootDirectory().dirName(), &ok );
+    if ( ok && !title.isEmpty())
+        this->setCustomTitle( title );
+}
+
+/**
+ * @brief FolderView::editStylesheet
+ */
+void FolderView::editStylesheet() {
+    StyleSheetDialog dialog( this, this->currentStyleSheet());
+    int result;
+
+    result = dialog.exec();
+    if ( result == QDialog::Accepted )
+        this->setCustomStyleSheet( dialog.customStyleSheet());
+}
+
+/**
+ * @brief FolderView::toggleViewMode
+ */
+void FolderView::toggleViewMode() {
+    if ( this->viewMode() == QListView::IconMode )
+        this->setViewMode( QListView::ListMode );
+    else
+        this->setViewMode( QListView::IconMode );
+}
+
+/**
+ * @brief FolderView::paintEvent
+ * @param event
+ */
+void FolderView::paintEvent( QPaintEvent *event ) {
+    QPainter painter( this );
+
+    // clear background for transparency
+    painter.setCompositionMode( QPainter::CompositionMode_Clear );
+    painter.fillRect( this->rect(), QColor( 0, 0, 0, 0 ));
+    painter.setCompositionMode( QPainter::CompositionMode_SourceOver );
+
+    // grab area debugging
+#if 0
+    int y;
+    for ( y = 0; y < Frame::MouseGrabAreas; y++ ) {
+        painter.fillRect( this->grabAreas[y], QBrush( QColor::fromRgb( 255, 0, 0, 255 )));
+    }
+#endif
+
+    // paint as usual
+    QWidget::paintEvent( event );
+}
+
+/**
+ * @brief FolderView::makeGrabAreas
+ */
+void FolderView::makeGrabAreas() {
+    this->grabAreas[TopLeft] = QRect( 0, 0, Frame::BorderWidth, Frame::BorderWidth );
+    this->grabAreas[Top] = QRect( Frame::BorderWidth, 0, this->width() - Frame::BorderWidth * 2, Frame::BorderWidth );
+    this->grabAreas[TopRight] = QRect( this->width() - Frame::BorderWidth, 0, Frame::BorderWidth, Frame::BorderWidth );
+    this->grabAreas[Right] = QRect( this->width() - Frame::BorderWidth, Frame::BorderWidth, Frame::BorderWidth, this->height() - Frame::BorderWidth * 2 );
+    this->grabAreas[BottomRight] = QRect( this->width() - Frame::BorderWidth, this->height() - Frame::BorderWidth, Frame::BorderWidth, Frame::BorderWidth );
+    this->grabAreas[Bottom] = QRect( Frame::BorderWidth, this->height() - Frame::BorderWidth, this->width() - Frame::BorderWidth * 2, Frame::BorderWidth );
+    this->grabAreas[BottomLeft] = QRect( 0, this->height() - Frame::BorderWidth, Frame::BorderWidth, Frame::BorderWidth );
+    this->grabAreas[Left] = QRect( 0, Frame::BorderWidth, Frame::BorderWidth, this->height() - Frame::BorderWidth * 2 );
+}
+
+/**
+ * @brief FolderView::eventFilter
+ * @param object
+ * @param event
+ * @return
+ */
+bool FolderView::eventFilter( QObject *object, QEvent *event ) {
+    QMouseEvent *mouseEvent;
+    int y;
+
+    // filter mouse events
+    if ( event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease ||
+         event->type() == QEvent::MouseMove || event->type() == QEvent::HoverMove ||
+         event->type() == QEvent::Leave || event->type() == QEvent::Resize ||
+         event->type() == QEvent::Move ) {
+
+        // get mouse event
+        mouseEvent = static_cast<QMouseEvent*>( event );
+
+        // test mouse origin if needed
+        if ( this->gesture == NoGesture && !this->isMaximized()) {
+            this->currentGrabArea = NoArea;
+            for ( y = 0; y < Frame::MouseGrabAreas; y++ ) {
+                if ( this->grabAreas[y].contains( mouseEvent->pos())) {
+                    this->currentGrabArea = static_cast<Areas>( y );
+                    break;
+                }
+            }
+        }
+
+        // ignore listView mouse events when cursor is on the edges
+        if ( this->currentGrabArea == NoArea )
+            this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, false );
+        else
+            this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
+
+        // change cursor shape if needed
+        if ( this->gesture == NoGesture ) {
+            Qt::CursorShape shape;
+
+            if ( this->currentGrabArea == Top || this->currentGrabArea == Bottom )
+                shape = Qt::SizeVerCursor;
+            else if ( this->currentGrabArea == Left || this->currentGrabArea == Right )
+                shape = Qt::SizeHorCursor;
+            else if ( this->currentGrabArea == TopLeft || this->currentGrabArea == BottomRight )
+                shape = Qt::SizeFDiagCursor;
+            else if ( this->currentGrabArea == TopRight || this->currentGrabArea == BottomLeft )
+                shape = Qt::SizeBDiagCursor;
+            else if ( this->currentGrabArea == NoArea )
+                shape = Qt::ArrowCursor;
+
+            if ( this->cursor().shape() != shape )
+                this->setCursor( QCursor( shape ));
+        }
+
+        // handle events
+        switch ( event->type()) {
+        case QEvent::MouseButtonPress:
+            if ( mouseEvent->button() == Qt::LeftButton ) {
+                // store mouse position
+                this->mousePos = mouseEvent->pos();
+
+                // no drag when maximized
+                if ( this->isMaximized())
+                    return true;
+
+                // determine gesture
+                if ( this->currentGrabArea == NoArea )
+                    this->gesture = Drag;
+                else
+                    this->gesture = Resize;
+
+                return true;
+            }
+            break;
+
+        case QEvent::MouseButtonRelease:
+            this->gesture = NoGesture;
+
+            if ( mouseEvent->button() == Qt::RightButton )
+                this->displayContextMenu( mouseEvent->pos());
+
+            break;
+
+        case QEvent::Leave:
+            this->gesture = NoGesture;
+            break;
+
+        case QEvent::MouseMove:
+            if ( this->gesture == Drag ) {
+                this->move( mouseEvent->globalPos().x() - this->mousePos.x(), mouseEvent->globalPos().y() - this->mousePos.y());
+                return true;
+            } else if ( this->gesture == Resize ) {
+                QRect updatedGeometry;
+
+                updatedGeometry = this->geometry();
+
+                switch ( this->currentGrabArea ) {
+                case TopLeft:
+                    updatedGeometry.setTopLeft( mouseEvent->globalPos());
+                    break;
+
+                case Top:
+                    updatedGeometry.setTop( mouseEvent->globalPos().y());
+                    break;
+
+                case TopRight:
+                    updatedGeometry.setTopRight( mouseEvent->globalPos());
+                    break;
+
+                case Right:
+                    updatedGeometry.setRight( mouseEvent->globalPos().x());
+                    break;
+
+                case BottomRight:
+                    updatedGeometry.setBottomRight( mouseEvent->globalPos());
+                    break;
+
+                case Bottom:
+                    updatedGeometry.setBottom( mouseEvent->globalPos().y());
+                    break;
+
+                case BottomLeft:
+                    updatedGeometry.setBottomLeft( mouseEvent->globalPos());
+                    break;
+
+                case Left:
+                    updatedGeometry.setLeft( mouseEvent->globalPos().x());
+                    break;
+
+                default:
+                    break;
+                }
+
+                // respect minimum width
+                if ( updatedGeometry.width() < this->minimumWidth())
+                    updatedGeometry.setLeft( this->geometry().x());
+
+                // respect minimum height
+                if ( updatedGeometry.height() < this->minimumHeight())
+                    updatedGeometry.setTop( this->geometry().y());
+
+                // set the new geometry
+                this->setGeometry( updatedGeometry );
+
+                // return success
+                return true;
+            }
+            break;
+
+        case QEvent::Resize:
+            this->makeGrabAreas();
+            break;
+
+        case QEvent::Move:
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    // other events are handled normally
+    return QWidget::eventFilter( object, event );
+}
+
+/**
+ * @brief FolderView::setupFrame
+ */
+void FolderView::setupFrame( HWND windowParent ) {
+    // enable mouse tracking
+    this->setMouseTracking( true );
+
+    // filter events
+    this->installEventFilter( this );
+
+    // make this a child window of desktop shell
+    SetParent(( HWND )this->winId(), windowParent );
+
+    // set appropriate window flags
+    this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint );
+    this->setAttribute( Qt::WA_TranslucentBackground );
+    this->setAttribute( Qt::WA_NoSystemBackground );
+    this->setAttribute( Qt::WA_Hover );
+
+    // make mouse grab areas
+    this->makeGrabAreas();
+}
+
+/**
+ * @brief FolderView::on_view_clicked
+ * @param index
+ */
+void FolderView::on_view_clicked( const QModelIndex &index ) {
+    if ( !index.isValid())
+        return;
+
+#ifdef PROXY_MODEL
+    QDesktopServices::openUrl( QUrl::fromLocalFile( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()));
+#else
+    QDesktopServices::openUrl( QUrl::fromLocalFile( this->model->data( index, QFileSystemModel::FilePathRole ).toString()));
+#endif
+    this->ui->view->clearSelection();
+}
+

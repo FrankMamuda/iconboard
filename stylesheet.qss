@@ -1,0 +1,35 @@
+QListView {
+    background-color: rgba( 0, 0, 0, 160 );
+    color: white;
+}
+
+QLabel {
+    background-color: rgba( 0, 0, 0, 200 );
+    color: white;
+}
+
+QScrollBar:vertical {
+    width:10px;
+    background: rgba( 255, 255, 255, 32 );
+    margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba( 0, 0, 0, 180 );
+    border-radius: 4px;
+    width: 8px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    min-height: 0px;
+    max-height: 32px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
