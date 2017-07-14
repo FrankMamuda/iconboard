@@ -57,3 +57,5 @@ RESOURCES += \
     resources.qrc
 
 win32:RC_FILE = icon.rc
+win32:QT += winextras
+win32:LIBS += -lgdi32 -luser32

@@ -237,7 +237,8 @@ void TrayWidget::readXML() {
                         else if ( !QString::compare( childElement.tagName(), "listMode" )) {
                             if ( text.toInt() == 1 )
                                 widget->setViewMode( QListView::ListMode );
-                        }
+                        } else if ( !QString::compare( childElement.tagName(), "iconSize" ))
+                            widget->setIconSize( text.toInt());
                     }
 
                     childNode = childNode.nextSibling();
@@ -301,6 +302,8 @@ void TrayWidget::writeConfiguration() {
 
         if ( widget->viewMode() == QListView::ListMode )
             stream << QString( "    <listMode>1</listMode>\n" );
+
+        stream << QString( "    <iconSize>%1</iconSize>\n" ).arg( widget->iconSize());
 
         stream << "  </widget>\n";
     }

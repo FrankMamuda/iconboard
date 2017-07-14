@@ -68,8 +68,14 @@
      <property name="resizeMode">
       <enum>QListView::Adjust</enum>
      </property>
+     <property name="layoutMode">
+      <enum>QListView::Batched</enum>
+     </property>
      <property name="uniformItemSizes">
       <bool>false</bool>
+     </property>
+     <property name="batchSize">
+      <number>16</number>
      </property>
      <property name="wordWrap">
       <bool>true</bool>

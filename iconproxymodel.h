@@ -24,6 +24,11 @@
 #include <QIcon>
 #include <QIdentityProxyModel>
 
+//
+// classes
+//
+class FolderView;
+
 /**
  * @brief The IconProxyModel class
  */
@@ -34,7 +39,8 @@ public:
     explicit IconProxyModel( QObject *parent = nullptr );
     ~IconProxyModel();
     QVariant data( const QModelIndex &index, int role = Qt::DisplayRole ) const;
-    static QIcon iconForFilename( const QString & fileName );
+    static QIcon iconForFilename( const QString &fileName ,int iconSize );
+    void clearIconCache() { this->iconTable.clear(); }
 
 signals:
     void iconFound( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index ) const;
@@ -50,4 +56,5 @@ private slots:
 
 private:
     QHash<QString, QIcon> iconTable;
+    FolderView *view;
 };

@@ -16,8 +16,6 @@
  *
  */
 
-
-
 #pragma once
 
 //
@@ -38,6 +36,8 @@ public:
     static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
     QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
     QIcon thumbnail( const QString &path, int scale, bool &ok );
+    QIcon extractIcon( const QString &path, bool &ok, bool jumbo = false );
+    QIcon addSymlinkLabel( const QIcon &icon, int originalSize, const QString theme = QString::null );
 
 private:
     QHash<QString, QIcon> cache;

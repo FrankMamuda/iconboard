@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/icons">
         <file alias="launcher_96">launcher_96.png</file>
+        <file alias="link">icons/link.svg</file>
     </qresource>
     <qresource prefix="/stylesheets">
         <file>stylesheet.qss</file>

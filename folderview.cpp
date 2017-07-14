@@ -51,6 +51,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath, HWND windowPar
 
     // set up listView and its model
     this->ui->view->setViewMode( QListView::IconMode );
+    //this->model->setResolveSymlinks( false );
 #ifdef PROXY_MODEL
     this->proxyModel = new IconProxyModel( this );
     this->proxyModel->setSourceModel( this->model );
@@ -109,16 +110,31 @@ QString FolderView::currentStyleSheet() const {
 }
 
 /**
+ * @brief FolderView::iconSize
+ * @return
+ */
+int FolderView::iconSize() const {
+    int size;
+
+    size = this->ui->view->iconSize().width();
+    if ( !size )
+        return Ui::DefaultIconSize;
+
+    return size;
+}
+
+/**
  * @brief FolderView::displayContextMenu
  * @param point
  */
 void FolderView::displayContextMenu( const QPoint &point ) {
     QMenu menu;
-    menu.addAction( "Change directory", this, SLOT( changeDirectory()));
-    menu.addAction( "Rename view", this, SLOT( renameView()));
-    menu.addAction( "Hide", this, SLOT( hide()));
-    menu.addAction( "Edit stylesheet", this, SLOT( editStylesheet()));
-    menu.addAction( "List mode", this, SLOT( toggleViewMode()));
+    menu.addAction( this->tr( "Change directory" ), this, SLOT( changeDirectory()));
+    menu.addAction( this->tr( "Rename view" ), this, SLOT( renameView()));
+    menu.addAction( this->tr( "Hide" ), this, SLOT( hide()));
+    menu.addAction( this->tr( "Edit stylesheet" ), this, SLOT( editStylesheet()));
+    menu.addAction( this->tr( "Set icon size" ), this, SLOT( setIconSize()));
+    menu.addAction( this->tr( "List mode" ), this, SLOT( toggleViewMode()));
     menu.actions().last()->setCheckable( true );
 
     if ( this->viewMode() == QListView::ListMode )
@@ -152,6 +168,23 @@ void FolderView::setCustomStyleSheet( const QString &stylesheet ) {
         this->setStyleSheet( this->defaultStyleSheet );
     else
         this->setStyleSheet( stylesheet );
+}
+
+/**
+ * @brief FolderView::setIconSize
+ */
+void FolderView::setIconSize() {
+    int size;
+    bool ok;
+
+    size = QInputDialog::getInt( this->parentWidget(), this->tr( "Set icon size" ), this->tr( "Size:" ), this->iconSize(), 0, 256, 16, &ok );
+    if ( ok ) {
+        this->setIconSize( size );
+        this->delegate->clearCache();
+#ifdef PROXY_MODEL
+        this->proxyModel->clearIconCache();
+#endif
+    }
 }
 
 /**

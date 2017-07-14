@@ -22,7 +22,7 @@ QScrollBar::handle:vertical {
     margin-right: 1px;
     margin-top: 2px;
     margin-bottom: 2px;
-    min-height: 0px;
+    min-height: 9px;
     max-height: 32px;
 }
 

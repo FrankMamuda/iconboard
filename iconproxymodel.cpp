@@ -22,6 +22,7 @@
 #include <QFileSystemModel>
 #include <QMimeDatabase>
 #include <QtConcurrent>
+#include "folderview.h"
 #include "iconproxymodel.h"
 #include "iconcache.h"
 
@@ -30,6 +31,7 @@
  * @param parent
  */
 IconProxyModel::IconProxyModel( QObject *parent ) : QIdentityProxyModel( parent ) {
+    this->view = qobject_cast<FolderView*>( parent );
     this->connect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )), this, SLOT( updateModel( QString, QIcon, QPersistentModelIndex )));
 }
 
@@ -49,21 +51,30 @@ IconProxyModel::~IconProxyModel() {
 QVariant IconProxyModel::data( const QModelIndex &index, int role ) const {
     QString fileName;
     QPersistentModelIndex persistentIndex( index );
+    int iconSize;
 
     if ( role == QFileSystemModel::FileIconRole ) {
         fileName = index.data( QFileSystemModel::FilePathRole ).toString();
+        iconSize = this->view->iconSize();
 
         if ( this->iconTable.contains( fileName ))
             return this->iconTable[fileName];
 
-        QtConcurrent::run( [ this, fileName, persistentIndex ] {
+        QtConcurrent::run( [ this, fileName, persistentIndex, iconSize ] {
             QIcon icon;
 
-            icon = IconProxyModel::iconForFilename( fileName );
+            icon = IconProxyModel::iconForFilename( fileName, iconSize );
             if ( !icon.isNull())
                 emit this->iconFound( fileName, icon, persistentIndex );
         } );
+    } else if ( role == Qt::DisplayRole ) {
+        fileName = index.data( QFileSystemModel::FilePathRole ).toString();
+        if ( fileName.endsWith( ".lnk" ))
+            return fileName.remove( ".lnk" ).split( "/" ).last();
+
+        return QIdentityProxyModel::data( index, Qt::DisplayRole ).toString();
     }
+
     return QIdentityProxyModel::data( index, role );
 }
 
@@ -71,19 +82,41 @@ QVariant IconProxyModel::data( const QModelIndex &index, int role ) const {
  * @brief IconProxyModel::iconForFilename
  * @return
  */
-QIcon IconProxyModel::iconForFilename( const QString &fileName ) {
+QIcon IconProxyModel::iconForFilename( const QString &fileName, int iconSize ) {
     QMimeDatabase db;
     QString iconName;
     QIcon icon;
+    QFileInfo info( fileName );
+
+    if ( info.isSymLink()) {
+        bool ok;
+
+        // extract icons only from executables
+        iconName = db.mimeTypeForFile( info.symLinkTarget(), QMimeDatabase::MatchContent ).iconName();
+        if ( iconName.contains( "x-ms-dos-executable" )) {
+            // extract jumbo first
+            icon = IconCache::instance()->extractIcon( info.symLinkTarget(), ok, true );
+            if ( !ok )
+                icon = IconCache::instance()->extractIcon( info.absoluteFilePath(), ok );
+
+            if ( ok ) {
+                icon = IconCache::instance()->addSymlinkLabel( icon, iconSize );
+                return icon;
+            }
+        }
+    }
 
     iconName = db.mimeTypeForFile( fileName, QMimeDatabase::MatchContent ).iconName();
     if ( iconName.startsWith( "image-" )) {
         bool ok;
-        icon = IconCache::instance()->thumbnail( fileName, 48, ok );
+        icon = IconCache::instance()->thumbnail( fileName, iconSize, ok );
         if ( ok )
             return icon;
     }
-    icon = IconCache::instance()->icon( iconName, 48 );
+    icon = IconCache::instance()->icon( iconName, iconSize );
+
+    if ( info.isSymLink())
+        icon = IconCache::instance()->addSymlinkLabel( icon, iconSize );
 
     return icon;
 }

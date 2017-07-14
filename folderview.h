@@ -39,6 +39,7 @@ class IconProxyModel;
  */
 namespace Ui {
 class FolderView;
+const static int DefaultIconSize = 48;
 }
 
 /**
@@ -84,6 +85,7 @@ public:
     QString customTitle() const { return this->m_customTitle; }
     QString customStyleSheet() const { return this->m_customStyleSheet; }
     QListView::ViewMode viewMode() const { return this->ui->view->viewMode(); }
+    int iconSize() const;
 
     // grab areas for frameless resizing
     enum Areas {
@@ -112,6 +114,8 @@ public slots:
     void setCustomTitle( const QString &title );
     void setCustomStyleSheet( const QString &stylesheet );
     void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }
+    void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }
+    void setIconSize();
 
 protected:
     void paintEvent( QPaintEvent *event );
