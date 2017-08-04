@@ -59,6 +59,8 @@
  *  custom per-item icons
  *  performace issues with large directories
  *  extract shell icons from dirs on symlinks
+ *  [DONE] geometry fix for multiple monitors
+ *  icon extraction issues on MSVC builds
  */
 
 /**

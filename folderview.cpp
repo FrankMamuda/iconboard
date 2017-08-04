@@ -317,7 +317,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
         // change cursor shape if needed
         if ( this->gesture == NoGesture ) {
-            Qt::CursorShape shape;
+            Qt::CursorShape shape = Qt::ArrowCursor;
 
             if ( this->currentGrabArea == Top || this->currentGrabArea == Bottom )
                 shape = Qt::SizeVerCursor;
