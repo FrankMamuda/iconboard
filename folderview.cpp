@@ -25,6 +25,7 @@
 #include <QDesktopServices>
 #include <QPainter>
 #include <QMenu>
+#include <QScreen>
 #include <QStorageInfo>
 #include "folderview.h"
 #include "folderdelegate.h"
@@ -338,7 +339,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
         case QEvent::MouseButtonPress:
             if ( mouseEvent->button() == Qt::LeftButton ) {
                 // store mouse position
-                this->mousePos = mouseEvent->pos();
+                this->mousePos = mouseEvent->globalPos();
 
                 // no drag when maximized
                 if ( this->isMaximized())
@@ -368,9 +369,33 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
         case QEvent::MouseMove:
             if ( this->gesture == Drag ) {
-                this->move( mouseEvent->globalPos().x() - this->mousePos.x(), mouseEvent->globalPos().y() - this->mousePos.y());
+                QPoint offset, newPos, screenOffset;
+
+                //
+                // NOTE: code refactored for use in mutiple monitor systems
+                //
+
+                // get offset from previous mouse position
+                offset = mouseEvent->globalPos() - this->mousePos;
+
+                // get screen offset
+                screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
+
+                // get new position offsetting it by screen and mouse offsets
+                newPos = this->pos() - screenOffset + offset;
+
+                // use winapi to move the window (avoiding buggy Qt setGeometry)
+                MoveWindow(( HWND )this->winId(), newPos.x(), newPos.y(), this->width(), this->height(), true );
+
+                // update last mouse position
+                this->mousePos = mouseEvent->globalPos();
+
                 return true;
             } else if ( this->gesture == Resize ) {
+                //
+                // FIXME: this is broken on multiple screens
+                //
+
                 QRect updatedGeometry;
 
                 updatedGeometry = this->geometry();
