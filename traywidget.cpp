@@ -26,6 +26,7 @@
 #include <QTextStream>
 #include <QDomDocument>
 #include <QDir>
+#include <QScreen>
 #include <QDebug>
 #include <QTextDocument>
 #include "traywidget.h"
@@ -212,6 +213,7 @@ void TrayWidget::readXML() {
 
                 childNode = element.firstChild();
                 widget = new FolderView( this->desktop, element.attribute( "rootPath" ), this->worker, this );
+
                 pos = widget->pos();
                 size = widget->size();
 
@@ -244,10 +246,28 @@ void TrayWidget::readXML() {
                     childNode = childNode.nextSibling();
                 }
 
-                widget->setGeometry( pos.x(), pos.y(), size.width(), size.height());
-
                 if ( isVisible )
                     widget->show();
+
+                {
+                    QRect updatedGeometry;
+                    QPoint screenOffset;
+
+                    //
+                    // NOTE: code refactored for use in mutiple monitor systems
+                    //       this still makes Qt complain about invalid geometry, but that does not matter at all
+                    //
+
+                    // get screen offset
+                    screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
+
+                    // offset geometry and mouse position
+                    updatedGeometry = QRect( pos.x(), pos.y(), size.width(), size.height());
+                    updatedGeometry.translate( -screenOffset );
+
+                    // use winapi to resize the window (avoiding buggy Qt setGeometry)
+                    MoveWindow(( HWND )widget->winId(), updatedGeometry.x(), updatedGeometry.y(), updatedGeometry.width(), updatedGeometry.height(), true );
+                }
 
                 if ( !styleSheet.isEmpty())
                     widget->setCustomStyleSheet( styleSheet );

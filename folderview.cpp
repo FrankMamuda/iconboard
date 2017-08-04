@@ -392,45 +392,53 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
                 return true;
             } else if ( this->gesture == Resize ) {
-                //
-                // FIXME: this is broken on multiple screens
-                //
-
                 QRect updatedGeometry;
+                QPoint screenOffset, updatedMouse;
 
+                //
+                // NOTE: code refactored for use in mutiple monitor systems
+                //
+
+                // get screen offset
+                screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
+
+                // offset geometry and mouse position
                 updatedGeometry = this->geometry();
+                updatedGeometry.translate( -screenOffset );
+                updatedMouse = this->mousePos - screenOffset;
 
+                // determine grab point
                 switch ( this->currentGrabArea ) {
                 case TopLeft:
-                    updatedGeometry.setTopLeft( mouseEvent->globalPos());
+                    updatedGeometry.setTopLeft( updatedMouse );
                     break;
 
                 case Top:
-                    updatedGeometry.setTop( mouseEvent->globalPos().y());
+                    updatedGeometry.setTop( updatedMouse.y());
                     break;
 
                 case TopRight:
-                    updatedGeometry.setTopRight( mouseEvent->globalPos());
+                    updatedGeometry.setTopRight( updatedMouse );
                     break;
 
                 case Right:
-                    updatedGeometry.setRight( mouseEvent->globalPos().x());
+                    updatedGeometry.setRight( updatedMouse.x());
                     break;
 
                 case BottomRight:
-                    updatedGeometry.setBottomRight( mouseEvent->globalPos());
+                    updatedGeometry.setBottomRight( updatedMouse );
                     break;
 
                 case Bottom:
-                    updatedGeometry.setBottom( mouseEvent->globalPos().y());
+                    updatedGeometry.setBottom( updatedMouse.y());
                     break;
 
                 case BottomLeft:
-                    updatedGeometry.setBottomLeft( mouseEvent->globalPos());
+                    updatedGeometry.setBottomLeft( updatedMouse );
                     break;
 
                 case Left:
-                    updatedGeometry.setLeft( mouseEvent->globalPos().x());
+                    updatedGeometry.setLeft( updatedMouse.x());
                     break;
 
                 default:
@@ -439,14 +447,17 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
                 // respect minimum width
                 if ( updatedGeometry.width() < this->minimumWidth())
-                    updatedGeometry.setLeft( this->geometry().x());
+                    updatedGeometry.setLeft( this->geometry().x() - screenOffset.x());
 
                 // respect minimum height
                 if ( updatedGeometry.height() < this->minimumHeight())
-                    updatedGeometry.setTop( this->geometry().y());
+                    updatedGeometry.setTop( this->geometry().y() - screenOffset.y());
 
-                // set the new geometry
-                this->setGeometry( updatedGeometry );
+                // use winapi to resize the window (avoiding buggy Qt setGeometry)
+                MoveWindow(( HWND )this->winId(), updatedGeometry.x(), updatedGeometry.y(), updatedGeometry.width(), updatedGeometry.height(), true );
+
+                // update last mouse position
+                this->mousePos = mouseEvent->globalPos();
 
                 // return success
                 return true;
