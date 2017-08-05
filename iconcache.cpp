@@ -129,7 +129,13 @@ QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
         return QIcon();
 
     memset( &shellInfo, 0, sizeof( SHFILEINFO ));
+
+#ifdef Q_CC_MSVC
+    // skip this check on msvc - it always fails
+    SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( path ).utf16()), 0, &shellInfo, sizeof( SHFILEINFO ), SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_ICONLOCATION | SHGFI_USEFILEATTRIBUTES | SHGFI_LARGEICON );
+#else
     if ( SUCCEEDED( SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( path ).utf16()), 0, &shellInfo, sizeof( SHFILEINFO ), SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_ICONLOCATION | SHGFI_USEFILEATTRIBUTES | SHGFI_LARGEICON ))) {
+#endif
         if ( shellInfo.hIcon ) {
             if ( QSysInfo::windowsVersion() >= QSysInfo::WV_VISTA ) {
                 IImageList *imageList = nullptr;
@@ -183,9 +189,11 @@ QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
                 return QIcon( pixmap );
             }
         }
+#ifndef Q_CC_MSVC
     }
 #endif
     return QIcon();
+#endif
 }
 
 /**
@@ -198,21 +206,28 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize, const QSt
     QPixmap base, overlay;
     QIcon overlayIcon( ":/icons/link" );
     const float factor = 4.0f;
+    float overlaySize = originalSize / factor;
     Q_UNUSED( theme )
+    QSize actualSize;
+
+    // limit shortcut arrow size
+    if ( overlaySize > 16.0f )
+        overlaySize = 16.0f;
 
     // get base pixmap (the icon)
     base = icon.pixmap( originalSize, originalSize );
+    actualSize = icon.actualSize( QSize( originalSize, originalSize ));
 
     // get overlay arrow (TODO: allow custom arrows)
-    overlay = overlayIcon.pixmap( originalSize / factor, originalSize / factor );
+    overlay = overlayIcon.pixmap( overlaySize, overlaySize );
 
     // superimpose arrow over base pixmap
     QPixmap result( originalSize, originalSize );
     result.fill( Qt::transparent );
     {
         QPainter painter( &result );
-        painter.drawPixmap( 0, 0, base );
-        painter.drawPixmap( 0, originalSize - originalSize / factor, originalSize / factor, originalSize / factor, overlay );
+        painter.drawPixmap( originalSize / 2 - actualSize.width() / 2, originalSize / 2 - actualSize.height() / 2, base );
+        painter.drawPixmap( 0, originalSize - overlaySize, overlaySize, overlaySize, overlay );
     }
 
     // return overlay icon

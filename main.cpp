@@ -60,9 +60,9 @@
  *  performace issues with large directories
  *  extract shell icons from dirs on symlinks
  *  [DONE] geometry fix for multiple monitors
- *  icon extraction issues on MSVC builds
+ *  [DONE] icon extraction issues on MSVC builds
  *  caching of extracted icons and thumbnails
- *  centred icons (if smaller than icon size)
+ *  [DONE] centred icons (if smaller than icon size)
  */
 
 /**
