@@ -87,7 +87,9 @@ bool IconIndex::build( const QString &theme ) {
     this->index[theme] = directories;
 
     // performance counters
-    //qDebug() << this->tr( "IconIndex::build: \"%1\" index built in %2 msec" ).arg( theme ).arg( timer.elapsed());
+#ifdef QT_DEBUG
+    qDebug() << this->tr( "IconIndex::build: \"%1\" index built in %2 msec" ).arg( theme ).arg( timer.elapsed());
+#endif
 
     return true;
 }

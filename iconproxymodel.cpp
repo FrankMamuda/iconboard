@@ -87,33 +87,28 @@ QIcon IconProxyModel::iconForFilename( const QString &fileName, int iconSize ) {
     QString iconName;
     QIcon icon;
     QFileInfo info( fileName );
+    bool ok;
+    QString filePath( fileName );
 
-    if ( info.isSymLink()) {
+    if ( info.isSymLink())
+        filePath = info.symLinkTarget();
+
+    // get mimetype by matching content
+    iconName = db.mimeTypeForFile( filePath, QMimeDatabase::MatchContent ).iconName();
+
+    // extract icons only from executables
+    if ( iconName.contains( "x-ms-dos-executable" )) {
+        // extract jumbo first
+        icon = IconCache::instance()->extractIcon( filePath, ok, true );
+        if ( !ok )
+            icon = IconCache::instance()->extractIcon( filePath, ok );
+    } else if ( iconName.startsWith( "image-" )) {
         bool ok;
-
-        // extract icons only from executables
-        iconName = db.mimeTypeForFile( info.symLinkTarget(), QMimeDatabase::MatchContent ).iconName();
-        if ( iconName.contains( "x-ms-dos-executable" )) {
-            // extract jumbo first
-            icon = IconCache::instance()->extractIcon( info.symLinkTarget(), ok, true );
-            if ( !ok )
-                icon = IconCache::instance()->extractIcon( info.absoluteFilePath(), ok );
-
-            if ( ok ) {
-                icon = IconCache::instance()->addSymlinkLabel( icon, iconSize );
-                return icon;
-            }
-        }
+        icon = IconCache::instance()->thumbnail( filePath, iconSize, ok );
     }
 
-    iconName = db.mimeTypeForFile( fileName, QMimeDatabase::MatchContent ).iconName();
-    if ( iconName.startsWith( "image-" )) {
-        bool ok;
-        icon = IconCache::instance()->thumbnail( fileName, iconSize, ok );
-        if ( ok )
-            return icon;
-    }
-    icon = IconCache::instance()->icon( iconName, iconSize );
+    if ( icon.isNull())
+        icon = IconCache::instance()->icon( iconName, iconSize );
 
     if ( info.isSymLink())
         icon = IconCache::instance()->addSymlinkLabel( icon, iconSize );

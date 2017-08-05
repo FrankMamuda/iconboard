@@ -46,7 +46,7 @@
  *  [DONE] custom icon size
  *  [DONE] extract icons from symlinks
  *  dir itertor batched loading
- *  QFileSystemWatcher
+ *  [DONE] QFileSystemWatcher - no need
  *  free grid placement
  *  "open with" dialog
  *  bugfix for right click on item and hilight rect
@@ -61,6 +61,8 @@
  *  extract shell icons from dirs on symlinks
  *  [DONE] geometry fix for multiple monitors
  *  icon extraction issues on MSVC builds
+ *  caching of extracted icons and thumbnails
+ *  centred icons (if smaller than icon size)
  */
 
 /**

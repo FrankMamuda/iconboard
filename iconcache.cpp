@@ -124,6 +124,10 @@ QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
 
     ok = false;
 
+    // only accept executables
+    if ( !path.endsWith( ".exe" ))
+        return QIcon();
+
     memset( &shellInfo, 0, sizeof( SHFILEINFO ));
     if ( SUCCEEDED( SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( path ).utf16()), 0, &shellInfo, sizeof( SHFILEINFO ), SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_ICONLOCATION | SHGFI_USEFILEATTRIBUTES | SHGFI_LARGEICON ))) {
         if ( shellInfo.hIcon ) {

@@ -51,12 +51,6 @@ TrayWidget::TrayWidget( QWidget *parent ) : QWidget( parent, Qt::Tool ), ui( new
     QIcon::setThemeSearchPaths( QStringList( iconDir.absolutePath()));
     QIcon::setThemeName( Ui::lightIconTheme );
 
-    // build pixmap index
-    //this->cache = new IconCache( QDir::homePath() + "/.iconBoard/cache" );
-    //this->cache->buildIndex( Ui::lightIconTheme );
-    //this->cache->buildIndex( Ui::darkIconTheme );
-    //iconCache = this->cache;
-
     // show tray icon
     this->tray->show();
 
@@ -187,7 +181,11 @@ void TrayWidget::readXML() {
     QDomNode node, childNode;
     QDomElement element, childElement;
 
+#ifdef QT_DEBUG
+    path = QDir::homePath() + "/.iconBoardDebug/configuration.xml";
+#else
     path = QDir::homePath() + "/.iconBoard/configuration.xml";
+#endif
 
     // load xml file
     QFile xmlFile( path );
@@ -288,7 +286,11 @@ void TrayWidget::readXML() {
  */
 void TrayWidget::writeConfiguration() {
     QString path;
+#ifdef QT_DEBUG
+    QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
+#else
     QDir configDir( QDir::homePath() + "/.iconBoard/" );
+#endif
 
     if ( !configDir.exists())
         configDir.mkpath( configDir.absolutePath());
