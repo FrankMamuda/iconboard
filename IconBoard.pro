@@ -32,7 +32,8 @@ SOURCES += main.cpp\
     iconcache.cpp \
     indexcache.cpp \
     iconproxymodel.cpp \
-    stylesheetdialog.cpp
+    stylesheetdialog.cpp \
+    screenmapper.cpp
 
 HEADERS  += \
     folderview.h \
@@ -46,16 +47,18 @@ HEADERS  += \
     singleton.h \
     indexcache.h \
     iconproxymodel.h \
-    stylesheetdialog.h
+    stylesheetdialog.h \
+    screenmapper.h
 
 FORMS    += \
     folderview.ui \
     traywidget.ui \
-    stylesheetdialog.ui
+    stylesheetdialog.ui \
+    screenmapper.ui
 
 RESOURCES += \
     resources.qrc
 
 win32:RC_FILE = icon.rc
 win32:QT += winextras
-win32:LIBS += -lgdi32 -luser32
+win32:LIBS += -lgdi32 -luser32 -luuid

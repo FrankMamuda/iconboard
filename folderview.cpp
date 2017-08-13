@@ -19,6 +19,7 @@
 //
 // includes
 //
+#include <shlobj.h>
 #include <QFileDialog>
 #include <QDebug>
 #include <QInputDialog>
@@ -143,6 +144,14 @@ void FolderView::displayContextMenu( const QPoint &point ) {
     else
         menu.actions().last()->setChecked( false );
 
+    menu.addAction( this->tr( "Read only" ), this, SLOT( toggleAccessMode()));
+    menu.actions().last()->setCheckable( true );
+
+    if ( this->model->isReadOnly())
+        menu.actions().last()->setChecked( true );
+    else
+        menu.actions().last()->setChecked( false );
+
     menu.exec( this->mapToGlobal( point ));
 }
 
@@ -239,6 +248,34 @@ void FolderView::toggleViewMode() {
         this->setViewMode( QListView::ListMode );
     else
         this->setViewMode( QListView::IconMode );
+}
+
+/**
+ * @brief FolderView::toggleAccessMode
+ */
+void FolderView::toggleAccessMode() {
+    this->setReadOnly( !this->isReadOnly());
+}
+
+/**
+ * @brief FolderView::setReadOnly
+ */
+void FolderView::setReadOnly( bool enable ) {
+    this->model->setReadOnly( enable );
+
+    if ( enable )
+        this->ui->view->setDragDropMode( QListView::DropOnly );
+    else
+        this->ui->view->setDragDropMode( QListView::NoDragDrop );
+
+}
+
+/**
+ * @brief FolderView::isReadOnly
+ * @return
+ */
+bool FolderView::isReadOnly() const {
+    return this->model->isReadOnly();
 }
 
 /**
@@ -519,3 +556,80 @@ void FolderView::on_view_clicked( const QModelIndex &index ) {
     this->ui->view->clearSelection();
 }
 
+/**
+ * @brief FolderView::openShellContextMenuForObject
+ * @param path
+ * @param pos
+ * @param parentWindow
+ * @return
+ */
+void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint pos, HWND parentWindow ) {
+    ITEMIDLIST *itemIdList;
+    IShellFolder *shellFolder;
+    LPCITEMIDLIST idChild;
+    HRESULT result;
+    IContextMenu *contextMenu;
+    HMENU popupMenu;
+
+    result = SHParseDisplayName( path.c_str(), 0, &itemIdList, 0, 0 );
+    if ( !SUCCEEDED( result ) || itemIdList == nullptr )
+        return;
+
+    result = SHBindToParent( itemIdList, IID_IShellFolder, reinterpret_cast<void**>( &shellFolder ), &idChild );
+    if ( !SUCCEEDED( result ) || shellFolder == nullptr )
+        return;
+
+    if ( !SUCCEEDED( shellFolder->GetUIObjectOf( parentWindow, 1, reinterpret_cast<const ITEMIDLIST **>( &idChild ), IID_IContextMenu, 0, reinterpret_cast<void**>( &contextMenu ))))
+        return;
+
+    popupMenu = CreatePopupMenu();
+    if ( popupMenu == nullptr )
+        return;
+
+    if ( SUCCEEDED( contextMenu->QueryContextMenu( popupMenu, 0, 1, 0x7FFF, CMF_NORMAL ))) {
+        int command;
+
+        command = TrackPopupMenuEx( popupMenu, TPM_RETURNCMD, pos.x(), pos.y(), parentWindow, NULL );
+        if ( command > 0 ) {
+            CMINVOKECOMMANDINFOEX info;
+
+            memset( &info, 0, sizeof( CMINVOKECOMMANDINFOEX ));
+
+            info.cbSize = sizeof( info );
+            info.fMask = CMIC_MASK_UNICODE;
+            info.hwnd = parentWindow;
+            info.lpVerb  = MAKEINTRESOURCEA( command - 1 );
+            info.lpVerbW = MAKEINTRESOURCEW( command - 1 );
+            info.nShow = SW_SHOWNORMAL;
+
+            contextMenu->InvokeCommand( reinterpret_cast<LPCMINVOKECOMMANDINFO>( &info ));
+        }
+    }
+    DestroyMenu( popupMenu );
+}
+
+/**
+ * @brief FolderView::on_view_customContextMenuRequested
+ * @param pos
+ */
+void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
+    QModelIndex index;
+
+    index = this->ui->view->indexAt( pos );
+    if ( !index.isValid())
+        return;
+
+    FolderView::openShellContextMenuForObject( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()).utf16()), QCursor::pos(), ( HWND )this->winId());
+}
+
+/**
+ * @brief FileSystemModel::flags
+ * @param index
+ * @return
+ */
+/*Qt::ItemFlags FileSystemModel::flags(const QModelIndex &index) const {
+    if ( !index.isValid())
+        return Qt::NoItemFlags;
+
+    return ( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDropEnabled );
+}*/

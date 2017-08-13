@@ -59,8 +59,10 @@ class FileSystemModel : public QFileSystemModel {
 public:
     explicit FileSystemModel( QObject *parent = 0, const QString &path = QDir::currentPath()) : QFileSystemModel( parent ) {
         this->setRootPath( path );
-        this->setReadOnly( true ); // TODO: add as menu (RO by default)
+        //..this->setReadOnly( true ); // TODO: add as menu (RO by default)
     }
+
+    //Qt::ItemFlags flags( const QModelIndex &index ) const;
 
 public slots:
     void reset() { this->beginResetModel(); this->resetInternalData(); this->endResetModel(); }
@@ -86,6 +88,8 @@ public:
     QString customStyleSheet() const { return this->m_customStyleSheet; }
     QListView::ViewMode viewMode() const { return this->ui->view->viewMode(); }
     int iconSize() const;
+    static void openShellContextMenuForObject( const std::wstring &path, QPoint pos, HWND parentWindow );
+    bool isReadOnly() const;
 
     // grab areas for frameless resizing
     enum Areas {
@@ -116,6 +120,7 @@ public slots:
     void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }
     void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }
     void setIconSize();
+    void setReadOnly( bool enable = true );
 
 protected:
     void paintEvent( QPaintEvent *event );
@@ -129,6 +134,8 @@ private slots:
     void on_view_clicked( const QModelIndex &index );
     void editStylesheet();
     void toggleViewMode();
+    void toggleAccessMode();
+    void on_view_customContextMenuRequested( const QPoint &pos );
 
 private:
     Ui::FolderView *ui;

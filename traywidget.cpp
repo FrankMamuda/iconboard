@@ -208,6 +208,7 @@ void TrayWidget::readXML() {
                 QPoint pos;
                 QSize size;
                 bool isVisible = true;
+                bool readOnly = true;
 
                 childNode = element.firstChild();
                 widget = new FolderView( this->desktop, element.attribute( "rootPath" ), this->worker, this );
@@ -237,7 +238,9 @@ void TrayWidget::readXML() {
                         else if ( !QString::compare( childElement.tagName(), "listMode" )) {
                             if ( text.toInt() == 1 )
                                 widget->setViewMode( QListView::ListMode );
-                        } else if ( !QString::compare( childElement.tagName(), "iconSize" ))
+                        } else if ( !QString::compare( childElement.tagName(), "readOnly" ))
+                            readOnly = static_cast<bool>( text.toInt());
+                        else if ( !QString::compare( childElement.tagName(), "iconSize" ))
                             widget->setIconSize( text.toInt());
                     }
 
@@ -266,6 +269,8 @@ void TrayWidget::readXML() {
                     // use winapi to resize the window (avoiding buggy Qt setGeometry)
                     MoveWindow(( HWND )widget->winId(), updatedGeometry.x(), updatedGeometry.y(), updatedGeometry.width(), updatedGeometry.height(), true );
                 }
+
+                widget->setReadOnly( readOnly );
 
                 if ( !styleSheet.isEmpty())
                     widget->setCustomStyleSheet( styleSheet );
@@ -324,6 +329,9 @@ void TrayWidget::writeConfiguration() {
 
         if ( widget->viewMode() == QListView::ListMode )
             stream << QString( "    <listMode>1</listMode>\n" );
+
+        if ( !widget->isReadOnly())
+            stream << QString( "    <readOnly>0</readOnly>\n" );
 
         stream << QString( "    <iconSize>%1</iconSize>\n" ).arg( widget->iconSize());
 

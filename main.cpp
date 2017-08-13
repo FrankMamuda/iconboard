@@ -63,6 +63,7 @@
  *  [DONE] icon extraction issues on MSVC builds
  *  caching of extracted icons and thumbnails
  *  [DONE] centred icons (if smaller than icon size)
+ *  drive names (from shortcuts)
  */
 
 /**

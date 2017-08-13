@@ -211,8 +211,10 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize, const QSt
     QSize actualSize;
 
     // limit shortcut arrow size
-    if ( overlaySize > 16.0f )
-        overlaySize = 16.0f;
+    if ( overlaySize > 24.0f )
+        overlaySize = 24.0f;
+    else if ( overlaySize < 8.0f )
+        overlaySize = 8.0f;
 
     // get base pixmap (the icon)
     base = icon.pixmap( originalSize, originalSize );
