@@ -33,7 +33,9 @@ SOURCES += main.cpp\
     indexcache.cpp \
     iconproxymodel.cpp \
     stylesheetdialog.cpp \
-    screenmapper.cpp
+    screenmapper.cpp \
+    settings.cpp \
+    variable.cpp
 
 HEADERS  += \
     folderview.h \
@@ -48,13 +50,16 @@ HEADERS  += \
     indexcache.h \
     iconproxymodel.h \
     stylesheetdialog.h \
-    screenmapper.h
+    screenmapper.h \
+    settings.h \
+    variable.h
 
 FORMS    += \
     folderview.ui \
     traywidget.ui \
     stylesheetdialog.ui \
-    screenmapper.ui
+    screenmapper.ui \
+    settings.ui
 
 RESOURCES += \
     resources.qrc

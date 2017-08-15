@@ -29,16 +29,22 @@
 #include <QScreen>
 #include <QDebug>
 #include <QTextDocument>
+#include <QXmlStreamWriter>
+#include <QBuffer>
 #include "traywidget.h"
 #include "ui_traywidget.h"
 #include "widgetmodel.h"
 #include "folderview.h"
+#include "variable.h"
+#include "settings.h"
+#include "iconcache.h"
+#include "screenmapper.h"
 
 /**
  * @brief TrayWidget::TrayWidget
  * @param parent
  */
-TrayWidget::TrayWidget( QWidget *parent ) : QWidget( parent, Qt::Tool ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), desktop( new QDesktopWidget()) {
+TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), desktop( new QDesktopWidget()) {
     // init ui
     this->ui->setupUi( this );
 
@@ -60,12 +66,18 @@ TrayWidget::TrayWidget( QWidget *parent ) : QWidget( parent, Qt::Tool ), ui( new
     // set up desktop widget
     this->getWindowHandles();
     this->wallpaper = desktop->grab();
-    SetParent(( HWND )this->desktop->winId(), this->worker );
-    this->readXML();
+    //SetParent(( HWND )this->desktop->winId(), this->worker );
+    //this->readXML();
 
     // connect tray icon
     this->connect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )), this, SLOT( trayIconActivated( QSystemTrayIcon::ActivationReason )));
     this->connect( qApp, SIGNAL( aboutToQuit()), this, SLOT( writeConfiguration()));
+
+    // set up icons
+    this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add" ));
+    this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove" ));
+    this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid" ));
+    this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility" ));
 }
 
 /**
@@ -106,70 +118,10 @@ void TrayWidget::trayIconActivated( QSystemTrayIcon::ActivationReason reason ) {
  */
 void TrayWidget::showContextMenu() {
     QMenu menu;
-    menu.addAction( "Exit", qApp, SLOT( quit()));
+    menu.addAction( this->tr( "Settings" ), this, SLOT( showSettingsDialog()));
+    menu.addSeparator();
+    menu.addAction( this->tr( "Exit" ), qApp, SLOT( quit()));
     menu.exec( QCursor::pos());
-}
-
-/**
- * @brief TrayWidget::on_buttonAdd_clicked
- */
-void TrayWidget::on_buttonAdd_clicked() {
-    QDir dir;
-
-    dir.setPath( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
-    if ( dir.exists()) {
-        this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this->worker, this );
-        this->widgetList.last()->show();
-        this->ui->widgetList->reset();
-    }
-}
-
-/**
- * @brief TrayWidget::on_buttonRemove_clicked
- */
-void TrayWidget::on_buttonRemove_clicked() {
-    QMessageBox msgBox;
-    FolderView *widget;
-    int row, state;
-
-    row = this->ui->widgetList->currentIndex().row();
-    if ( row < 0 || row >= this->widgetList.count())
-        return;
-
-    // get widget ptr
-    widget = this->widgetList.at( row );
-
-    // display warning
-    msgBox.setText( this->tr( "Do you really want to remove \"%1\"?" ).arg( widget->title()));
-    msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::No );
-    msgBox.setDefaultButton( QMessageBox::Yes );
-    msgBox.setIcon( QMessageBox::Warning );
-    state = msgBox.exec();
-
-    // check options
-    switch ( state ) {
-    case QMessageBox::Yes:
-        widget->hide();
-        this->widgetList.removeOne( widget );
-        this->ui->widgetList->reset();
-        //delete widget;
-        break;
-
-    case QMessageBox::No:
-    default:
-        return;
-    }
-}
-
-/**
- * @brief decodeXML
- * @param buffer
- * @return
- */
-QString TrayWidget::decodeXML( const QString &buffer ) {
-    QTextDocument text;
-    text.setHtml( buffer );
-    return text.toPlainText();
 }
 
 /**
@@ -191,7 +143,7 @@ void TrayWidget::readXML() {
     QFile xmlFile( path );
 
     if ( !xmlFile.exists() || !xmlFile.open( QFile::ReadOnly | QFile::Text )) {
-        qDebug() << "error";
+        qDebug() << this->tr( "TrayWidget::readXML: no configuration file found" );
         return;
     }
 
@@ -202,42 +154,55 @@ void TrayWidget::readXML() {
         element = node.toElement();
 
         if ( !element.isNull()) {
-            if ( !QString::compare( element.tagName(), "widget" )) {
+            if ( !QString::compare( element.tagName(), "variable" )) {
+                QString key;
+                QVariant value;
+
+                childNode = element.firstChild();
+                key = element.attribute( "key" );
+
+                if ( element.hasAttribute( "binary" )) {
+                    QByteArray array;
+                    array = QByteArray::fromBase64( element.attribute( "binary" ).toUtf8().constData());
+                    QBuffer buffer( &array );
+                    buffer.open( QIODevice::ReadOnly );
+                    QDataStream in( &buffer );
+                    in >> value;
+                } else
+                    value = element.attribute( "value" );
+
+                if ( Variable::instance()->contains( key ))
+                    Variable::instance()->setValue( key, value, true );
+            } else if ( !QString::compare( element.tagName(), "widget" )) {
                 FolderView *widget;
                 QString text, styleSheet;
-                QPoint pos;
-                QSize size;
                 bool isVisible = true;
                 bool readOnly = true;
+                QRect widgetGeometry;
 
                 childNode = element.firstChild();
                 widget = new FolderView( this->desktop, element.attribute( "rootPath" ), this->worker, this );
+                widgetGeometry = widget->geometry();
 
-                pos = widget->pos();
-                size = widget->size();
+                styleSheet = element.attribute( "stylesheet" );
 
                 while ( !childNode.isNull()) {
                     childElement = childNode.toElement();
-                    text = TrayWidget::decodeXML( childElement.text());
+                    text = childElement.text();
 
                     if ( !childElement.isNull()) {
-                        if ( !QString::compare( childElement.tagName(), "x" ))
-                            pos.setX( text.toInt());
-                        else if ( !QString::compare( childElement.tagName(), "y" ))
-                            pos.setY( text.toInt());
-                        else if ( !QString::compare( childElement.tagName(), "width" ))
-                            size.setWidth( text.toInt());
-                        else if ( !QString::compare( childElement.tagName(), "height" ))
-                            size.setHeight( text.toInt());
-                        else if ( !QString::compare( childElement.tagName(), "title" ))
+                        if ( !QString::compare( childElement.tagName(), "geometry" )) {
+                            widgetGeometry = QRect(
+                                        childElement.attribute( "x" ).toInt(),
+                                        childElement.attribute( "y" ).toInt(),
+                                        childElement.attribute( "width" ).toInt(),
+                                        childElement.attribute( "height" ).toInt());
+                        } else if ( !QString::compare( childElement.tagName(), "title" )) {
                             widget->setCustomTitle( text );
-                        else if ( !QString::compare( childElement.tagName(), "visible" ))
+                        } else if ( !QString::compare( childElement.tagName(), "visible" )) {
                             isVisible = static_cast<bool>( text.toInt());
-                        else if ( !QString::compare( childElement.tagName(), "stylesheet" ))
-                            styleSheet = text;
-                        else if ( !QString::compare( childElement.tagName(), "listMode" )) {
-                            if ( text.toInt() == 1 )
-                                widget->setViewMode( QListView::ListMode );
+                        } else if ( !QString::compare( childElement.tagName(), "viewMode" )) {
+                            widget->setViewMode( static_cast<QListView::ViewMode>( text.toInt()));
                         } else if ( !QString::compare( childElement.tagName(), "readOnly" ))
                             readOnly = static_cast<bool>( text.toInt());
                         else if ( !QString::compare( childElement.tagName(), "iconSize" ))
@@ -251,7 +216,6 @@ void TrayWidget::readXML() {
                     widget->show();
 
                 {
-                    QRect updatedGeometry;
                     QPoint screenOffset;
 
                     //
@@ -263,11 +227,10 @@ void TrayWidget::readXML() {
                     screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
 
                     // offset geometry and mouse position
-                    updatedGeometry = QRect( pos.x(), pos.y(), size.width(), size.height());
-                    updatedGeometry.translate( -screenOffset );
+                    widgetGeometry.translate( -screenOffset );
 
                     // use winapi to resize the window (avoiding buggy Qt setGeometry)
-                    MoveWindow(( HWND )widget->winId(), updatedGeometry.x(), updatedGeometry.y(), updatedGeometry.width(), updatedGeometry.height(), true );
+                    MoveWindow(( HWND )widget->winId(), widgetGeometry.x(), widgetGeometry.y(), widgetGeometry.width(), widgetGeometry.height(), true );
                 }
 
                 widget->setReadOnly( readOnly );
@@ -309,34 +272,98 @@ void TrayWidget::writeConfiguration() {
         return;
     }
 
-    QTextStream stream( &xmlFile );
-    stream << "<configuration>\n";
-    foreach ( FolderView *widget, this->widgetList ) {
-        stream << QString( "  <widget rootPath=\"%1\">\n" ).arg( widget->rootPath().toHtmlEscaped());
-        stream << QString( "    <x>%1</x>\n" ).arg( widget->pos().x());
-        stream << QString( "    <y>%1</y>\n" ).arg( widget->pos().y());
-        stream << QString( "    <width>%1</width>\n" ).arg( widget->width());
-        stream << QString( "    <height>%1</height>\n" ).arg( widget->height());
+    QXmlStreamWriter stream( &xmlFile );
+    stream.setAutoFormatting(true);
+    stream.writeStartDocument();
+    stream.writeStartElement( "configuration" );
+    stream.writeAttribute( "version", "2" );
 
-        if ( !widget->customTitle().isEmpty())
-            stream << QString( "    <title>%1</title>\n" ).arg( widget->customTitle().toHtmlEscaped());
+    // write out variables
+    foreach ( VariableEntry var, Variable::instance()->list ) {
+        stream.writeEmptyElement( "variable" );
+        stream.writeAttribute( "key", var.key());
 
-        if ( !widget->isVisible())
-            stream << QString( "    <visible>0</visible>\n" );
+        if ( !var.value().canConvert<QString>()) {
+            QByteArray array;
+            QBuffer buffer(&array);
 
-        if ( !widget->customStyleSheet().isEmpty())
-            stream << QString( "    <stylesheet>%1</stylesheet>\n" ).arg( widget->customStyleSheet().toHtmlEscaped());
+            buffer.open( QIODevice::WriteOnly );
+            QDataStream out( &buffer );
 
-        if ( widget->viewMode() == QListView::ListMode )
-            stream << QString( "    <listMode>1</listMode>\n" );
+            out << var.value();
+            buffer.close();
 
-        if ( !widget->isReadOnly())
-            stream << QString( "    <readOnly>0</readOnly>\n" );
-
-        stream << QString( "    <iconSize>%1</iconSize>\n" ).arg( widget->iconSize());
-
-        stream << "  </widget>\n";
+            stream.writeAttribute( "binary", QString( array.toBase64()));
+        } else {
+            stream.writeAttribute( "value", var.value().toString());
+        }
     }
+
+    // write out widgets
+    foreach ( FolderView *widget, this->widgetList ) {
+        stream.writeStartElement( "widget" );
+        stream.writeAttribute( "rootPath", widget->rootPath());
+
+        // stylesheet (for better readability store as attribute)
+        stream.writeAttribute( "stylesheet", widget->customStyleSheet().replace( "\r", "" ));
+
+        // geometry
+        stream.writeEmptyElement( "geometry" );
+        stream.writeAttribute( "x", QString::number( widget->pos().x()));
+        stream.writeAttribute( "y", QString::number( widget->pos().y()));
+        stream.writeAttribute( "width", QString::number( widget->width()));
+        stream.writeAttribute( "height", QString::number( widget->height()));
+
+        // title
+        if ( !widget->customTitle().isEmpty())
+            stream.writeTextElement( "title", widget->customTitle());
+
+        // visibility
+        if ( !widget->isVisible())
+            stream.writeTextElement( "visible", QString::number( 0 ));
+
+        // viewMode
+        stream.writeTextElement( "viewMode", QString::number( static_cast<int>( widget->viewMode())));
+
+        // access mode
+        if ( !widget->isReadOnly())
+            stream.writeTextElement( "readOnly", QString::number( 0 ));
+
+        // icon size
+        stream.writeTextElement( "iconSize", QString::number( widget->iconSize()));
+
+        // end widget element
+        stream.writeEndElement();
+    }
+
+    /*
+    stream2.writeStartElement( "variable" );
+    stream2.writeAttribute( "name", "cvarSmth" );
+    stream2.writeEndElement();
+
+    CREATION:
+                            #name           #defaultValue
+    Variable::add( "ui_displaySymlinkIcon", true );
+
+    STORAGE:
+    <variable name="ui_displaySymlinkIcon" value="true">
+
+    ACCESS:
+    Variable::value( "ui_displaySymlinkIcon" ).toBool();
+      searches for variable:
+        not found - false
+        found - value
+
+    add flags in future such as archive, temporary, read only, etc.
+*/
+
+    // end config element
+    stream.writeEndElement();
+
+    // end document
+    stream.writeEndDocument();
+
+    // close file
     xmlFile.close();
 }
 
@@ -371,11 +398,81 @@ void TrayWidget::getWindowHandles() {
 }
 
 /**
- * @brief TrayWidget::on_buttonVisibility_clicked
+ * @brief TrayWidget::on_widgetList_doubleClicked
+ * @param index
  */
-void TrayWidget::on_buttonVisibility_clicked() {
+void TrayWidget::on_widgetList_doubleClicked( const QModelIndex & ) {
+    this->on_actionShow_triggered();
+}
+/**
+ * @brief TrayWidget::showSettingsDialog
+ */
+void TrayWidget::showSettingsDialog() {
+    Settings settingsDialog;
+
+    settingsDialog.exec();
+   // settingsDialog->show();
+}
+
+/**
+ * @brief TrayWidget::on_actionAdd_triggered
+ */
+void TrayWidget::on_actionAdd_triggered() {
+    QDir dir;
+
+    dir.setPath( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
+    if ( dir.exists()) {
+        this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this->worker, this );
+        this->widgetList.last()->show();
+        this->ui->widgetList->reset();
+    }
+}
+
+/**
+ * @brief TrayWidget::on_actionRemove_triggered
+ */
+void TrayWidget::on_actionRemove_triggered() {
+    QMessageBox msgBox;
+    FolderView *widget;
+    int row, state;
+
+    row = this->ui->widgetList->currentIndex().row();
+    if ( row < 0 || row >= this->widgetList.count())
+        return;
+
+    // get widget ptr
+    widget = this->widgetList.at( row );
+
+    // display warning
+    msgBox.setText( this->tr( "Do you really want to remove \"%1\"?" ).arg( widget->title()));
+    msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::No );
+    msgBox.setDefaultButton( QMessageBox::Yes );
+    msgBox.setIcon( QMessageBox::Warning );
+    state = msgBox.exec();
+
+    // check options
+    switch ( state ) {
+    case QMessageBox::Yes:
+        widget->hide();
+        this->widgetList.removeOne( widget );
+        this->ui->widgetList->reset();
+        //delete widget;
+        break;
+
+    case QMessageBox::No:
+    default:
+        return;
+    }
+}
+
+/**
+ * @brief TrayWidget::on_actionShow_triggered
+ */
+void TrayWidget::on_actionShow_triggered() {
     FolderView *widget;
     int row;
+
+    // TODO: set checkable
 
     row = this->ui->widgetList->currentIndex().row();
     if ( row < 0 || row >= this->widgetList.count())
@@ -392,9 +489,16 @@ void TrayWidget::on_buttonVisibility_clicked() {
 }
 
 /**
- * @brief TrayWidget::on_widgetList_doubleClicked
- * @param index
+ * @brief TrayWidget::on_actionMap_triggered
  */
-void TrayWidget::on_widgetList_doubleClicked( const QModelIndex & ) {
-    this->on_buttonVisibility_clicked();
+void TrayWidget::on_actionMap_triggered() {
+    ScreenMapper mapperDialog;
+    mapperDialog.exec();
+}
+
+/**
+ * @brief TrayWidget::on_buttonClose_clicked
+ */
+void TrayWidget::on_buttonClose_clicked() {
+    this->hide();
 }

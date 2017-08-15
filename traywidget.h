@@ -21,7 +21,7 @@
 //
 // includes
 //
-#include <QWidget>
+#include <QMainWindow>
 #include <QSystemTrayIcon>
 #include <QDesktopWidget>
 #include <windows.h>
@@ -45,7 +45,7 @@ static const QString darkIconTheme = "breeze-dark";
 /**
  * @brief The TrayWidget class
  */
-class TrayWidget : public QWidget {
+class TrayWidget : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -53,18 +53,20 @@ public:
     ~TrayWidget();
     QList<FolderView*> widgetList;
     QPixmap wallpaper;
-    static QString decodeXML( const QString &buffer );
+    void readXML();
 
 private slots:
     void trayIconActivated( QSystemTrayIcon::ActivationReason reason );
     void showContextMenu();
-    void on_buttonAdd_clicked();
-    void on_buttonRemove_clicked();
-    void readXML();
     void writeConfiguration();
     void getWindowHandles();
-    void on_buttonVisibility_clicked();
     void on_widgetList_doubleClicked( const QModelIndex &index );
+    void showSettingsDialog();
+    void on_actionAdd_triggered();
+    void on_actionRemove_triggered();
+    void on_actionShow_triggered();
+    void on_actionMap_triggered();
+    void on_buttonClose_clicked();
 
 private:
     Ui::TrayWidget *ui;

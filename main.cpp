@@ -25,45 +25,49 @@
 #include "indexcache.h"
 #include "iconindex.h"
 #include "iconcache.h"
+#include "variable.h"
+#include "iconproxymodel.h"
 
 /*
  * TODO list:
+ *  [DONE] hidden widgets
+ *  [DONE] custom stylesheet support
+ *  [DONE] xml safe strings in config
+ *  [DONE] "open with" dialog
+ *  [DONE] bugfix for right click on item and hilight rect
+ *  [DONE] list mode
+ *  [DONE] custom icon size
+ *  [DONE] extract icons from symlinks
+ *  [DONE] QFileSystemWatcher - no need
+ *  [DONE] geometry fix for multiple monitors
+ *  [DONE] icon extraction issues on MSVC builds
+ *  [DONE] centred icons (if smaller than icon size)
+ *  [DONE] settings dialog with custom variables
+ *  [DONE?] weird QPersistentIndex corruption bugfix
+ *  [DONE?] weird QObject::moveToThread fix
  *  lock to specific resolution
  *  lock to desktop
  *  periodic (timed settings save)
- *  [DONE] hidden widgets
  *  root folder ('My Computer') folder support
  *  pseudo-folders (with drag-drop support)
  *  non-read only folders
- *  [DONE] custom stylesheet support
- *  [DONE] xml safe strings in config
  *  backup configuration
  *  single instance
  *  custom sorting
  *  custom alignment
  *  remove hilight in list mode
  *  custom hilight/selection color
- *  [DONE] custom icon size
- *  [DONE] extract icons from symlinks
  *  dir itertor batched loading
- *  [DONE] QFileSystemWatcher - no need
  *  free grid placement
- *  "open with" dialog
- *  bugfix for right click on item and hilight rect
- *  [DONE] list mode
  *  focusless scrolling (mouseOver scrolling)
  *  multi column list
- *  weird QPersistentIndex corruption bugfix
- *  weird QObject::moveToThread fix
  *  start-on-boot option
  *  custom per-item icons
  *  performace issues with large directories
  *  extract shell icons from dirs on symlinks
- *  [DONE] geometry fix for multiple monitors
- *  [DONE] icon extraction issues on MSVC builds
  *  caching of extracted icons and thumbnails
- *  [DONE] centred icons (if smaller than icon size)
  *  drive names (from shortcuts)
+ *  setting custom stylesheet changes font for some reason
  */
 
 /**
@@ -84,9 +88,21 @@ int main( int argc, char *argv[] ) {
     IconIndex::instance()->build( "breeze" );
     IconIndex::instance()->build( "breeze-dark" );
 
+    // request a trivial icon early to avoid QObject::moveToThread bug
+    IconProxyModel::iconForFilename( QDir::currentPath(), 0 );
+
     // display tray widget
-    TrayWidget a;
-    Q_UNUSED( a );
+    TrayWidget trayWidget;
+
+    // add vars
+    Variable::instance()->add( "ui_displaySymlinkIcon", true );
+    Variable::instance()->add( "universalInteger", 42 );
+
+    QIcon overlayIcon( ":/icons/link" );
+    Variable::instance()->add( "ui_overlayIconTest", overlayIcon );
+
+    // read config
+    trayWidget.readXML();
 
     return app.exec();
 }

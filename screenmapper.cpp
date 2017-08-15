@@ -29,14 +29,14 @@
  * @brief Widget::Widget
  * @param parent
  */
-Widget::Widget( QWidget *parent ) : QWidget( parent ), ui( new Ui::Widget ) {
+ScreenMapper::ScreenMapper( QWidget *parent ) : QDialog( parent ), ui( new Ui::ScreenMapper ) {
     this->ui->setupUi( this );
 }
 
 /**
  * @brief Widget::~Widget
  */
-Widget::~Widget() {
+ScreenMapper::~ScreenMapper() {
     delete this->ui;
 }
 
@@ -44,7 +44,7 @@ Widget::~Widget() {
  * @brief Widget::paintEvent
  * @param event
  */
-void Widget::paintEvent( QPaintEvent *event ) {
+void ScreenMapper::paintEvent( QPaintEvent *event ) {
     QPainter painter( this );
     QRect rect;
 
@@ -93,6 +93,6 @@ void Widget::paintEvent( QPaintEvent *event ) {
     //this->resize( pixmap.size());
 
     // paint widget as is
-    QWidget::paintEvent( event );
+    QDialog::paintEvent( event );
 }
 

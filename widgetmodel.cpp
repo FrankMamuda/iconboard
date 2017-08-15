@@ -44,7 +44,13 @@ QVariant WidgetModel::data( const QModelIndex &index, int role ) const {
     switch ( role ) {
     // TODO: USE ASPECT RATIO OF SCREEN
     case Qt::DecorationRole:
-        return this->parentWidget->widgetList.at( index.row())->grab().scaled( 40, 30 );
+    {
+        QPixmap pixmap;
+        pixmap = this->parentWidget->widgetList.at( index.row())->grab();
+
+        if ( !pixmap.isNull())
+            return pixmap.scaled( 40, 30 );
+    }
 
     case Qt::DisplayRole:
         return this->parentWidget->widgetList.at( index.row())->title();

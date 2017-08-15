@@ -66,6 +66,11 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath, HWND windowPar
     this->ui->view->setDragDropMode( QAbstractItemView::NoDragDrop );
     this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
 
+    this->ui->view->setDragEnabled(true);
+    this->ui->view->setAcceptDrops(true);
+    this->ui->view->setDropIndicatorShown(true);
+
+
     // set up view delegate
     this->delegate = new FolderDelegate( this->ui->view );
     this->ui->view->setItemDelegate( this->delegate );
@@ -620,6 +625,7 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
         return;
 
     FolderView::openShellContextMenuForObject( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()).utf16()), QCursor::pos(), ( HWND )this->winId());
+    this->ui->view->selectionModel()->clear();
 }
 
 /**

@@ -16,34 +16,7 @@
  *
  */
 
-#pragma once
-
 //
 // includes
 //
-#include <QDialog>
-#include <QPainter>
-
-/**
- * @brief The Ui namespace
- */
-namespace Ui {
-class ScreenMapper;
-}
-
-/**
- * @brief The Widget class
- */
-class ScreenMapper : public QDialog {
-    Q_OBJECT
-
-public:
-    explicit ScreenMapper( QWidget *parent = 0 );
-    ~ScreenMapper();
-
-protected:
-    void paintEvent( QPaintEvent * );
-
-private:
-    Ui::ScreenMapper *ui;
-};
+#include "variable.h"

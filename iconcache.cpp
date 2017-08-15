@@ -21,6 +21,7 @@
 //
 #include "iconcache.h"
 #include "indexcache.h"
+#include "variable.h"
 #ifdef Q_OS_WIN32
 #include <QtWin>
 #include <QDir>
@@ -209,6 +210,10 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize, const QSt
     float overlaySize = originalSize / factor;
     Q_UNUSED( theme )
     QSize actualSize;
+
+    // abort if disabled
+    if ( Variable::instance()->isDisabled( "ui_displaySymlinkIcon" ))
+        return icon;
 
     // limit shortcut arrow size
     if ( overlaySize > 24.0f )

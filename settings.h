@@ -21,29 +21,36 @@
 //
 // includes
 //
+#include <QSignalMapper>
 #include <QDialog>
-#include <QPainter>
+#include "variable.h"
 
 /**
  * @brief The Ui namespace
  */
 namespace Ui {
-class ScreenMapper;
+class Settings;
 }
 
 /**
- * @brief The Widget class
+ * @brief The Settings class
  */
-class ScreenMapper : public QDialog {
+class Settings : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ScreenMapper( QWidget *parent = 0 );
-    ~ScreenMapper();
+    explicit Settings( QWidget *parent = 0 );
+    ~Settings();
+    void bind( const QString &key, QWidget *widget );
+    void setValue( const QString &key, bool internal = false );
 
-protected:
-    void paintEvent( QPaintEvent * );
+private slots:
+    void internalValueChanged( const QString &key ) { this->setValue( key, true ); }
+    void externalValueChanged( const QString &key ) { this->setValue( key, false ); }
+    void on_closeButton_clicked();
 
 private:
-    Ui::ScreenMapper *ui;
+    Ui::Settings *ui;
+    QMap<QString, QWidget*>boundVariables;
+    QSignalMapper *signalMapper;
 };
