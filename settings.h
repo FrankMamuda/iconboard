@@ -48,6 +48,7 @@ private slots:
     void internalValueChanged( const QString &key ) { this->setValue( key, true ); }
     void externalValueChanged( const QString &key ) { this->setValue( key, false ); }
     void on_closeButton_clicked();
+    void runOnStartupValueChanged( QVariant value );
 
 private:
     Ui::Settings *ui;

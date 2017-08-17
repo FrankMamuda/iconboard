@@ -65,6 +65,7 @@ public:
     //Qt::ItemFlags flags( const QModelIndex &index ) const;
 
 public slots:
+    void softReset() { emit this->dataChanged( this->index( 0, 0 ), this->index( this->rowCount() - 1, this->columnCount() - 1 )); }
     void reset() { this->beginResetModel(); this->resetInternalData(); this->endResetModel(); }
 };
 
@@ -117,6 +118,7 @@ public slots:
     void displayContextMenu( const QPoint &point );
     void setCustomTitle( const QString &title );
     void setCustomStyleSheet( const QString &stylesheet );
+    void setDefaultStyleSheet();
     void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }
     void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }
     void setIconSize();

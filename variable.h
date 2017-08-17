@@ -25,6 +25,7 @@
 #include <QVariant>
 #include <QString>
 #include <QDebug>
+#include <QMetaMethod>
 #include "singleton.h"
 
 /**
@@ -64,6 +65,16 @@ public:
     QString string( const QString &key, bool defaultValue = false ) { return Variable::instance()->value<QString>( key, defaultValue ); }
 
     template<typename T>
+    void updateConnections( const QString &key, const T &value ) {
+        if ( Variable::instance()->slotList.contains( key )) {
+            QPair<QObject*, int> slot;
+
+            slot = Variable::instance()->slotList[key];
+            slot.first->metaObject()->method( slot.second ).invoke( slot.first, Qt::QueuedConnection, Q_ARG( QVariant, value ));
+        }
+    }
+
+    template<typename T>
     void setValue( const QString &key, const T &value, bool initial = false ) {
         if ( initial ) {
             // initial read from configuration file
@@ -78,10 +89,9 @@ public:
 
             // any subsequent value changes emit a valueChanged signal
             if ( value != currentValue ) {
-                qDebug() << "set" << key;
-
                 Variable::instance()->list[key].setValue( value );
                 emit valueChanged( key );
+                Variable::instance()->updateConnections( key, value );
             }
         }
     }
@@ -95,6 +105,8 @@ public:
     void reset( const QString &key ) { if ( Variable::instance()->contains( key )) Variable::instance()->setValue<QVariant>( key, Variable::instance()->value<QVariant>( key, true )); }
 
     QMap<QString, VariableEntry> list;
+    QMap<QString, QPair<QObject*, int> > slotList;
+    void bind( const QString &key, const QObject *receiver, const char *method );
 
 signals:
     void valueChanged( const QString &key );

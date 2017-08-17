@@ -19,7 +19,6 @@
 //
 // includes
 //
-#include <QApplication>
 #include <QDebug>
 #include "traywidget.h"
 #include "indexcache.h"
@@ -27,6 +26,7 @@
 #include "iconcache.h"
 #include "variable.h"
 #include "iconproxymodel.h"
+#include "application.h"
 
 /*
  * TODO list:
@@ -43,31 +43,33 @@
  *  [DONE] icon extraction issues on MSVC builds
  *  [DONE] centred icons (if smaller than icon size)
  *  [DONE] settings dialog with custom variables
+ *  [DONE] remove hilight in list mode
+ *  [DONE] weird QObject::moveToThread fix
+ *  [DONE] focusless scrolling (mouseOver scrolling)
+ *  [DONE] single instance
+ *  [DONE] fixed custom stylesheet font issues
  *  [DONE?] weird QPersistentIndex corruption bugfix
- *  [DONE?] weird QObject::moveToThread fix
+ *  [DONE?] start-on-boot option
  *  lock to specific resolution
- *  lock to desktop
+ *  lock to desktop screen
  *  periodic (timed settings save)
  *  root folder ('My Computer') folder support
  *  pseudo-folders (with drag-drop support)
  *  non-read only folders
  *  backup configuration
- *  single instance
  *  custom sorting
  *  custom alignment
- *  remove hilight in list mode
  *  custom hilight/selection color
  *  dir itertor batched loading
- *  free grid placement
- *  focusless scrolling (mouseOver scrolling)
+ *  free placement, free scaling
+ *  whole desktop replacement option
  *  multi column list
- *  start-on-boot option
  *  custom per-item icons
  *  performace issues with large directories
  *  extract shell icons from dirs on symlinks
  *  caching of extracted icons and thumbnails
  *  drive names (from shortcuts)
- *  setting custom stylesheet changes font for some reason
+ *  predefined styles
  */
 
 /**
@@ -77,7 +79,11 @@
  * @return
  */
 int main( int argc, char *argv[] ) {
-    QApplication app( argc, argv );
+    Application app( argc, argv );
+
+    // create an instance of app
+    if ( !app.lock())
+        return EXIT_FAILURE;
 
     // register metatypes
     qRegisterMetaType<Entry>( "Entry" );
@@ -94,12 +100,9 @@ int main( int argc, char *argv[] ) {
     // display tray widget
     TrayWidget trayWidget;
 
-    // add vars
+    // add default variables
     Variable::instance()->add( "ui_displaySymlinkIcon", true );
-    Variable::instance()->add( "universalInteger", 42 );
-
-    QIcon overlayIcon( ":/icons/link" );
-    Variable::instance()->add( "ui_overlayIconTest", overlayIcon );
+    Variable::instance()->add( "app_runOnStartup", false );
 
     // read config
     trayWidget.readXML();

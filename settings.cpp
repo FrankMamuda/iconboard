@@ -22,6 +22,7 @@
 #include <QDebug>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QSettings>
 #include "settings.h"
 #include "ui_settings.h"
 
@@ -32,10 +33,16 @@
 Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings ), signalMapper( new QSignalMapper( this )) {
     this->ui->setupUi( this );
 
+    // connect for updates
     this->connect( Variable::instance(), SIGNAL( valueChanged( QString )), this, SLOT( externalValueChanged( QString )));
+    this->connect( this->signalMapper, SIGNAL( mapped( QString )), this, SLOT( internalValueChanged( QString )));
 
     // first bind vars and set initial values
     this->bind( "ui_displaySymlinkIcon", this->ui->displaySymlinkIcon );
+    this->bind( "app_runOnStartup", this->ui->runOnStartup );
+
+    // bind runOnStarup variable, to write out settings value
+    Variable::instance()->bind( "app_runOnStartup", this, SLOT( runOnStartupValueChanged( QVariant )));
 }
 
 /**
@@ -60,28 +67,24 @@ void Settings::bind( const QString &key, QWidget *widget ) {
     // TODO: expand to other widget types in future
     if ( !QString::compare( widget->metaObject()->className(), "QCheckBox" )) {
         QCheckBox *checkBox;
-
         checkBox = qobject_cast<QCheckBox*>( widget );
 
         // connect for further updates
         if ( checkBox != nullptr ) {
             this->connect( checkBox, SIGNAL( stateChanged( int )), this->signalMapper, SLOT( map()));
             signalMapper->setMapping( checkBox, key );
-            this->connect( this->signalMapper, SIGNAL( mapped( QString )), this, SLOT( internalValueChanged( QString )));
         }
     } else if ( !QString::compare( widget->metaObject()->className(), "QSpinBox" )) {
         QSpinBox *spinBox;
-
         spinBox = qobject_cast<QSpinBox*>( widget );
 
         // connect for further updates
         if ( spinBox != nullptr ) {
             this->connect( spinBox, SIGNAL( valueChanged( int )), this->signalMapper, SLOT( map()));
             signalMapper->setMapping( spinBox, key );
-            this->connect( this->signalMapper, SIGNAL( mapped( QString )), this, SLOT( internalValueChanged( QString )));
         }
     } else {
-        qDebug() << "unsupported container";
+        qDebug() << "Settings::bind: unsupported container" << widget->metaObject()->className();
     }
 }
 
@@ -126,6 +129,10 @@ void Settings::setValue( const QString &key, bool internal ) {
         qDebug() << "Settings::setValue: unsupported container" << widget->metaObject()->className();
     }
 
+    // force update
+    if ( internal )
+        Variable::instance()->updateConnections( key, Variable::instance()->value<QVariant>( key ));
+
     // unblock signals
     widget->blockSignals( false );
 }
@@ -135,4 +142,21 @@ void Settings::setValue( const QString &key, bool internal ) {
  */
 void Settings::on_closeButton_clicked() {
     this->close();
+}
+
+/**
+ * @brief Settings::runOnStartupValueChanged
+ * @param value
+ */
+void Settings::runOnStartupValueChanged( QVariant value ) {
+#ifdef QT_DEBUG
+    qDebug() << "runOnStartupValueChanged change to" << value.toBool();
+#else
+    QSettings settings( "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat );
+
+    if ( value.toBool())
+        settings.setValue( "IconBoardApp", QCoreApplication::applicationFilePath().replace( '/', '\\' ));
+    else
+        settings.remove( "IconBoardApp" );
+#endif
 }

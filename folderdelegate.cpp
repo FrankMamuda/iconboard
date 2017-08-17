@@ -199,8 +199,21 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
             rect.setWidth( item.lineWidths.at( y ));
             painter->drawText( rect, item.lines.at( y ), to );
         }
-        return;
-    }
+    } else {
+        QStyleOptionViewItem optionNoSelection;
+        QStyle::State state;
 
-    QStyledItemDelegate::paint( painter, option, index );
+        // remove hover/selection flags
+        state = option.state;
+        state = state & ( ~QStyle::State_MouseOver );
+        state = state & ( ~QStyle::State_Selected );
+        state = state & ( ~QStyle::State_HasFocus );
+        state = state & ( ~QStyle::State_Active );
+
+        optionNoSelection = option;
+        optionNoSelection.state = state;
+
+        // paint it exactly the same as before, yet ignoring selections
+        QStyledItemDelegate::paint( painter, optionNoSelection, index );
+    }
 }

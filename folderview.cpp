@@ -84,8 +84,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath, HWND windowPar
     // set default stylesheet
     styleSheet.setFileName( ":/stylesheets/stylesheet.qss" );
     if ( styleSheet.open( QFile::ReadOnly )) {
-        this->setStyleSheet( styleSheet.readAll().constData());
-        this->defaultStyleSheet = this->styleSheet();
+        this->defaultStyleSheet = styleSheet.readAll().constData();
         styleSheet.close();
     }
 
@@ -180,9 +179,27 @@ void FolderView::setCustomStyleSheet( const QString &stylesheet ) {
     this->m_customStyleSheet = stylesheet;
 
     if ( stylesheet.isEmpty())
-        this->setStyleSheet( this->defaultStyleSheet );
-    else
+        this->setDefaultStyleSheet();
+    else {
         this->setStyleSheet( stylesheet );
+
+        // this has to be done to properly reset view
+        this->delegate->clearCache();
+        this->ui->view->setItemDelegate( nullptr );
+        this->ui->view->setItemDelegate( this->delegate );
+    }
+}
+
+/**
+ * @brief FolderView::setDefaultStyleSheet
+ */
+void FolderView::setDefaultStyleSheet() {
+    this->setStyleSheet( this->defaultStyleSheet );
+
+    // this has to be done to properly reset view
+    this->delegate->clearCache();
+    this->ui->view->setItemDelegate( nullptr );
+    this->ui->view->setItemDelegate( this->delegate );
 }
 
 /**
@@ -195,7 +212,12 @@ void FolderView::setIconSize() {
     size = QInputDialog::getInt( this->parentWidget(), this->tr( "Set icon size" ), this->tr( "Size:" ), this->iconSize(), 0, 256, 16, &ok );
     if ( ok ) {
         this->setIconSize( size );
+
+        // this has to be done to properly reset view
         this->delegate->clearCache();
+        this->ui->view->setItemDelegate( nullptr );
+        this->ui->view->setItemDelegate( this->delegate );
+
 #ifdef PROXY_MODEL
         this->proxyModel->clearIconCache();
 #endif
@@ -217,7 +239,11 @@ void FolderView::changeDirectory() {
 #else
         this->ui->view->setRootIndex( this->model->index( dir.absolutePath()));
 #endif
+
+        // this has to be done to properly reset view
         this->delegate->clearCache();
+        this->ui->view->setItemDelegate( nullptr );
+        this->ui->view->setItemDelegate( this->delegate );
     }
 }
 
@@ -335,7 +361,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
     if ( event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease ||
          event->type() == QEvent::MouseMove || event->type() == QEvent::HoverMove ||
          event->type() == QEvent::Leave || event->type() == QEvent::Resize ||
-         event->type() == QEvent::Move ) {
+         event->type() == QEvent::Move || event->type() == QEvent::Enter ) {
 
         // get mouse event
         mouseEvent = static_cast<QMouseEvent*>( event );
@@ -403,6 +429,21 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
             if ( mouseEvent->button() == Qt::RightButton )
                 this->displayContextMenu( mouseEvent->pos());
 
+            break;
+
+        case QEvent::Enter:
+        {
+            // do winapi magic
+            DWORD curentThread, foregroundThread;
+
+            curentThread = GetCurrentThreadId();
+            foregroundThread = GetWindowThreadProcessId( GetForegroundWindow(), NULL );
+
+            // steal input thread form foreground
+            AttachThreadInput( foregroundThread, curentThread, TRUE );
+            SetForegroundWindow(( HWND )this->winId());
+            AttachThreadInput( foregroundThread, curentThread, FALSE );
+        }
             break;
 
         case QEvent::Leave:

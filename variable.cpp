@@ -20,3 +20,32 @@
 // includes
 //
 #include "variable.h"
+
+/**
+ * @brief Variable::connect
+ * @param key
+ * @param receiver
+ * @param method
+ */
+void Variable::bind( const QString &key, const QObject *receiver, const char *method ) {
+   QPair<QObject*, int> slot;
+   int code;
+
+    if ( key.isEmpty())
+        return;
+
+    // check if method is a slot
+    code = ((( int )( *method ) - '0' ) & 0x3 );
+    if ( code != 1 )
+        return;
+
+    // get method name
+    ++method;
+
+    // create an object/method pair
+    slot.first = const_cast<QObject*>( receiver );
+    slot.second = receiver->metaObject()->indexOfSlot( QMetaObject::normalizedSignature( qPrintable( method )));
+
+    // add pair to slotList
+    Variable::instance()->slotList[key] = slot;
+}

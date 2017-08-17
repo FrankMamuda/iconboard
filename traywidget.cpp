@@ -234,9 +234,7 @@ void TrayWidget::readXML() {
                 }
 
                 widget->setReadOnly( readOnly );
-
-                if ( !styleSheet.isEmpty())
-                    widget->setCustomStyleSheet( styleSheet );
+                widget->setCustomStyleSheet( styleSheet );
 
                 this->widgetList << widget;
             }
@@ -384,7 +382,7 @@ void TrayWidget::getWindowHandles() {
         return;
 
     // get first worker and shell
-    SendMessageTimeout( progman, 0x052C, 0, 0, SMTO_NORMAL, 3000, NULL);
+    SendMessageTimeout( progman, 0x052C, 0, 0, SMTO_NORMAL, 3000, NULL );
     while( shell == nullptr ) {
         worker = FindWindowEx( desktop, worker, L"WorkerW", 0 );
         if ( worker != nullptr )
@@ -424,6 +422,7 @@ void TrayWidget::on_actionAdd_triggered() {
     if ( dir.exists()) {
         this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this->worker, this );
         this->widgetList.last()->show();
+        this->widgetList.last()->setDefaultStyleSheet();
         this->ui->widgetList->reset();
     }
 }

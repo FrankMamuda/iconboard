@@ -52,7 +52,8 @@ HEADERS  += \
     stylesheetdialog.h \
     screenmapper.h \
     settings.h \
-    variable.h
+    variable.h \
+    application.h
 
 FORMS    += \
     folderview.ui \
