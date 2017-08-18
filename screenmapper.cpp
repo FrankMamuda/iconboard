@@ -67,6 +67,7 @@ void ScreenMapper::paintEvent( QPaintEvent *event ) {
             int index;
             QTextOption textOption;
             QFont font;
+            QPen pen;
 
             // fill screen rect
             screenPainter.fillRect( screen->geometry(), QColor::fromRgb( 0, 0, 0, alpha ));
@@ -83,6 +84,16 @@ void ScreenMapper::paintEvent( QPaintEvent *event ) {
             screenPainter.setFont( font );
             screenPainter.drawText( screen->geometry(), QString( "%1" ).arg( index ), textOption );
             qDebug() << screen->name();
+
+            // paint widget rect
+            screenPainter.fillRect( this->widgetRect, QBrush( QColor::fromRgb( 0, 0, 0, 128 ), Qt::SolidPattern ));
+            font.setPointSize( this->widgetRect.height() / 2 );
+            screenPainter.setFont( font );
+            pen = screenPainter.pen();
+            pen.setWidth( 4 );
+            screenPainter.setPen( pen );
+            screenPainter.drawRect( this->widgetRect );
+            screenPainter.drawText( this->widgetRect, "W", textOption );
         }
     }
 

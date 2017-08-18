@@ -118,6 +118,7 @@ void TrayWidget::trayIconActivated( QSystemTrayIcon::ActivationReason reason ) {
  */
 void TrayWidget::showContextMenu() {
     QMenu menu;
+    menu.addAction( this->tr( "Widget list" ), this, SLOT( show()));
     menu.addAction( this->tr( "Settings" ), this, SLOT( showSettingsDialog()));
     menu.addSeparator();
     menu.addAction( this->tr( "Exit" ), qApp, SLOT( quit()));
@@ -492,7 +493,21 @@ void TrayWidget::on_actionShow_triggered() {
  */
 void TrayWidget::on_actionMap_triggered() {
     ScreenMapper mapperDialog;
+
+    FolderView *widget;
+    int row;
+
+    row = this->ui->widgetList->currentIndex().row();
+    if ( row < 0 || row >= this->widgetList.count())
+        return;
+
+    // get widget ptr
+    widget = this->widgetList.at( row );
+
+    qDebug() << "set widget rect" << widget->geometry();
+    mapperDialog.setWidgetRect( widget->geometry());
     mapperDialog.exec();
+
 }
 
 /**

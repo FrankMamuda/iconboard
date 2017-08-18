@@ -40,10 +40,12 @@ class ScreenMapper : public QDialog {
 public:
     explicit ScreenMapper( QWidget *parent = 0 );
     ~ScreenMapper();
+    void setWidgetRect( const QRect &rect ) { this->widgetRect = rect; }
 
 protected:
     void paintEvent( QPaintEvent * );
 
 private:
     Ui::ScreenMapper *ui;
+    QRect widgetRect;
 };
