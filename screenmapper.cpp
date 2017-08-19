@@ -19,18 +19,28 @@
 //
 // includes
 //
-#include "screenmapper.h"
-#include "ui_screenmapper.h"
 #include <QApplication>
 #include <QScreen>
 #include <QDebug>
+#include "screenmapper.h"
+#include "ui_screenmapper.h"
 
 /**
  * @brief Widget::Widget
  * @param parent
  */
 ScreenMapper::ScreenMapper( QWidget *parent ) : QDialog( parent ), ui( new Ui::ScreenMapper ) {
+    int y;
+
     this->ui->setupUi( this );
+
+    // go each individual screen
+    for ( y = 0; y < QApplication::screens().count(); y++ ) {
+        QScreen *screen;
+
+        screen = QApplication::screens().at( y );
+        this->ui->comboScreens->addItem( QString( "%1: \"%2\"" ).arg( y + 1 ).arg( screen->name().remove( "\\" ).remove( "." )));
+    }
 }
 
 /**
@@ -39,71 +49,3 @@ ScreenMapper::ScreenMapper( QWidget *parent ) : QDialog( parent ), ui( new Ui::S
 ScreenMapper::~ScreenMapper() {
     delete this->ui;
 }
-
-/**
- * @brief Widget::paintEvent
- * @param event
- */
-void ScreenMapper::paintEvent( QPaintEvent *event ) {
-    QPainter painter( this );
-    QRect rect;
-
-    // get whole geometry
-    rect = QApplication::primaryScreen()->virtualGeometry();
-
-    // make a pixmap of screen geometries
-    QPixmap pixmap( rect.width(), rect.height());
-    pixmap.fill( Qt::transparent );
-    {
-        QPainter screenPainter( &pixmap );
-        int alpha = 64;
-
-        // translate
-        screenPainter.translate( -rect.topLeft());
-        screenPainter.fillRect( rect, QBrush( QColor::fromRgb( 0, 255, 0, 255 )));
-
-        // go each individual screen
-        foreach ( QScreen *screen, QApplication::screens()) {
-            int index;
-            QTextOption textOption;
-            QFont font;
-            QPen pen;
-
-            // fill screen rect
-            screenPainter.fillRect( screen->geometry(), QColor::fromRgb( 0, 0, 0, alpha ));
-            alpha += 64;
-
-            if ( alpha > 255 )
-                alpha = 64;
-
-            // paint screen index
-            index = QApplication::screens().indexOf( screen ) + 1;
-            textOption.setAlignment( Qt::AlignCenter );
-            screenPainter.setPen( QColor::fromRgb( 255, 255, 255, 255 ));
-            font.setPointSize( screen->geometry().height() / 2 );
-            screenPainter.setFont( font );
-            screenPainter.drawText( screen->geometry(), QString( "%1" ).arg( index ), textOption );
-            qDebug() << screen->name();
-
-            // paint widget rect
-            screenPainter.fillRect( this->widgetRect, QBrush( QColor::fromRgb( 0, 0, 0, 128 ), Qt::SolidPattern ));
-            font.setPointSize( this->widgetRect.height() / 2 );
-            screenPainter.setFont( font );
-            pen = screenPainter.pen();
-            pen.setWidth( 4 );
-            screenPainter.setPen( pen );
-            screenPainter.drawRect( this->widgetRect );
-            screenPainter.drawText( this->widgetRect, "W", textOption );
-        }
-    }
-
-    // resize and paint pixmap
-    pixmap = pixmap.scaled( this->size() * 2, Qt::KeepAspectRatio, Qt::FastTransformation ).scaled( this->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation );
-    painter.drawPixmap( 0, 0, pixmap.width(), pixmap.height(), pixmap );
-
-    //this->resize( pixmap.size());
-
-    // paint widget as is
-    QDialog::paintEvent( event );
-}
-

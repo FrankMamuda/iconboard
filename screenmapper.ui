@@ -7,14 +7,61 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>248</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Screen mapper</string>
   </property>
+  <layout class="QGridLayout" name="gridLayout" columnstretch="1,2,2">
+   <item row="0" column="1">
+    <widget class="QComboBox" name="comboMode">
+     <item>
+      <property name="text">
+       <string>Primary screen</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Only selected</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Selected priority</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Clone</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="labelMode">
+     <property name="text">
+      <string>Display mode:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QComboBox" name="comboScreens"/>
+   </item>
+   <item row="1" column="0" colspan="3">
+    <widget class="MapperWidget" name="mapperWidget" native="true"/>
+   </item>
+  </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>MapperWidget</class>
+   <extends>QWidget</extends>
+   <header>mapperwidget.h </header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

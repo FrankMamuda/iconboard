@@ -21,28 +21,24 @@
 //
 // includes
 //
-#include <QDialog>
-#include "mapperwidget.h"
+#include <QWidget>
+#include <QPainter>
 
-/**
- * @brief The Ui namespace
- */
-namespace Ui {
+//
+// classes
+//
 class ScreenMapper;
-}
 
 /**
- * @brief The Widget class
+ * @brief The MapperWidget class
  */
-class ScreenMapper : public QDialog {
+class MapperWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ScreenMapper( QWidget *parent = 0 );
-    ~ScreenMapper();
-    void setWidgetRect( const QRect &rect ) { this->widgetRect = rect; }
-    QRect widgetRect;
+    explicit MapperWidget( QWidget *parent = 0  );
+    ScreenMapper *screenMapper();
 
-private:
-    Ui::ScreenMapper *ui;
+protected:
+    void paintEvent( QPaintEvent * );
 };

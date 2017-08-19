@@ -35,7 +35,8 @@ SOURCES += main.cpp\
     stylesheetdialog.cpp \
     screenmapper.cpp \
     settings.cpp \
-    variable.cpp
+    variable.cpp \
+    mapperwidget.cpp
 
 HEADERS  += \
     folderview.h \
@@ -53,7 +54,8 @@ HEADERS  += \
     screenmapper.h \
     settings.h \
     variable.h \
-    application.h
+    application.h \
+    mapperwidget.h
 
 FORMS    += \
     folderview.ui \
