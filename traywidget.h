@@ -67,6 +67,7 @@ private slots:
     void on_actionShow_triggered();
     void on_actionMap_triggered();
     void on_buttonClose_clicked();
+    void reload();
 
 private:
     Ui::TrayWidget *ui;

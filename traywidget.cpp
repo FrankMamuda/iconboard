@@ -78,6 +78,9 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui(
     this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove" ));
     this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid" ));
     this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility" ));
+
+    // reload on changed virtual geometry
+    this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
 }
 
 /**
@@ -335,27 +338,6 @@ void TrayWidget::writeConfiguration() {
         stream.writeEndElement();
     }
 
-    /*
-    stream2.writeStartElement( "variable" );
-    stream2.writeAttribute( "name", "cvarSmth" );
-    stream2.writeEndElement();
-
-    CREATION:
-                            #name           #defaultValue
-    Variable::add( "ui_displaySymlinkIcon", true );
-
-    STORAGE:
-    <variable name="ui_displaySymlinkIcon" value="true">
-
-    ACCESS:
-    Variable::value( "ui_displaySymlinkIcon" ).toBool();
-      searches for variable:
-        not found - false
-        found - value
-
-    add flags in future such as archive, temporary, read only, etc.
-*/
-
     // end config element
     stream.writeEndElement();
 
@@ -515,4 +497,22 @@ void TrayWidget::on_actionMap_triggered() {
  */
 void TrayWidget::on_buttonClose_clicked() {
     this->hide();
+}
+
+/**
+ * @brief TrayWidget::reload basically reloads all widgets
+ */
+void TrayWidget::reload() {
+    // save existing configuration
+    this->writeConfiguration();
+
+    // close all widgets
+    foreach ( FolderView *widget, this->widgetList )
+        widget->close();
+
+    // clear widget list
+    this->widgetList.clear();
+
+    // reload configuration
+    this->readXML();
 }
