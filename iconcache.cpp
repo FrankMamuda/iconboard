@@ -22,7 +22,9 @@
 #include "iconcache.h"
 #include "indexcache.h"
 #include "variable.h"
-#ifdef Q_OS_WIN32
+
+#include <QPainter>
+#ifdef Q_OS_WIN
 #include <QtWin>
 #include <QDir>
 #include <commctrl.h>
@@ -116,7 +118,7 @@ QIcon IconCache::thumbnail( const QString &path, int scale, bool &ok ) {
  * @return
  */
 QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
-#ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN
     SHFILEINFO shellInfo;
     QPixmap pixmap;
     QImage image;
@@ -193,8 +195,12 @@ QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
 #ifndef Q_CC_MSVC
     }
 #endif
-    return QIcon();
+#else
+    Q_UNUSED( path )
+    Q_UNUSED( ok )
+    Q_UNUSED( jumbo )
 #endif
+    return QIcon();
 }
 
 /**

@@ -24,7 +24,9 @@
 #include <QWidget>
 #include <QFileSystemModel>
 #include <QMouseEvent>
+#ifdef Q_OS_WIN
 #include <windows.h>
+#endif
 #include "ui_folderview.h"
 
 //
@@ -80,7 +82,11 @@ class FolderView : public QWidget {
     Q_PROPERTY( QString customStyleSheet READ customStyleSheet WRITE setCustomStyleSheet )
 
 public:
+#ifdef Q_OS_WIN
     explicit FolderView( QWidget *parent, const QString &rootPath, HWND windowParent, TrayWidget *trayParent );
+#else
+    explicit FolderView( QWidget *parent, const QString &rootPath, TrayWidget *trayParent );
+#endif
     ~FolderView();
     QString title() const { if ( !this->customTitle().isNull()) return this->customTitle(); return this->ui->title->text(); }
     QString rootPath() const { return this->model->rootPath(); }
@@ -89,7 +95,9 @@ public:
     QString customStyleSheet() const { return this->m_customStyleSheet; }
     QListView::ViewMode viewMode() const { return this->ui->view->viewMode(); }
     int iconSize() const;
+#ifdef Q_OS_WIN
     static void openShellContextMenuForObject( const std::wstring &path, QPoint pos, HWND parentWindow );
+#endif
     bool isReadOnly() const;
 
     // grab areas for frameless resizing
@@ -131,7 +139,11 @@ protected:
 private slots:
     void changeDirectory();
     void renameView();
+#ifdef Q_OS_WIN
     void setupFrame( HWND windowParent );
+#else
+    void setupFrame();
+#endif
     void makeGrabAreas();
     void on_view_clicked( const QModelIndex &index );
     void editStylesheet();

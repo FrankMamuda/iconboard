@@ -30,7 +30,11 @@
  * @param parent
  */
 IconIndex::IconIndex( QObject *parent ) : QObject( parent ) {
+#ifdef Q_OS_WIN
     this->setPath( QDir::current().absolutePath() + "/" + "icons" );
+#else
+    this->setPath( "/usr/share/icons" );
+#endif
 }
 
 /**

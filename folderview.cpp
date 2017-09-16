@@ -19,7 +19,9 @@
 //
 // includes
 //
+#ifdef Q_OS_WIN
 #include <shlobj.h>
+#endif
 #include <QFileDialog>
 #include <QDebug>
 #include <QInputDialog>
@@ -44,7 +46,11 @@
  * @param parent
  * @param rootPath
  */
+#ifdef Q_OS_WIN
 FolderView::FolderView( QWidget *parent, const QString &rootPath, HWND windowParent, TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView )/*, proxyModel( new IconProxyModel())*/, model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ) {
+#else
+FolderView::FolderView( QWidget *parent, const QString &rootPath, TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView )/*, proxyModel( new IconProxyModel())*/, model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ) {
+#endif
     QDir dir( rootPath );
     QFile styleSheet;
 
@@ -89,7 +95,12 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath, HWND windowPar
     }
 
     // get window handles and set as child window
+#ifdef Q_OS_WIN
     this->setupFrame( windowParent );
+#else
+    this->setupFrame();
+    this->setWindowFlags( this->windowFlags() | Qt::WindowStaysOnBottomHint );
+#endif
 }
 
 /**
@@ -433,6 +444,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
         case QEvent::Enter:
         {
+#ifdef Q_OS_WIN
             // do winapi magic
             DWORD curentThread, foregroundThread;
 
@@ -443,6 +455,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
             AttachThreadInput( foregroundThread, curentThread, TRUE );
             SetForegroundWindow(( HWND )this->winId());
             AttachThreadInput( foregroundThread, curentThread, FALSE );
+#endif
         }
             break;
 
@@ -468,8 +481,9 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                 newPos = this->pos() - screenOffset + offset;
 
                 // use winapi to move the window (avoiding buggy Qt setGeometry)
+#ifdef Q_OS_WIN
                 MoveWindow(( HWND )this->winId(), newPos.x(), newPos.y(), this->width(), this->height(), true );
-
+#endif
                 // update last mouse position
                 this->mousePos = mouseEvent->globalPos();
 
@@ -537,7 +551,9 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                     updatedGeometry.setTop( this->geometry().y() - screenOffset.y());
 
                 // use winapi to resize the window (avoiding buggy Qt setGeometry)
+#ifdef Q_OS_WIN
                 MoveWindow(( HWND )this->winId(), updatedGeometry.x(), updatedGeometry.y(), updatedGeometry.width(), updatedGeometry.height(), true );
+#endif
 
                 // update last mouse position
                 this->mousePos = mouseEvent->globalPos();
@@ -566,7 +582,11 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 /**
  * @brief FolderView::setupFrame
  */
+#ifdef Q_OS_WIN
 void FolderView::setupFrame( HWND windowParent ) {
+#else
+void FolderView::setupFrame() {
+#endif
     // enable mouse tracking
     this->setMouseTracking( true );
 
@@ -574,7 +594,9 @@ void FolderView::setupFrame( HWND windowParent ) {
     this->installEventFilter( this );
 
     // make this a child window of desktop shell
+#ifdef Q_OS_WIN
     SetParent(( HWND )this->winId(), windowParent );
+#endif
 
     // set appropriate window flags
     this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint );
@@ -609,6 +631,7 @@ void FolderView::on_view_clicked( const QModelIndex &index ) {
  * @param parentWindow
  * @return
  */
+#ifdef Q_OS_WIN
 void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint pos, HWND parentWindow ) {
     ITEMIDLIST *itemIdList;
     IShellFolder *shellFolder;
@@ -653,6 +676,7 @@ void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint
     }
     DestroyMenu( popupMenu );
 }
+#endif
 
 /**
  * @brief FolderView::on_view_customContextMenuRequested
@@ -665,8 +689,10 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
     if ( !index.isValid())
         return;
 
+#ifdef Q_OS_WIN
     FolderView::openShellContextMenuForObject( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()).utf16()), QCursor::pos(), ( HWND )this->winId());
     this->ui->view->selectionModel()->clear();
+#endif
 }
 
 /**

@@ -66,8 +66,6 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui(
     // set up desktop widget
     this->getWindowHandles();
     this->wallpaper = desktop->grab();
-    //SetParent(( HWND )this->desktop->winId(), this->worker );
-    //this->readXML();
 
     // connect tray icon
     this->connect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )), this, SLOT( trayIconActivated( QSystemTrayIcon::ActivationReason )));
@@ -185,7 +183,11 @@ void TrayWidget::readXML() {
                 QRect widgetGeometry;
 
                 childNode = element.firstChild();
+#ifdef Q_OS_WIN
                 widget = new FolderView( this->desktop, element.attribute( "rootPath" ), this->worker, this );
+#else
+                widget = new FolderView( this->desktop, element.attribute( "rootPath" ), this );
+#endif
                 widgetGeometry = widget->geometry();
 
                 styleSheet = element.attribute( "stylesheet" );
@@ -234,7 +236,9 @@ void TrayWidget::readXML() {
                     widgetGeometry.translate( -screenOffset );
 
                     // use winapi to resize the window (avoiding buggy Qt setGeometry)
+#ifdef Q_OS_WIN
                     MoveWindow(( HWND )widget->winId(), widgetGeometry.x(), widgetGeometry.y(), widgetGeometry.width(), widgetGeometry.height(), true );
+#endif
                 }
 
                 widget->setReadOnly( readOnly );
@@ -352,6 +356,7 @@ void TrayWidget::writeConfiguration() {
  * @brief FolderView::getWindowHandles
  */
 void TrayWidget::getWindowHandles() {
+#ifdef Q_OS_WIN
     HWND desktop, progman, shell = nullptr, worker = nullptr;
 
     // get desktop window
@@ -376,6 +381,7 @@ void TrayWidget::getWindowHandles() {
 
     // store worker handle
     this->worker = worker;
+#endif
 }
 
 /**
@@ -403,7 +409,11 @@ void TrayWidget::on_actionAdd_triggered() {
 
     dir.setPath( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
     if ( dir.exists()) {
+#ifdef Q_OS_WIN
         this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this->worker, this );
+#else
+        this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this );
+#endif
         this->widgetList.last()->show();
         this->widgetList.last()->setDefaultStyleSheet();
         this->ui->widgetList->reset();

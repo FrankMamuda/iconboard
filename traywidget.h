@@ -24,7 +24,9 @@
 #include <QMainWindow>
 #include <QSystemTrayIcon>
 #include <QDesktopWidget>
+#ifdef Q_OS_WIN
 #include <windows.h>
+#endif
 
 //
 // classes
@@ -74,5 +76,7 @@ private:
     QSystemTrayIcon *tray;
     WidgetModel *model;
     QDesktopWidget *desktop;
+#ifdef Q_OS_WIN
     HWND worker;
+#endif
 };
