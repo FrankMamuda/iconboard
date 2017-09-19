@@ -21,25 +21,32 @@
 //
 // includes
 //
-#include <QIcon>
 #include "singleton.h"
 
 /**
- * @brief The IconCache class
+ * @brief The XMLFiles namespace
  */
-class IconCache : public QObject {
+namespace XMLFiles {
+const static QString Variables( "configuration.xml" );
+const static QString Widgets( "widgets.xml" );
+}
+
+/**
+ * @brief The XMLTools class
+ */
+class XMLTools : public QObject {
     Q_OBJECT
+    Q_ENUMS( Modes )
 
 public:
-    IconCache( QObject *parent = 0 );
-    static IconCache *createInstance() { return new IconCache(); }
-    static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
-    QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
-    QIcon thumbnail( const QString &path, int scale, bool &ok );
-    QIcon extractIcon( const QString &path, bool &ok, bool jumbo = false );
-    QIcon addSymlinkLabel( const QIcon &icon, int originalSize, const QString theme = QString::null );
-    QIcon iconForFilename( const QString &fileName, int iconSize );
-
-private:
-    QHash<QString, QIcon> cache;
+    XMLTools( QObject *parent = 0 );
+    static XMLTools *createInstance() { return new XMLTools(); }
+    static XMLTools *instance() { return Singleton<XMLTools>::instance( XMLTools::createInstance ); }
+    enum Modes {
+        NoMode = -1,
+        Variables,
+        Widgets
+    };
+    void writeConfiguration( Modes mode, QObject *object = nullptr );
+    void readConfiguration( Modes mode, QObject *object = nullptr );
 };

@@ -1,14 +1,16 @@
-QListView {
-    background-color: rgba( 0, 0, 0, 160 );
-    color: white;
-    font-size: 9pt;
-}
-
 QLabel#title {
-    background-color: rgba( 0, 0, 0, 200 );
+    background-color: rgba( 48, 48, 48, 200 );
     color: white;
     padding: 4px;
     font-weight: bold;
+}
+
+QListView {
+    background-color: rgba( 32, 32, 32, 160 );
+    color: white;
+    font-size: 9pt;
+    outline: none;
+    border: 0px;
 }
 
 QScrollBar:vertical {

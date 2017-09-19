@@ -19,9 +19,6 @@
 //
 // includes
 //
-#ifdef Q_OS_WIN
-#include <shlobj.h>
-#endif
 #include <QFileDialog>
 #include <QDebug>
 #include <QInputDialog>
@@ -35,6 +32,9 @@
 #include "traywidget.h"
 #include "iconproxymodel.h"
 #include "stylesheetdialog.h"
+#ifdef Q_OS_WIN
+#include <shlobj.h>
+#endif
 
 //
 // defines
@@ -67,7 +67,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath, TrayWidget *tr
     this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( rootPath )));
 #else
     this->ui->view->setModel( this->model );
-    this->ui->view->setRootIndex( /*this->proxyModel->mapFromSource( */this->model->setRootPath( rootPath/* )*/));
+    this->ui->view->setRootIndex( this->model->setRootPath( rootPath )));
 #endif
     this->ui->view->setDragDropMode( QAbstractItemView::NoDragDrop );
     this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );

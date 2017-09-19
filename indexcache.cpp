@@ -65,7 +65,7 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ) 
             this->indexFile << IndexCacheNamespace::Version;
     }
 
-    // reead data
+    // read data
     if ( !this->read()) {
         qDebug() << this->tr( "IndexCache: failed to read cache" );
         this->shutdown();
@@ -131,7 +131,7 @@ bool IndexCache::write( const QString &iconName, int iconScale, const QString &t
         return false;
 
     // ignore placeholder icons
-    if ( !QString::compare( "application-x-zerosize", iconName ))
+    if ( !QString::compare( "application-x-zerosize", iconName ) || fileName.isEmpty())
         return false;
 
     // check hash

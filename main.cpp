@@ -27,6 +27,7 @@
 #include "variable.h"
 #include "iconproxymodel.h"
 #include "application.h"
+#include "xmltools.h"
 
 /*
  * TODO list:
@@ -48,6 +49,7 @@
  *  [DONE] focusless scrolling (mouseOver scrolling)
  *  [DONE] single instance
  *  [DONE] fixed custom stylesheet font issues
+ *  [DONE] remove QListView border
  *  [DONE?] weird QPersistentIndex corruption bugfix
  *  [DONE?] start-on-boot option
  *  lock to specific resolution
@@ -60,7 +62,6 @@
  *  custom sorting
  *  custom alignment
  *  custom hilight/selection color
- *  dir itertor batched loading
  *  free placement, free scaling
  *  whole desktop replacement option
  *  multi column list
@@ -70,6 +71,9 @@
  *  caching of extracted icons and thumbnails
  *  drive names (from shortcuts)
  *  predefined styles
+ *  fix tray context menu for linux
+ *  'about' dialog
+ *  extract icons from links themselves not their targets
  */
 
 /**
@@ -79,6 +83,7 @@
  * @return
  */
 int main( int argc, char *argv[] ) {
+    QString themeName;
     Application app( argc, argv );
 
     // create an instance of app
@@ -90,22 +95,30 @@ int main( int argc, char *argv[] ) {
     qRegisterMetaType<Match>( "Match" );
     qRegisterMetaType<MatchList>( "MatchList" );
 
-    // setup icons
-    IconIndex::instance()->build( "breeze" );
-    IconIndex::instance()->build( "breeze-dark" );
-
-    // request a trivial icon early to avoid QObject::moveToThread bug
-    IconProxyModel::iconForFilename( QDir::currentPath(), 0 );
-
-    // display tray widget
-    TrayWidget trayWidget;
-
     // add default variables
     Variable::instance()->add( "ui_displaySymlinkIcon", true );
     Variable::instance()->add( "app_runOnStartup", false );
+    Variable::instance()->add( "ui_iconTheme", "system" );
+    XMLTools::instance()->readConfiguration( XMLTools::Variables );
 
-    // read config
-    trayWidget.readXML();
+    // request a trivial icon early to avoid QObject::moveToThread bug
+    IconCache::instance()->iconForFilename( QDir::currentPath(), 0 );
+
+    // setup icons
+    themeName = Variable::instance()->string( "ui_iconTheme" );
+    qDebug() << themeName;
+    if ( !themeName.isEmpty() && QString::compare( "system", themeName )) {
+        QFile file( IconIndex::instance()->path() + "/" + themeName + "/" + "index.theme" );
+        if ( file.exists()) {
+            IconIndex::instance()->build( themeName );
+            IconIndex::instance()->setDefaultTheme( themeName );
+            qDebug() << IconIndex::instance()->defaultTheme();
+        }
+    }
+
+    // display tray widget
+    TrayWidget trayWidget;
+    Q_UNUSED( trayWidget )
 
     return app.exec();
 }

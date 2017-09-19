@@ -19,18 +19,11 @@
 //
 // includes
 //
-#include <QMenu>
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QDataStream>
-#include <QTextStream>
-#include <QDomDocument>
 #include <QDir>
 #include <QScreen>
 #include <QDebug>
-#include <QTextDocument>
-#include <QXmlStreamWriter>
-#include <QBuffer>
 #include "traywidget.h"
 #include "ui_traywidget.h"
 #include "widgetmodel.h"
@@ -39,23 +32,17 @@
 #include "settings.h"
 #include "iconcache.h"
 #include "screenmapper.h"
+#include "xmltools.h"
+#include "iconindex.h"
+#include "about.h"
 
 /**
  * @brief TrayWidget::TrayWidget
  * @param parent
  */
-TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), desktop( new QDesktopWidget()) {
+TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), desktop( new QDesktopWidget()), menu( new QMenu( this )) {
     // init ui
     this->ui->setupUi( this );
-
-    // set up icon cache
-#ifdef Q_OS_WIN
-    QDir iconDir( QDir::currentPath() + "/icons" );
-#else
-    QDir iconDir( "/usr/share/icons" );
-#endif
-    QIcon::setThemeSearchPaths( QStringList( iconDir.absolutePath()));
-    QIcon::setThemeName( Ui::lightIconTheme );
 
     // show tray icon
     this->tray->show();
@@ -79,6 +66,20 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui(
 
     // reload on changed virtual geometry
     this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
+
+    // setup context menu
+    this->menu->addAction( this->tr( "Widget list" ), this, SLOT( show()));
+    this->menu->addAction( this->tr( "Settings" ), this, SLOT( showSettingsDialog()));
+    this->menu->addSeparator();
+    this->menu->addAction( this->tr( "About" ), this, SLOT( showAboutDialog()));
+    this->menu->addAction( this->tr( "Exit" ), qApp, SLOT( quit()));
+    this->tray->setContextMenu( this->menu );
+
+    // read configuration
+    this->readConfiguration();
+
+    // bind iconTheme variable, to index new themes
+    Variable::instance()->bind( "ui_iconTheme", this, SLOT( iconThemeChanged( QVariant )));
 }
 
 /**
@@ -89,6 +90,7 @@ TrayWidget::~TrayWidget() {
     //delete this->cache;
     delete this->desktop;
     delete this->model;
+    delete this->menu;
     delete this->tray;
     delete this->ui;
 }
@@ -106,250 +108,12 @@ void TrayWidget::trayIconActivated( QSystemTrayIcon::ActivationReason reason ) {
         break;
 
     case QSystemTrayIcon::Context:
-        this->showContextMenu();
+        this->tray->contextMenu()->exec( QCursor::pos());
         break;
 
     default:
         break;
     }
-}
-
-/**
- * @brief TrayWidget::showContextMenu
- */
-void TrayWidget::showContextMenu() {
-    QMenu menu;
-    menu.addAction( this->tr( "Widget list" ), this, SLOT( show()));
-    menu.addAction( this->tr( "Settings" ), this, SLOT( showSettingsDialog()));
-    menu.addSeparator();
-    menu.addAction( this->tr( "Exit" ), qApp, SLOT( quit()));
-    menu.exec( QCursor::pos());
-}
-
-/**
- * @brief TrayWidget::readXML
- */
-void TrayWidget::readXML() {
-    QString path;
-    QDomDocument document;
-    QDomNode node, childNode;
-    QDomElement element, childElement;
-
-#ifdef QT_DEBUG
-    path = QDir::homePath() + "/.iconBoardDebug/configuration.xml";
-#else
-    path = QDir::homePath() + "/.iconBoard/configuration.xml";
-#endif
-
-    // load xml file
-    QFile xmlFile( path );
-
-    if ( !xmlFile.exists() || !xmlFile.open( QFile::ReadOnly | QFile::Text )) {
-        qDebug() << this->tr( "TrayWidget::readXML: no configuration file found" );
-        return;
-    }
-
-    document.setContent( &xmlFile );
-    node = document.documentElement().firstChild();
-
-    while ( !node.isNull()) {
-        element = node.toElement();
-
-        if ( !element.isNull()) {
-            if ( !QString::compare( element.tagName(), "variable" )) {
-                QString key;
-                QVariant value;
-
-                childNode = element.firstChild();
-                key = element.attribute( "key" );
-
-                if ( element.hasAttribute( "binary" )) {
-                    QByteArray array;
-                    array = QByteArray::fromBase64( element.attribute( "binary" ).toUtf8().constData());
-                    QBuffer buffer( &array );
-                    buffer.open( QIODevice::ReadOnly );
-                    QDataStream in( &buffer );
-                    in >> value;
-                } else
-                    value = element.attribute( "value" );
-
-                if ( Variable::instance()->contains( key ))
-                    Variable::instance()->setValue( key, value, true );
-            } else if ( !QString::compare( element.tagName(), "widget" )) {
-                FolderView *widget;
-                QString text, styleSheet;
-                bool isVisible = true;
-                bool readOnly = true;
-                QRect widgetGeometry;
-
-                childNode = element.firstChild();
-#ifdef Q_OS_WIN
-                widget = new FolderView( this->desktop, element.attribute( "rootPath" ), this->worker, this );
-#else
-                widget = new FolderView( this->desktop, element.attribute( "rootPath" ), this );
-#endif
-                widgetGeometry = widget->geometry();
-
-                styleSheet = element.attribute( "stylesheet" );
-
-                while ( !childNode.isNull()) {
-                    childElement = childNode.toElement();
-                    text = childElement.text();
-
-                    if ( !childElement.isNull()) {
-                        if ( !QString::compare( childElement.tagName(), "geometry" )) {
-                            widgetGeometry = QRect(
-                                        childElement.attribute( "x" ).toInt(),
-                                        childElement.attribute( "y" ).toInt(),
-                                        childElement.attribute( "width" ).toInt(),
-                                        childElement.attribute( "height" ).toInt());
-                        } else if ( !QString::compare( childElement.tagName(), "title" )) {
-                            widget->setCustomTitle( text );
-                        } else if ( !QString::compare( childElement.tagName(), "visible" )) {
-                            isVisible = static_cast<bool>( text.toInt());
-                        } else if ( !QString::compare( childElement.tagName(), "viewMode" )) {
-                            widget->setViewMode( static_cast<QListView::ViewMode>( text.toInt()));
-                        } else if ( !QString::compare( childElement.tagName(), "readOnly" ))
-                            readOnly = static_cast<bool>( text.toInt());
-                        else if ( !QString::compare( childElement.tagName(), "iconSize" ))
-                            widget->setIconSize( text.toInt());
-                    }
-
-                    childNode = childNode.nextSibling();
-                }
-
-                if ( isVisible )
-                    widget->show();
-
-                {
-                    QPoint screenOffset;
-
-                    //
-                    // NOTE: code refactored for use in mutiple monitor systems
-                    //       this still makes Qt complain about invalid geometry, but that does not matter at all
-                    //
-
-                    // get screen offset
-                    screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
-
-                    // offset geometry and mouse position
-                    widgetGeometry.translate( -screenOffset );
-
-                    // use winapi to resize the window (avoiding buggy Qt setGeometry)
-#ifdef Q_OS_WIN
-                    MoveWindow(( HWND )widget->winId(), widgetGeometry.x(), widgetGeometry.y(), widgetGeometry.width(), widgetGeometry.height(), true );
-#endif
-                }
-
-                widget->setReadOnly( readOnly );
-                widget->setCustomStyleSheet( styleSheet );
-
-                this->widgetList << widget;
-            }
-        }
-        node = node.nextSibling();
-    }
-
-    this->ui->widgetList->reset();
-    document.clear();
-    xmlFile.close();
-}
-
-/**
- * @brief TrayWidget::writeConfiguration
- */
-void TrayWidget::writeConfiguration() {
-    QString path;
-#ifdef QT_DEBUG
-    QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
-#else
-    QDir configDir( QDir::homePath() + "/.iconBoard/" );
-#endif
-
-    if ( !configDir.exists())
-        configDir.mkpath( configDir.absolutePath());
-
-    path = configDir.absolutePath() + "/configuration.xml";
-
-    // load xml file
-    QFile xmlFile( path );
-    if ( !xmlFile.open( QFile::WriteOnly | QFile::Text | QFile::Truncate )) {
-        qDebug() << "TrayWidget::writeConfiguration: error - could not open configuration file" << path;
-        return;
-    }
-
-    QXmlStreamWriter stream( &xmlFile );
-    stream.setAutoFormatting(true);
-    stream.writeStartDocument();
-    stream.writeStartElement( "configuration" );
-    stream.writeAttribute( "version", "2" );
-
-    // write out variables
-    foreach ( VariableEntry var, Variable::instance()->list ) {
-        stream.writeEmptyElement( "variable" );
-        stream.writeAttribute( "key", var.key());
-
-        if ( !var.value().canConvert<QString>()) {
-            QByteArray array;
-            QBuffer buffer(&array);
-
-            buffer.open( QIODevice::WriteOnly );
-            QDataStream out( &buffer );
-
-            out << var.value();
-            buffer.close();
-
-            stream.writeAttribute( "binary", QString( array.toBase64()));
-        } else {
-            stream.writeAttribute( "value", var.value().toString());
-        }
-    }
-
-    // write out widgets
-    foreach ( FolderView *widget, this->widgetList ) {
-        stream.writeStartElement( "widget" );
-        stream.writeAttribute( "rootPath", widget->rootPath());
-
-        // stylesheet (for better readability store as attribute)
-        stream.writeAttribute( "stylesheet", widget->customStyleSheet().replace( "\r", "" ));
-
-        // geometry
-        stream.writeEmptyElement( "geometry" );
-        stream.writeAttribute( "x", QString::number( widget->pos().x()));
-        stream.writeAttribute( "y", QString::number( widget->pos().y()));
-        stream.writeAttribute( "width", QString::number( widget->width()));
-        stream.writeAttribute( "height", QString::number( widget->height()));
-
-        // title
-        if ( !widget->customTitle().isEmpty())
-            stream.writeTextElement( "title", widget->customTitle());
-
-        // visibility
-        if ( !widget->isVisible())
-            stream.writeTextElement( "visible", QString::number( 0 ));
-
-        // viewMode
-        stream.writeTextElement( "viewMode", QString::number( static_cast<int>( widget->viewMode())));
-
-        // access mode
-        if ( !widget->isReadOnly())
-            stream.writeTextElement( "readOnly", QString::number( 0 ));
-
-        // icon size
-        stream.writeTextElement( "iconSize", QString::number( widget->iconSize()));
-
-        // end widget element
-        stream.writeEndElement();
-    }
-
-    // end config element
-    stream.writeEndElement();
-
-    // end document
-    stream.writeEndDocument();
-
-    // close file
-    xmlFile.close();
 }
 
 /**
@@ -391,14 +155,21 @@ void TrayWidget::getWindowHandles() {
 void TrayWidget::on_widgetList_doubleClicked( const QModelIndex & ) {
     this->on_actionShow_triggered();
 }
+
 /**
  * @brief TrayWidget::showSettingsDialog
  */
 void TrayWidget::showSettingsDialog() {
     Settings settingsDialog;
-
     settingsDialog.exec();
-   // settingsDialog->show();
+}
+
+/**
+ * @brief TrayWidget::showAboutDialog
+ */
+void TrayWidget::showAboutDialog() {
+    About aboutDialog;
+    aboutDialog.exec();
 }
 
 /**
@@ -410,9 +181,9 @@ void TrayWidget::on_actionAdd_triggered() {
     dir.setPath( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
     if ( dir.exists()) {
 #ifdef Q_OS_WIN
-        this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this->worker, this );
+        this->widgetList << new FolderView( nullptr, dir.absolutePath(), this->worker, this );
 #else
-        this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this );
+        this->widgetList << new FolderView( nullptr, dir.absolutePath(), this );
 #endif
         this->widgetList.last()->show();
         this->widgetList.last()->setDefaultStyleSheet();
@@ -513,7 +284,10 @@ void TrayWidget::on_buttonClose_clicked() {
  * @brief TrayWidget::reload basically reloads all widgets
  */
 void TrayWidget::reload() {
-    // save existing configuration
+    // announce
+    qDebug() << "TrayWidget::reload: reloading configuration";
+
+    // save existing widget list
     this->writeConfiguration();
 
     // close all widgets
@@ -523,6 +297,40 @@ void TrayWidget::reload() {
     // clear widget list
     this->widgetList.clear();
 
-    // reload configuration
-    this->readXML();
+    // reload widget list
+    this->readConfiguration();
+}
+
+/**
+ * @brief TrayWidget::iconThemeChanged
+ * @param value
+ */
+void TrayWidget::iconThemeChanged(QVariant value) {
+    QString themeName;
+
+    themeName = value.toString();
+    if ( themeName.isEmpty())
+        return;
+
+    if ( QString::compare( themeName, IconIndex::instance()->defaultTheme()) || QString::compare( themeName, "system" )) {
+        IconIndex::instance()->build( themeName );
+        IconIndex::instance()->setDefaultTheme( themeName );
+        this->reload();
+    }
+}
+
+/**
+ * @brief TrayWidget::readConfiguration
+ */
+void TrayWidget::readConfiguration() {
+    XMLTools::instance()->readConfiguration( XMLTools::Widgets, this );
+    this->ui->widgetList->reset();
+}
+
+/**
+ * @brief TrayWidget::writeConfiguration
+ */
+void TrayWidget::writeConfiguration() {
+    XMLTools::instance()->writeConfiguration( XMLTools::Widgets, this );
+    XMLTools::instance()->writeConfiguration( XMLTools::Variables );
 }

@@ -39,7 +39,6 @@ public:
     explicit IconProxyModel( QObject *parent = nullptr );
     ~IconProxyModel();
     QVariant data( const QModelIndex &index, int role = Qt::DisplayRole ) const;
-    static QIcon iconForFilename( const QString &fileName ,int iconSize );
     void clearIconCache() { this->iconTable.clear(); }
 
 signals:

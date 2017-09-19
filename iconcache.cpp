@@ -20,6 +20,7 @@
 // includes
 //
 #include "iconcache.h"
+#include "iconindex.h"
 #include "indexcache.h"
 #include "variable.h"
 
@@ -32,6 +33,7 @@
 #include <shellapi.h>
 #include <Winuser.h>
 #include <QPainter>
+#include <QMimeDatabase>
 #endif
 
 /**
@@ -51,6 +53,10 @@ IconCache::IconCache( QObject *parent ) : QObject( parent ) {
 QIcon IconCache::icon( const QString &iconName, int scale, const QString theme ) {
     QIcon icon;
     QString alias;
+
+    // return empty icon on invalid themes
+    if ( !QString::compare( theme, "system" ) || theme.isEmpty())
+        return QIcon();
 
     // make unique icons for different sizes
     alias = QString( "%1_%2_%3" ).arg( iconName ).arg( theme ).arg( scale );
@@ -245,4 +251,42 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize, const QSt
 
     // return overlay icon
     return QIcon( result );
+}
+
+/**
+ * @brief IconCache::iconForFilename
+ * @return
+ */
+QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
+    QMimeDatabase db;
+    QString iconName;
+    QIcon icon;
+    QFileInfo info( fileName );
+    bool ok;
+    QString filePath( fileName );
+
+    if ( info.isSymLink())
+        filePath = info.symLinkTarget();
+
+    // get mimetype by matching content
+    iconName = db.mimeTypeForFile( filePath, QMimeDatabase::MatchContent ).iconName();
+
+    // extract icons only from executables
+    if ( iconName.contains( "x-ms-dos-executable" )) {
+        // extract jumbo first
+        icon = IconCache::instance()->extractIcon( filePath, ok, true );
+        if ( !ok )
+            icon = IconCache::instance()->extractIcon( filePath, ok );
+    } else if ( iconName.startsWith( "image-" )) {
+        bool ok;
+        icon = IconCache::instance()->thumbnail( filePath, iconSize, ok );
+    }
+
+    if ( icon.isNull())
+        icon = IconCache::instance()->icon( iconName, iconSize, IconIndex::instance()->defaultTheme());
+
+    if ( info.isSymLink())
+        icon = IconCache::instance()->addSymlinkLabel( icon, iconSize );
+
+    return icon;
 }

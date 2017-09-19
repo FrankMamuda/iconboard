@@ -22,24 +22,40 @@
 #include <QDebug>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QComboBox>
 #include <QSettings>
 #include "settings.h"
 #include "ui_settings.h"
+#include "iconindex.h"
 
 /**
  * @brief Settings::Settings
  * @param parent
  */
 Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings ), signalMapper( new QSignalMapper( this )) {
+    QDir dir( IconIndex::instance()->path());
+
+    // set up ui
     this->ui->setupUi( this );
 
     // connect for updates
     this->connect( Variable::instance(), SIGNAL( valueChanged( QString )), this, SLOT( externalValueChanged( QString )));
     this->connect( this->signalMapper, SIGNAL( mapped( QString )), this, SLOT( internalValueChanged( QString )));
 
+    // find all icon dirs
+    this->ui->iconTheme->addItem( this->tr( "System default" ), "system" );
+    foreach ( const QString &path, dir.entryList( QDir::AllDirs | QDir::NoDotAndDotDot )) {
+        QFile file( IconIndex::instance()->path() + "/" + path + "/" + "index.theme" );
+        if ( !file.exists())
+            continue;
+
+        this->ui->iconTheme->addItem( path, path );
+    }
+
     // first bind vars and set initial values
     this->bind( "ui_displaySymlinkIcon", this->ui->displaySymlinkIcon );
     this->bind( "app_runOnStartup", this->ui->runOnStartup );
+    this->bind( "ui_iconTheme", this->ui->iconTheme );
 
     // bind runOnStarup variable, to write out settings value
     Variable::instance()->bind( "app_runOnStartup", this, SLOT( runOnStartupValueChanged( QVariant )));
@@ -83,6 +99,15 @@ void Settings::bind( const QString &key, QWidget *widget ) {
             this->connect( spinBox, SIGNAL( valueChanged( int )), this->signalMapper, SLOT( map()));
             signalMapper->setMapping( spinBox, key );
         }
+    } else if ( !QString::compare( widget->metaObject()->className(), "QComboBox" )) {
+        QComboBox *comboBox;
+        comboBox = qobject_cast<QComboBox*>( widget );
+
+        // connect for further updates
+        if ( comboBox != nullptr ) {
+            this->connect( comboBox, SIGNAL( currentIndexChanged( int )), this->signalMapper, SLOT( map()));
+            signalMapper->setMapping( comboBox, key );
+        }
     } else {
         qDebug() << "Settings::bind: unsupported container" << widget->metaObject()->className();
     }
@@ -125,6 +150,28 @@ void Settings::setValue( const QString &key, bool internal ) {
             else
                 spinBox->setValue( Variable::instance()->integer( key ));
         }
+    } else if ( !QString::compare( widget->metaObject()->className(), "QComboBox" )) {
+        QComboBox *comboBox;
+
+        comboBox = qobject_cast<QComboBox*>( widget );
+
+        if ( comboBox != nullptr ) {
+            if ( comboBox->currentIndex() != -1 ) {
+                if ( internal )
+                    Variable::instance()->setValue( key, comboBox->currentData(), true );
+                else {
+                    int y;
+                    for ( y = 0; y < comboBox->count(); y++ ) {
+                        if ( comboBox->itemData( y ) == Variable::instance()->value<QVariant>( key )) {
+                            comboBox->setCurrentIndex( y );
+                            break;
+                        }
+                    }
+                }
+            } else {
+                qDebug() << "Settings::setValue: empty comboBox for variable" << key;
+            }
+        }
     } else {
         qDebug() << "Settings::setValue: unsupported container" << widget->metaObject()->className();
     }
@@ -160,3 +207,4 @@ void Settings::runOnStartupValueChanged( QVariant value ) {
         settings.remove( "IconBoardApp" );
 #endif
 }
+

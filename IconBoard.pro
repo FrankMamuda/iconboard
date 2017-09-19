@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     screenmapper.cpp \
     settings.cpp \
     variable.cpp \
-    mapperwidget.cpp
+    mapperwidget.cpp \
+    xmltools.cpp
 
 HEADERS  += \
     folderview.h \
@@ -55,14 +56,17 @@ HEADERS  += \
     settings.h \
     variable.h \
     application.h \
-    mapperwidget.h
+    mapperwidget.h \
+    xmltools.h \
+    about.h
 
 FORMS    += \
     folderview.ui \
     traywidget.ui \
     stylesheetdialog.ui \
     screenmapper.ui \
-    settings.ui
+    settings.ui \
+    about.ui
 
 RESOURCES += \
     resources.qrc

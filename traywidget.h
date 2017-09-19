@@ -24,6 +24,7 @@
 #include <QMainWindow>
 #include <QSystemTrayIcon>
 #include <QDesktopWidget>
+#include <QMenu>
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
@@ -40,8 +41,6 @@ class IconCache;
  */
 namespace Ui {
 class TrayWidget;
-static const QString lightIconTheme = "breeze";
-static const QString darkIconTheme = "breeze-dark";
 }
 
 /**
@@ -55,11 +54,13 @@ public:
     ~TrayWidget();
     QList<FolderView*> widgetList;
     QPixmap wallpaper;
-    void readXML();
+#ifdef Q_OS_WIN
+    HWND worker;
+#endif
 
 private slots:
     void trayIconActivated( QSystemTrayIcon::ActivationReason reason );
-    void showContextMenu();
+    void readConfiguration();
     void writeConfiguration();
     void getWindowHandles();
     void on_widgetList_doubleClicked( const QModelIndex &index );
@@ -70,13 +71,13 @@ private slots:
     void on_actionMap_triggered();
     void on_buttonClose_clicked();
     void reload();
+    void iconThemeChanged( QVariant value );
+    void showAboutDialog();
 
 private:
     Ui::TrayWidget *ui;
     QSystemTrayIcon *tray;
     WidgetModel *model;
     QDesktopWidget *desktop;
-#ifdef Q_OS_WIN
-    HWND worker;
-#endif
+    QMenu *menu;
 };

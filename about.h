@@ -21,25 +21,31 @@
 //
 // includes
 //
-#include <QIcon>
-#include "singleton.h"
+#include <QApplication>
+#include <QDialog>
+#include "ui_about.h"
+
+//
+// namespaces
+//
+namespace Ui {
+class About;
+}
 
 /**
- * @brief The IconCache class
+ * @brief The About class
  */
-class IconCache : public QObject {
+class About : public QDialog {
     Q_OBJECT
+    Q_CLASSINFO( "description", "About dialog" )
 
 public:
-    IconCache( QObject *parent = 0 );
-    static IconCache *createInstance() { return new IconCache(); }
-    static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
-    QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
-    QIcon thumbnail( const QString &path, int scale, bool &ok );
-    QIcon extractIcon( const QString &path, bool &ok, bool jumbo = false );
-    QIcon addSymlinkLabel( const QIcon &icon, int originalSize, const QString theme = QString::null );
-    QIcon iconForFilename( const QString &fileName, int iconSize );
+    explicit About( QWidget *parent = nullptr ) : QDialog( parent ), ui( new Ui::About ) { this->ui->setupUi( this ); }
+    ~About() { delete this->ui; }
 
 private:
-    QHash<QString, QIcon> cache;
+    Ui::About *ui;
+
+private slots:
+    void on_aboutQt_clicked() { QApplication::aboutQt(); }
 };

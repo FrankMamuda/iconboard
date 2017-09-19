@@ -31,7 +31,7 @@
  */
 IconIndex::IconIndex( QObject *parent ) : QObject( parent ) {
 #ifdef Q_OS_WIN
-    this->setPath( QDir::current().absolutePath() + "/" + "icons" );
+    this->setPath( QDir::currentPath() + "/" + "icons" );
 #else
     this->setPath( "/usr/share/icons" );
 #endif
@@ -56,6 +56,12 @@ bool IconIndex::build( const QString &theme ) {
     // reject empty theme names
     if ( theme.isEmpty()) {
         qDebug() << this->tr( "IconIndex::build: empty theme name provided" );
+        return false;
+    }
+
+    // reject system theme
+    if ( !QString::compare( theme, "system" )) {
+        qDebug() << this->tr( "IconIndex::build: system theme is not to be built" );
         return false;
     }
 
@@ -106,22 +112,11 @@ bool IconIndex::build( const QString &theme ) {
  */
 QSet<QString> IconIndex::iconIndex( const QString &iconName, const QString &theme ) const {
     QSet<QString> paths;
-    QString themeName;
-
-    // return empty set if default theme has not been set (index not built)
-    if ( this->defaultTheme().isEmpty()) {
-        qDebug() << this->tr( "IconIndex::iconIndex: default theme unavailable" );
-        return paths;
-    }
-
-    // revert to default if no theme specified
-    if ( theme.isEmpty())
-        themeName = this->defaultTheme();
 
     // generate icon paths
-    foreach ( const QString &directory, this->index[themeName] ) {
+    foreach ( const QString &directory, this->index[theme] ) {
         foreach ( const QString &extension, IconIndexNamespace::Extensions )
-            paths << QString( "%1/%2/%3/%4.%5" ).arg( this->path()).arg( themeName ).arg( directory ).arg( iconName ).arg( extension );
+            paths << QString( "%1/%2/%3/%4.%5" ).arg( this->path()).arg( theme ).arg( directory ).arg( iconName ).arg( extension );
     }
     return paths;
 }
