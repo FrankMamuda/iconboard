@@ -106,13 +106,11 @@ int main( int argc, char *argv[] ) {
 
     // setup icons
     themeName = Variable::instance()->string( "ui_iconTheme" );
-    qDebug() << themeName;
     if ( !themeName.isEmpty() && QString::compare( "system", themeName )) {
         QFile file( IconIndex::instance()->path() + "/" + themeName + "/" + "index.theme" );
         if ( file.exists()) {
             IconIndex::instance()->build( themeName );
             IconIndex::instance()->setDefaultTheme( themeName );
-            qDebug() << IconIndex::instance()->defaultTheme();
         }
     }
 

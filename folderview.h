@@ -150,6 +150,7 @@ private slots:
     void toggleViewMode();
     void toggleAccessMode();
     void on_view_customContextMenuRequested( const QPoint &pos );
+    //void makeContextMenu();
 
 private:
     Ui::FolderView *ui;
@@ -164,4 +165,5 @@ private:
     QString m_customTitle;
     QString m_customStyleSheet;
     QString defaultStyleSheet;
+    //QMenu menu;
 };

@@ -29,6 +29,7 @@
 namespace XMLFiles {
 const static QString Variables( "configuration.xml" );
 const static QString Widgets( "widgets.xml" );
+const static QString Styles( "styles.xml" );
 }
 
 /**
@@ -45,7 +46,8 @@ public:
     enum Modes {
         NoMode = -1,
         Variables,
-        Widgets
+        Widgets,
+        Styles
     };
     void writeConfiguration( Modes mode, QObject *object = nullptr );
     void readConfiguration( Modes mode, QObject *object = nullptr );

@@ -32,6 +32,8 @@
 #include "traywidget.h"
 #include "iconproxymodel.h"
 #include "stylesheetdialog.h"
+#include "iconcache.h"
+#include "iconindex.h"
 #ifdef Q_OS_WIN
 #include <shlobj.h>
 #endif
@@ -145,27 +147,34 @@ int FolderView::iconSize() const {
  * @param point
  */
 void FolderView::displayContextMenu( const QPoint &point ) {
-    QMenu menu;
-    menu.addAction( this->tr( "Change directory" ), this, SLOT( changeDirectory()));
-    menu.addAction( this->tr( "Rename view" ), this, SLOT( renameView()));
-    menu.addAction( this->tr( "Hide" ), this, SLOT( hide()));
-    menu.addAction( this->tr( "Edit stylesheet" ), this, SLOT( editStylesheet()));
-    menu.addAction( this->tr( "Set icon size" ), this, SLOT( setIconSize()));
-    menu.addAction( this->tr( "List mode" ), this, SLOT( toggleViewMode()));
-    menu.actions().last()->setCheckable( true );
+    QMenu menu, *appearanceMenu, *styleMenu;
+    QAction *actionListMode, *actionReadOnly;
+
+    menu.addAction( IconCache::instance()->icon( "inode-directory", 16, IconIndex::instance()->defaultTheme()), this->tr( "Change directory" ), this, SLOT( changeDirectory()));
+    menu.addAction( IconCache::instance()->icon( "edit-rename", 16, IconIndex::instance()->defaultTheme()), this->tr( "Rename view" ), this, SLOT( renameView()));
+    menu.addAction( IconCache::instance()->icon( "view-close", 16, IconIndex::instance()->defaultTheme()), this->tr( "Hide" ), this, SLOT( hide()));
+    menu.addSeparator();
+    appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16, IconIndex::instance()->defaultTheme()), this->tr( "Appearance" ));
+    styleMenu = appearanceMenu->addMenu( this->tr( "Style" ));
+    styleMenu->addAction( IconCache::instance()->icon( "document-edit", 16, IconIndex::instance()->defaultTheme()), this->tr( "Custom stylesheet" ), this, SLOT( editStylesheet()));
+    appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16, IconIndex::instance()->defaultTheme()), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
+    actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16, IconIndex::instance()->defaultTheme()), this->tr( "List mode" ), this, SLOT( toggleViewMode()));
+    actionListMode->setCheckable( true );
 
     if ( this->viewMode() == QListView::ListMode )
-        menu.actions().last()->setChecked( true );
+        actionListMode->setChecked( true );
     else
-        menu.actions().last()->setChecked( false );
+        actionListMode->setChecked( false );
 
-    menu.addAction( this->tr( "Read only" ), this, SLOT( toggleAccessMode()));
-    menu.actions().last()->setCheckable( true );
+    menu.addSeparator();
+    actionReadOnly = menu.addAction( this->tr( "Read only" ), this, SLOT( toggleAccessMode()));
+    actionReadOnly->setCheckable( true );
+    actionReadOnly->setDisabled( true );
 
     if ( this->model->isReadOnly())
-        menu.actions().last()->setChecked( true );
+        actionReadOnly->setChecked( true );
     else
-        menu.actions().last()->setChecked( false );
+        actionReadOnly->setChecked( false );
 
     menu.exec( this->mapToGlobal( point ));
 }
@@ -455,6 +464,8 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
             AttachThreadInput( foregroundThread, curentThread, TRUE );
             SetForegroundWindow(( HWND )this->winId());
             AttachThreadInput( foregroundThread, curentThread, FALSE );
+#else
+            // TODO: steal focus in X11 and other environments
 #endif
         }
             break;
@@ -483,6 +494,8 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                 // use winapi to move the window (avoiding buggy Qt setGeometry)
 #ifdef Q_OS_WIN
                 MoveWindow(( HWND )this->winId(), newPos.x(), newPos.y(), this->width(), this->height(), true );
+#else
+                this->move( newPos.x(), newPos.y());
 #endif
                 // update last mouse position
                 this->mousePos = mouseEvent->globalPos();
@@ -553,6 +566,8 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                 // use winapi to resize the window (avoiding buggy Qt setGeometry)
 #ifdef Q_OS_WIN
                 MoveWindow(( HWND )this->winId(), updatedGeometry.x(), updatedGeometry.y(), updatedGeometry.width(), updatedGeometry.height(), true );
+#else
+                this->setGeometry( updatedGeometry );
 #endif
 
                 // update last mouse position
@@ -692,8 +707,18 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
 #ifdef Q_OS_WIN
     FolderView::openShellContextMenuForObject( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()).utf16()), QCursor::pos(), ( HWND )this->winId());
     this->ui->view->selectionModel()->clear();
+#else
+    // TODO: context menu in other environments
 #endif
 }
+
+/**
+ * @brief FolderView::makeContextMenu
+ */
+/*void FolderView::makeContextMenu()
+{
+
+}*/
 
 /**
  * @brief FileSystemModel::flags

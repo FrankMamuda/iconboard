@@ -37,7 +37,8 @@ SOURCES += main.cpp\
     settings.cpp \
     variable.cpp \
     mapperwidget.cpp \
-    xmltools.cpp
+    xmltools.cpp \
+    styleeditor.cpp
 
 HEADERS  += \
     folderview.h \
@@ -51,22 +52,25 @@ HEADERS  += \
     singleton.h \
     indexcache.h \
     iconproxymodel.h \
-    stylesheetdialog.h \
     screenmapper.h \
     settings.h \
     variable.h \
     application.h \
     mapperwidget.h \
     xmltools.h \
-    about.h
+    about.h \
+    styles.h \
+    stylesheetdialog.h \
+    styleeditor.h
 
 FORMS    += \
     folderview.ui \
     traywidget.ui \
-    stylesheetdialog.ui \
     screenmapper.ui \
     settings.ui \
-    about.ui
+    about.ui \
+    stylesheetdialog.ui \
+    styleeditor.ui
 
 RESOURCES += \
     resources.qrc

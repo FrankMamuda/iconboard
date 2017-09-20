@@ -33,6 +33,7 @@ IconIndex::IconIndex( QObject *parent ) : QObject( parent ) {
 #ifdef Q_OS_WIN
     this->setPath( QDir::currentPath() + "/" + "icons" );
 #else
+    // NOTE: not sure about macOS (can we use a custom dir from Settings dialog)
     this->setPath( "/usr/share/icons" );
 #endif
 }

@@ -41,7 +41,7 @@ XMLTools::XMLTools( QObject *parent ) : QObject( parent ) {
  * @brief XMLTools::writeConfiguration
  * @param mode
  */
-void XMLTools::writeConfiguration( Modes mode , QObject *object ) {
+void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
     QString path;
 #ifdef QT_DEBUG
     QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
@@ -49,19 +49,25 @@ void XMLTools::writeConfiguration( Modes mode , QObject *object ) {
     QDir configDir( QDir::homePath() + "/.iconBoard/" );
 #endif
 
+
     if ( !configDir.exists())
         configDir.mkpath( configDir.absolutePath());
 
     // switch mode
     switch ( mode ) {
     case Variables:
-        path = configDir.absolutePath() + XMLFiles::Variables;
+        path = configDir.absolutePath() + "/" + XMLFiles::Variables;
         break;
 
     case Widgets:
-        path = configDir.absolutePath() + XMLFiles::Widgets;
+        path = configDir.absolutePath() + "/" + XMLFiles::Widgets;
         if ( object == nullptr )
             return;
+        break;
+
+    case Styles:
+        path = configDir.absolutePath() + "/" + XMLFiles::Styles;
+        qDebug() << "write out" << path;
         break;
 
     case NoMode:
@@ -155,6 +161,18 @@ void XMLTools::writeConfiguration( Modes mode , QObject *object ) {
     }
         break;
 
+    case Styles:
+        // begin style element
+        stream.writeStartElement( "style" );
+
+        // stylesheet (for better readability store as attribute)
+        stream.writeAttribute( "name", QString( "super awesome style" ).replace( "\r", "" ));
+        stream.writeAttribute( "stylesheet", QString( "junk" ).replace( "\r", "" ));
+
+        // end style element
+        stream.writeEndElement();
+        break;
+
     case NoMode:
     default:
         qDebug() << "XMLTools::writeConfiguration: error - invalid mode";
@@ -195,11 +213,11 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
     // switch mode
     switch ( mode ) {
     case Variables:
-        path = configDir.absolutePath() + XMLFiles::Variables;
+        path = configDir.absolutePath() + "/" + XMLFiles::Variables;
         break;
 
     case Widgets:
-        path = configDir.absolutePath() + XMLFiles::Widgets;
+        path = configDir.absolutePath() + "/" + XMLFiles::Widgets;
         if ( object == nullptr )
             return;
 
@@ -292,6 +310,8 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
                 // use winapi to resize the window (avoiding buggy Qt setGeometry)
 #ifdef Q_OS_WIN
                 MoveWindow(( HWND )widget->winId(), widgetGeometry.x(), widgetGeometry.y(), widgetGeometry.width(), widgetGeometry.height(), true );
+#else
+                widget->setGeometry( widgetGeometry );
 #endif
 
                 widget->setReadOnly( readOnly );

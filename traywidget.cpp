@@ -35,12 +35,13 @@
 #include "xmltools.h"
 #include "iconindex.h"
 #include "about.h"
+#include "styleeditor.h"
 
 /**
  * @brief TrayWidget::TrayWidget
  * @param parent
  */
-TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), desktop( new QDesktopWidget()), menu( new QMenu( this )) {
+TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), desktop( new QDesktopWidget()), menu( new QMenu( this )) {
     // init ui
     this->ui->setupUi( this );
 
@@ -51,7 +52,9 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui(
     this->ui->widgetList->setModel( this->model );
 
     // set up desktop widget
+#ifdef Q_OS_WIN
     this->getWindowHandles();
+#endif
     this->wallpaper = desktop->grab();
 
     // connect tray icon
@@ -59,20 +62,23 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui(
     this->connect( qApp, SIGNAL( aboutToQuit()), this, SLOT( writeConfiguration()));
 
     // set up icons
-    this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add" ));
-    this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove" ));
-    this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid" ));
-    this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility" ));
+    this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add", 16, IconIndex::instance()->defaultTheme()));
+    this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove", 16, IconIndex::instance()->defaultTheme()));
+    this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid", 16, IconIndex::instance()->defaultTheme()));
+    this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility", 16, IconIndex::instance()->defaultTheme()));
 
     // reload on changed virtual geometry
     this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
 
     // setup context menu
-    this->menu->addAction( this->tr( "Widget list" ), this, SLOT( show()));
-    this->menu->addAction( this->tr( "Settings" ), this, SLOT( showSettingsDialog()));
+    this->menu->addAction( IconCache::instance()->icon( "view-list-icons", 16, IconIndex::instance()->defaultTheme()), this->tr( "Widget list" ), this, SLOT( show()));
+    this->menu->addAction( IconCache::instance()->icon( "configure", 16, IconIndex::instance()->defaultTheme()), this->tr( "Settings" ), this, SLOT( showSettingsDialog()));
+#ifdef QT_DEBUG
+    this->menu->addAction( this->tr( "Style editor" ), this, SLOT( showStyleDialog()));
+#endif
     this->menu->addSeparator();
-    this->menu->addAction( this->tr( "About" ), this, SLOT( showAboutDialog()));
-    this->menu->addAction( this->tr( "Exit" ), qApp, SLOT( quit()));
+    this->menu->addAction( IconCache::instance()->icon( "help-about", 16, IconIndex::instance()->defaultTheme()), this->tr( "About" ), this, SLOT( showAboutDialog()));
+    this->menu->addAction( IconCache::instance()->icon( "application-exit", 16, IconIndex::instance()->defaultTheme()), this->tr( "Exit" ), qApp, SLOT( quit()));
     this->tray->setContextMenu( this->menu );
 
     // read configuration
@@ -80,6 +86,11 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent, Qt::Tool ), ui(
 
     // bind iconTheme variable, to index new themes
     Variable::instance()->bind( "ui_iconTheme", this, SLOT( iconThemeChanged( QVariant )));
+
+#ifndef QT_DEBUG
+    // not currently available
+    this->ui->actionMap->setEnabled( false );
+#endif
 }
 
 /**
@@ -119,8 +130,8 @@ void TrayWidget::trayIconActivated( QSystemTrayIcon::ActivationReason reason ) {
 /**
  * @brief FolderView::getWindowHandles
  */
-void TrayWidget::getWindowHandles() {
 #ifdef Q_OS_WIN
+void TrayWidget::getWindowHandles() {
     HWND desktop, progman, shell = nullptr, worker = nullptr;
 
     // get desktop window
@@ -145,8 +156,8 @@ void TrayWidget::getWindowHandles() {
 
     // store worker handle
     this->worker = worker;
-#endif
 }
+#endif
 
 /**
  * @brief TrayWidget::on_widgetList_doubleClicked
@@ -164,6 +175,13 @@ void TrayWidget::showSettingsDialog() {
     settingsDialog.exec();
 }
 
+/**
+ * @brief TrayWidget::showStyleDialog
+ */
+void TrayWidget::showStyleDialog() {
+    StyleEditor styleDialog;
+    styleDialog.exec();
+}
 /**
  * @brief TrayWidget::showAboutDialog
  */
@@ -333,4 +351,8 @@ void TrayWidget::readConfiguration() {
 void TrayWidget::writeConfiguration() {
     XMLTools::instance()->writeConfiguration( XMLTools::Widgets, this );
     XMLTools::instance()->writeConfiguration( XMLTools::Variables );
+
+#ifdef QT_DEBUG
+    XMLTools::instance()->writeConfiguration( XMLTools::Styles );
+#endif
 }

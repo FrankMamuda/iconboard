@@ -21,28 +21,26 @@
 //
 // includes
 //
-#include <QDialog>
-#include <QToolBar>
+#include <QObject>
 
 /**
- * The Ui namespace
+ * @brief The Style class
  */
-namespace Ui {
-class StyleSheetDialog;
-}
-
-/**
- * @brief The StyleSheetDialog class
- */
-class StyleSheetDialog : public QDialog {
-    Q_OBJECT
+class Style : public QObject {
+   Q_OBJECT
+   Q_PROPERTY( QString name READ name WRITE setName )
+   Q_PROPERTY( QString styleSheet READ styleSheet WRITE setStyleSheet )
 
 public:
-    explicit StyleSheetDialog( QWidget *parent = 0, const QString &styleSheet = QString::null );
-    ~StyleSheetDialog();
-    QString customStyleSheet() const;
+    QString name() const { return this->m_name; }
+    QString styleSheet() const { return this->m_styleSheet; }
+
+public slots:
+    void setStyleSheet( const QString &value ) { this->m_styleSheet = value; }
+    void setName( const QString &value ) { this->m_name = value; }
 
 private:
-    Ui::StyleSheetDialog *ui;
-    QToolBar *toolBar;
+    QString m_name;
+    QString m_styleSheet;
 };
+

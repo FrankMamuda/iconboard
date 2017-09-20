@@ -62,7 +62,9 @@ private slots:
     void trayIconActivated( QSystemTrayIcon::ActivationReason reason );
     void readConfiguration();
     void writeConfiguration();
+#ifdef Q_OS_WIN
     void getWindowHandles();
+#endif
     void on_widgetList_doubleClicked( const QModelIndex &index );
     void showSettingsDialog();
     void on_actionAdd_triggered();
@@ -73,6 +75,7 @@ private slots:
     void reload();
     void iconThemeChanged( QVariant value );
     void showAboutDialog();
+    void showStyleDialog();
 
 private:
     Ui::TrayWidget *ui;

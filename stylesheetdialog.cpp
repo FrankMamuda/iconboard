@@ -19,22 +19,43 @@
 //
 // includes
 //
+#include "iconcache.h"
+#include "iconindex.h"
 #include "stylesheetdialog.h"
 #include "ui_stylesheetdialog.h"
+
+#include <QComboBox>
+#include <QLabel>
 
 /**
  * @brief StyleSheetDialog::StyleSheetDialog
  * @param parent
  */
-StyleSheetDialog::StyleSheetDialog( QWidget *parent, const QString &styleSheet ) : QDialog( parent ), ui( new Ui::StyleSheetDialog ) {
+StyleSheetDialog::StyleSheetDialog( QWidget *parent, const QString &styleSheet ) : QDialog( parent ), ui( new Ui::StyleSheetDialog ), toolBar( new QToolBar( this )) {
     this->ui->setupUi( this );
     this->ui->editor->setPlainText( styleSheet );
+
+    // set up toolbar
+#if 0
+    this->toolBar->setFloatable( false );
+    this->toolBar->setMovable( false );
+    this->toolBar->setIconSize( QSize( 16, 16 ));
+    this->toolBar->setAllowedAreas( Qt::TopToolBarArea );
+    this->toolBar->setToolButtonStyle( Qt::ToolButtonTextUnderIcon );
+    this->ui->verticalLayout->setMenuBar( this->toolBar );
+
+    // add buttons
+    this->toolBar->addAction( IconCache::instance()->icon( "document-save", 16, IconIndex::instance()->defaultTheme()), this->tr( "Save" ));
+    this->toolBar->addWidget( new QLabel( "Base style" ));
+    this->toolBar->addWidget( new QComboBox());
+#endif
 }
 
 /**
  * @brief StyleSheetDialog::~StyleSheetDialog
  */
 StyleSheetDialog::~StyleSheetDialog() {
+    //delete this->toolBar;
     delete this->ui;
 }
 

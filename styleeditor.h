@@ -22,27 +22,24 @@
 // includes
 //
 #include <QDialog>
-#include <QToolBar>
 
 /**
  * The Ui namespace
  */
 namespace Ui {
-class StyleSheetDialog;
+class StyleEditor;
 }
 
 /**
- * @brief The StyleSheetDialog class
+ * @brief The StyleEditor class
  */
-class StyleSheetDialog : public QDialog {
+class StyleEditor : public QDialog {
     Q_OBJECT
 
 public:
-    explicit StyleSheetDialog( QWidget *parent = 0, const QString &styleSheet = QString::null );
-    ~StyleSheetDialog();
-    QString customStyleSheet() const;
+    explicit StyleEditor( QWidget *parent = 0 );
+    ~StyleEditor();
 
 private:
-    Ui::StyleSheetDialog *ui;
-    QToolBar *toolBar;
+    Ui::StyleEditor *ui;
 };

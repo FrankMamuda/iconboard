@@ -16,33 +16,32 @@
  *
  */
 
-#pragma once
-
 //
 // includes
 //
-#include <QDialog>
-#include <QToolBar>
+#include "folderview.h"
+#include "iconproxymodel.h"
+#include "styleeditor.h"
+#include "ui_styleeditor.h"
 
 /**
- * The Ui namespace
+ * @brief StyleEditor::StyleEditor
+ * @param parent
  */
-namespace Ui {
-class StyleSheetDialog;
+StyleEditor::StyleEditor( QWidget *parent ) : QDialog( parent ), ui( new Ui::StyleEditor ) {
+    this->ui->setupUi( this );
+
+    this->ui->listView->setViewMode( QListView::IconMode );
+    QFileSystemModel *model = new FileSystemModel();
+    IconProxyModel *proxyModel = new IconProxyModel( this );
+    proxyModel->setSourceModel( model );
+    this->ui->listView->setModel( proxyModel );
+    this->ui->listView->setRootIndex( proxyModel->mapFromSource( model->setRootPath( QDir::homePath())));
 }
 
 /**
- * @brief The StyleSheetDialog class
+ * @brief StyleEditor::~StyleEditor
  */
-class StyleSheetDialog : public QDialog {
-    Q_OBJECT
-
-public:
-    explicit StyleSheetDialog( QWidget *parent = 0, const QString &styleSheet = QString::null );
-    ~StyleSheetDialog();
-    QString customStyleSheet() const;
-
-private:
-    Ui::StyleSheetDialog *ui;
-    QToolBar *toolBar;
-};
+StyleEditor::~StyleEditor() {
+    delete ui;
+}

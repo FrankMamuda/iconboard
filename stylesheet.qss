@@ -5,7 +5,7 @@ QLabel#title {
     font-weight: bold;
 }
 
-QListView {
+QListView#view {
     background-color: rgba( 32, 32, 32, 160 );
     color: white;
     font-size: 9pt;
