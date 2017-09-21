@@ -64,8 +64,6 @@ public:
         //..this->setReadOnly( true ); // TODO: add as menu (RO by default)
     }
 
-    //Qt::ItemFlags flags( const QModelIndex &index ) const;
-
 public slots:
     void softReset() { emit this->dataChanged( this->index( 0, 0 ), this->index( this->rowCount() - 1, this->columnCount() - 1 )); }
     void reset() { this->beginResetModel(); this->resetInternalData(); this->endResetModel(); }
@@ -80,6 +78,7 @@ class FolderView : public QWidget {
     Q_PROPERTY( QString rootPath READ rootPath )
     Q_PROPERTY( QString customTitle READ customTitle WRITE setCustomTitle )
     Q_PROPERTY( QString customStyleSheet READ customStyleSheet WRITE setCustomStyleSheet )
+    Q_PROPERTY( Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder )
 
 public:
 #ifdef Q_OS_WIN
@@ -99,6 +98,7 @@ public:
     static void openShellContextMenuForObject( const std::wstring &path, QPoint pos, HWND parentWindow );
 #endif
     bool isReadOnly() const;
+    Qt::SortOrder sortOrder() const { return this->m_sortOrder; }
 
     // grab areas for frameless resizing
     enum Areas {
@@ -131,6 +131,7 @@ public slots:
     void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }
     void setIconSize();
     void setReadOnly( bool enable = true );
+    void setSortOrder( Qt::SortOrder order );
 
 protected:
     void paintEvent( QPaintEvent *event );
@@ -151,6 +152,7 @@ private slots:
     void toggleAccessMode();
     void on_view_customContextMenuRequested( const QPoint &pos );
     //void makeContextMenu();
+    void toggleSortOrder();
 
 private:
     Ui::FolderView *ui;
@@ -165,5 +167,6 @@ private:
     QString m_customTitle;
     QString m_customStyleSheet;
     QString defaultStyleSheet;
+    Qt::SortOrder m_sortOrder;
     //QMenu menu;
 };

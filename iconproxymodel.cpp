@@ -20,7 +20,6 @@
 // includes
 //
 #include <QFileSystemModel>
-#include <QMimeDatabase>
 #include <QtConcurrent>
 #include "folderview.h"
 #include "iconproxymodel.h"
@@ -57,8 +56,8 @@ QVariant IconProxyModel::data( const QModelIndex &index, int role ) const {
         fileName = index.data( QFileSystemModel::FilePathRole ).toString();
         iconSize = this->view->iconSize();
 
-        if ( this->iconTable.contains( fileName ))
-            return this->iconTable[fileName];
+        if ( this->cache.contains( fileName ))
+            return this->cache[fileName];
 
         QtConcurrent::run( [ this, fileName, persistentIndex, iconSize ] {
             QIcon icon;

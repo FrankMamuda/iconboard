@@ -53,7 +53,7 @@ public:
     explicit TrayWidget( QWidget *parent = 0 );
     ~TrayWidget();
     QList<FolderView*> widgetList;
-    QPixmap wallpaper;
+    //QPixmap wallpaper;
 #ifdef Q_OS_WIN
     HWND worker;
 #endif
@@ -66,7 +66,6 @@ private slots:
     void getWindowHandles();
 #endif
     void on_widgetList_doubleClicked( const QModelIndex &index );
-    void showSettingsDialog();
     void on_actionAdd_triggered();
     void on_actionRemove_triggered();
     void on_actionShow_triggered();
@@ -74,13 +73,10 @@ private slots:
     void on_buttonClose_clicked();
     void reload();
     void iconThemeChanged( QVariant value );
-    void showAboutDialog();
-    void showStyleDialog();
 
 private:
     Ui::TrayWidget *ui;
     QSystemTrayIcon *tray;
     WidgetModel *model;
-    QDesktopWidget *desktop;
     QMenu *menu;
 };

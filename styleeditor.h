@@ -21,7 +21,11 @@
 //
 // includes
 //
+#include "iconcache.h"
+#include "folderdelegate.h"
+#include <QAbstractListModel>
 #include <QDialog>
+#include <QToolBar>
 
 /**
  * The Ui namespace
@@ -31,15 +35,42 @@ class StyleEditor;
 }
 
 /**
+ * @brief The StyleDemoModel class
+ */
+class StyleDemoModel : public QAbstractListModel {
+    Q_OBJECT
+
+public:
+    StyleDemoModel( QObject *parent ) : QAbstractListModel( parent ) {}
+    int rowCount( const QModelIndex & = QModelIndex()) const override { return 3; }
+    QVariant data( const QModelIndex &, int role ) const;
+};
+
+/**
  * @brief The StyleEditor class
  */
 class StyleEditor : public QDialog {
     Q_OBJECT
+    Q_ENUMS( Modes )
 
 public:
-    explicit StyleEditor( QWidget *parent = 0 );
+    enum Modes {
+        NoMode = -1,
+        Full,
+        Custom
+    };
+    explicit StyleEditor( QWidget *parent = 0, Modes mode = Full, const QString &styleSheet = QString::null );
     ~StyleEditor();
+    Modes mode() const { return this->m_mode; }
+    QString customStyleSheet() const;
+
+private slots:
+    void on_tabWidget_currentChanged( int index );
 
 private:
     Ui::StyleEditor *ui;
+    StyleDemoModel *model;
+    QToolBar *toolBar;
+    FolderDelegate *delegate;
+    Modes m_mode;
 };

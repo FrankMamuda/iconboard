@@ -147,6 +147,9 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
             // viewMode
             stream.writeTextElement( "viewMode", QString::number( static_cast<int>( widget->viewMode())));
 
+            // sortOrder
+            stream.writeTextElement( "sortOrder", QString::number( static_cast<int>( widget->sortOrder())));
+
             // access mode
             if ( !widget->isReadOnly())
                 stream.writeTextElement( "readOnly", QString::number( 0 ));
@@ -255,6 +258,7 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
                 bool readOnly = true;
                 QRect widgetGeometry;
                 QPoint screenOffset;
+                Qt::SortOrder sortOrder;
 
                 childNode = element.firstChild();
 #ifdef Q_OS_WIN
@@ -285,6 +289,8 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
                             widget->setViewMode( static_cast<QListView::ViewMode>( text.toInt()));
                         } else if ( !QString::compare( childElement.tagName(), "readOnly" )) {
                             readOnly = static_cast<bool>( text.toInt());
+                        } else if ( !QString::compare( childElement.tagName(), "sortOrder" )) {
+                            sortOrder = static_cast<Qt::SortOrder>( text.toInt());
                         } else if ( !QString::compare( childElement.tagName(), "iconSize" )) {
                             widget->setIconSize( text.toInt());
                         }
@@ -315,6 +321,7 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
 #endif
 
                 widget->setReadOnly( readOnly );
+                widget->setSortOrder( sortOrder );
                 widget->setCustomStyleSheet( styleSheet );
                 trayWidget->widgetList << widget;
             } else if ( !QString::compare( element.tagName(), "variable" ) && mode == Variables ) {

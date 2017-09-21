@@ -32,7 +32,6 @@ SOURCES += main.cpp\
     iconcache.cpp \
     indexcache.cpp \
     iconproxymodel.cpp \
-    stylesheetdialog.cpp \
     screenmapper.cpp \
     settings.cpp \
     variable.cpp \
@@ -60,8 +59,8 @@ HEADERS  += \
     xmltools.h \
     about.h \
     styles.h \
-    stylesheetdialog.h \
-    styleeditor.h
+    styleeditor.h \
+    backgroundframe.h
 
 FORMS    += \
     folderview.ui \
@@ -69,7 +68,6 @@ FORMS    += \
     screenmapper.ui \
     settings.ui \
     about.ui \
-    stylesheetdialog.ui \
     styleeditor.ui
 
 RESOURCES += \

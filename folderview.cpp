@@ -31,10 +31,11 @@
 #include "folderdelegate.h"
 #include "traywidget.h"
 #include "iconproxymodel.h"
-#include "stylesheetdialog.h"
+#include "styleeditor.h"
 #include "iconcache.h"
 #include "iconindex.h"
 #ifdef Q_OS_WIN
+#include <QPointer>
 #include <shlobj.h>
 #endif
 
@@ -48,11 +49,11 @@
  * @param parent
  * @param rootPath
  */
-#ifdef Q_OS_WIN
-FolderView::FolderView( QWidget *parent, const QString &rootPath, HWND windowParent, TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView )/*, proxyModel( new IconProxyModel())*/, model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ) {
-#else
-FolderView::FolderView( QWidget *parent, const QString &rootPath, TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView )/*, proxyModel( new IconProxyModel())*/, model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ) {
-#endif
+FolderView::FolderView( QWidget *parent, const QString &rootPath,
+                        #ifdef Q_OS_WIN
+                        HWND windowParent,
+                        #endif
+                        TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ), m_sortOrder( Qt::AscendingOrder ) {
     QDir dir( rootPath );
     QFile styleSheet;
 
@@ -78,7 +79,6 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath, TrayWidget *tr
     this->ui->view->setAcceptDrops(true);
     this->ui->view->setDropIndicatorShown(true);
 
-
     // set up view delegate
     this->delegate = new FolderDelegate( this->ui->view );
     this->ui->view->setItemDelegate( this->delegate );
@@ -101,7 +101,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath, TrayWidget *tr
     this->setupFrame( windowParent );
 #else
     this->setupFrame();
-    this->setWindowFlags( this->windowFlags() | Qt::WindowStaysOnBottomHint );
+    this->setWindowFlags( this->windowFlags() | Qt::WindowStaysOnBottomHint | Qt::Tool );
 #endif
 }
 
@@ -147,18 +147,18 @@ int FolderView::iconSize() const {
  * @param point
  */
 void FolderView::displayContextMenu( const QPoint &point ) {
-    QMenu menu, *appearanceMenu, *styleMenu;
-    QAction *actionListMode, *actionReadOnly;
+    QMenu menu, *appearanceMenu, *styleMenu, *sortMenu;
+    QAction *actionListMode, *actionReadOnly, *actionSortAscending, *actionDirsFirst, *actionCaseSensitive;
 
-    menu.addAction( IconCache::instance()->icon( "inode-directory", 16, IconIndex::instance()->defaultTheme()), this->tr( "Change directory" ), this, SLOT( changeDirectory()));
-    menu.addAction( IconCache::instance()->icon( "edit-rename", 16, IconIndex::instance()->defaultTheme()), this->tr( "Rename view" ), this, SLOT( renameView()));
-    menu.addAction( IconCache::instance()->icon( "view-close", 16, IconIndex::instance()->defaultTheme()), this->tr( "Hide" ), this, SLOT( hide()));
+    menu.addAction( IconCache::instance()->icon( "inode-directory", 16 ), this->tr( "Change directory" ), this, SLOT( changeDirectory()));
+    menu.addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename view" ), this, SLOT( renameView()));
+    menu.addAction( IconCache::instance()->icon( "view-close", 16 ), this->tr( "Hide" ), this, SLOT( hide()));
     menu.addSeparator();
-    appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16, IconIndex::instance()->defaultTheme()), this->tr( "Appearance" ));
+    appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Appearance" ));
     styleMenu = appearanceMenu->addMenu( this->tr( "Style" ));
-    styleMenu->addAction( IconCache::instance()->icon( "document-edit", 16, IconIndex::instance()->defaultTheme()), this->tr( "Custom stylesheet" ), this, SLOT( editStylesheet()));
-    appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16, IconIndex::instance()->defaultTheme()), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
-    actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16, IconIndex::instance()->defaultTheme()), this->tr( "List mode" ), this, SLOT( toggleViewMode()));
+    styleMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" ), this, SLOT( editStylesheet()));
+    appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
+    actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16 ), this->tr( "List mode" ), this, SLOT( toggleViewMode()));
     actionListMode->setCheckable( true );
 
     if ( this->viewMode() == QListView::ListMode )
@@ -167,6 +167,26 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         actionListMode->setChecked( false );
 
     menu.addSeparator();
+
+    sortMenu = menu.addMenu( IconCache::instance()->icon( "format-list-ordered", 16 ), this->tr( "Sort" ));
+    actionSortAscending = sortMenu->addAction( IconCache::instance()->icon( "view-sort-ascending", 16 ), this->tr( "Ascending order" ), this, SLOT( toggleSortOrder()));
+    if ( this->sortOrder() == Qt::AscendingOrder)
+        actionSortAscending->setChecked( true );
+    else
+        actionSortAscending->setChecked( false );
+
+    //actionSortAscending->connect( actionSortAscending, &QAction::triggered, this, [ actionSortAscending, this ]() {
+    //    //this->setO
+    //    fw.setOrder( Qt::AscendingOrder );
+    //});
+    actionSortAscending->setCheckable( true );
+    actionDirsFirst = sortMenu->addAction( this->tr( "Directories first" ), this, SLOT( editStylesheet()));
+    actionDirsFirst->setCheckable( true );
+    actionCaseSensitive = sortMenu->addAction( this->tr( "Case sensitive" ), this, SLOT( editStylesheet()));
+    actionCaseSensitive->setCheckable( true );
+
+    menu.addSeparator();
+
     actionReadOnly = menu.addAction( this->tr( "Read only" ), this, SLOT( toggleAccessMode()));
     actionReadOnly->setCheckable( true );
     actionReadOnly->setDisabled( true );
@@ -239,7 +259,7 @@ void FolderView::setIconSize() {
         this->ui->view->setItemDelegate( this->delegate );
 
 #ifdef PROXY_MODEL
-        this->proxyModel->clearIconCache();
+        this->proxyModel->clearCache();
 #endif
     }
 }
@@ -283,7 +303,7 @@ void FolderView::renameView() {
  * @brief FolderView::editStylesheet
  */
 void FolderView::editStylesheet() {
-    StyleSheetDialog dialog( this, this->currentStyleSheet());
+    StyleEditor dialog( this, StyleEditor::Custom, this->currentStyleSheet());
     int result;
 
     result = dialog.exec();
@@ -309,6 +329,16 @@ void FolderView::toggleAccessMode() {
 }
 
 /**
+ * @brief FolderView::toggleSortOrder
+ */
+void FolderView::toggleSortOrder() {
+    if ( this->sortOrder() == Qt::AscendingOrder )
+        this->setSortOrder( Qt::DescendingOrder );
+    else
+        this->setSortOrder( Qt::AscendingOrder );
+}
+
+/**
  * @brief FolderView::setReadOnly
  */
 void FolderView::setReadOnly( bool enable ) {
@@ -319,6 +349,15 @@ void FolderView::setReadOnly( bool enable ) {
     else
         this->ui->view->setDragDropMode( QListView::NoDragDrop );
 
+}
+
+/**
+ * @brief FolderView::setSortOrder
+ * @param order
+ */
+void FolderView::setSortOrder( Qt::SortOrder order ) {
+    this->m_sortOrder = order;
+    this->model->sort( 0, order );
 }
 
 /**

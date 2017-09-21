@@ -6,54 +6,71 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>468</width>
-    <height>343</height>
+    <width>414</width>
+    <height>356</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Style editor</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="centralLayout">
    <item>
-    <layout class="QVBoxLayout" name="widgetLayout">
-     <property name="spacing">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
       <number>0</number>
      </property>
-     <property name="leftMargin">
-      <number>10</number>
-     </property>
-     <property name="topMargin">
-      <number>10</number>
-     </property>
-     <property name="rightMargin">
-      <number>10</number>
-     </property>
-     <property name="bottomMargin">
-      <number>10</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="styleSheet">
-        <string notr="true">QLabel {
+     <widget class="QWidget" name="tabPreview">
+      <attribute name="title">
+       <string>Tab 1</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="previewLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="BackgroundFrame" name="frame">
+         <property name="styleSheet">
+          <string notr="true">QFrame#frame {
+    border: 1px solid black;
+	background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 white, stop: 0.4 rgba( 180, 180, 180, 255 ), stop:1 rgb( 240, 240, 240, 255 ));
+	background-image: url(dense6pattern.png);
+    background-repeat: repeat-xy;
+}
+</string>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="title">
+            <property name="styleSheet">
+             <string notr="true">QLabel#title {
     background-color: rgba( 48, 48, 48, 200 );
     color: white;
     padding: 4px;
     font-weight: bold;
 }
-</string>
-       </property>
-       <property name="text">
-        <string>Title</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QListView" name="listView">
-       <property name="styleSheet">
-        <string notr="true">QListView {
+
+QListView#view {
     background-color: rgba( 32, 32, 32, 160 );
     color: white;
     font-size: 9pt;
@@ -87,23 +104,179 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
 }
 </string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+            </property>
+            <property name="text">
+             <string>Title</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListView" name="view">
+            <property name="styleSheet">
+             <string notr="true">QLabel#title {
+    background-color: rgba( 48, 48, 48, 200 );
+    color: white;
+    padding: 4px;
+    font-weight: bold;
+}
+
+QListView#view {
+    background-color: rgba( 32, 32, 32, 160 );
+    color: white;
+    font-size: 9pt;
+    outline: none;
+    border: 0px;
+}
+
+QScrollBar:vertical {
+    width:10px;
+    background: rgba( 255, 255, 255, 32 );
+    margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba( 0, 0, 0, 180 );
+    border-radius: 4px;
+    width: 8px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    min-height: 9px;
+    max-height: 32px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabEditor">
+      <attribute name="title">
+       <string>Tab 2</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QPlainTextEdit" name="styleSheetEditor">
+         <property name="plainText">
+          <string>QLabel#title {
+    background-color: rgba( 48, 48, 48, 200 );
+    color: white;
+    padding: 4px;
+    font-weight: bold;
+}
+
+QListView#view {
+    background-color: rgba( 32, 32, 32, 160 );
+    color: white;
+    font-size: 9pt;
+    outline: none;
+    border: 0px;
+}
+
+QScrollBar:vertical {
+    width:10px;
+    background: rgba( 255, 255, 255, 32 );
+    margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba( 0, 0, 0, 180 );
+    border-radius: 4px;
+    width: 8px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    min-height: 9px;
+    max-height: 32px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
    <item>
-    <widget class="QPlainTextEdit" name="plainTextEdit"/>
-   </item>
-   <item>
-    <widget class="QPushButton" name="pushButton">
-     <property name="text">
-      <string>Ok</string>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
   </layout>
+  <zorder>title</zorder>
+  <zorder>tabWidget</zorder>
+  <zorder>buttonBox</zorder>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BackgroundFrame</class>
+   <extends>QFrame</extends>
+   <header>backgroundframe.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>StyleEditor</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>430</x>
+     <y>321</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>206</x>
+     <y>177</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>StyleEditor</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>430</x>
+     <y>321</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>206</x>
+     <y>177</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

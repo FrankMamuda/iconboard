@@ -21,27 +21,102 @@
 //
 #include "folderview.h"
 #include "iconproxymodel.h"
+#include "iconcache.h"
 #include "styleeditor.h"
 #include "ui_styleeditor.h"
+#include <QComboBox>
 
 /**
  * @brief StyleEditor::StyleEditor
  * @param parent
  */
-StyleEditor::StyleEditor( QWidget *parent ) : QDialog( parent ), ui( new Ui::StyleEditor ) {
+StyleEditor::StyleEditor( QWidget *parent, Modes mode, const QString &styleSheet ) : QDialog( parent ), ui( new Ui::StyleEditor ), model( new StyleDemoModel( this )), toolBar( new QToolBar( this )), m_mode( mode ) {
+    // set up view
     this->ui->setupUi( this );
 
-    this->ui->listView->setViewMode( QListView::IconMode );
-    QFileSystemModel *model = new FileSystemModel();
-    IconProxyModel *proxyModel = new IconProxyModel( this );
-    proxyModel->setSourceModel( model );
-    this->ui->listView->setModel( proxyModel );
-    this->ui->listView->setRootIndex( proxyModel->mapFromSource( model->setRootPath( QDir::homePath())));
+    // set up virtual folder widget
+    this->ui->view->setViewMode( QListView::IconMode );
+    this->ui->view->setModel( this->model );
+    this->delegate = new FolderDelegate( this->ui->view );
+    this->ui->view->setItemDelegate( this->delegate );
+    this->ui->view->setStyleSheet( this->ui->styleSheetEditor->toPlainText());
+    this->ui->title->setStyleSheet( this->ui->styleSheetEditor->toPlainText());
+
+    // set up tab widget
+    if ( this->ui->tabWidget->count() != 2 )
+        return;
+
+    this->ui->tabWidget->setTabText( 0, this->tr( "Preview" ));
+    this->ui->tabWidget->setTabIcon( 0, IconCache::instance()->icon( "view-preview", 16 ));
+    this->ui->tabWidget->setTabText( 1, this->tr( "Editor" ));
+    this->ui->tabWidget->setTabIcon( 1, IconCache::instance()->icon( "color-picker", 16 ));
+
+    // set window icon
+    this->setWindowIcon( IconCache::instance()->icon( "color-picker" ));
+
+    // set up toolBar
+    if ( this->mode() == Full ) {
+        this->toolBar->setFloatable( false );
+        this->toolBar->setMovable( false );
+        this->toolBar->setIconSize( QSize( 16, 16 ));
+        this->toolBar->setAllowedAreas( Qt::TopToolBarArea );
+        this->toolBar->setToolButtonStyle( Qt::ToolButtonTextUnderIcon );
+        this->toolBar->setStyleSheet( "QToolBar { border-bottom: 1px solid gray; }" );
+        this->ui->centralLayout->setMenuBar( this->toolBar );
+
+        // add toolbar buttons
+        this->toolBar->addAction( IconCache::instance()->icon( "document-save", 16 ), this->tr( "Save" ));
+        this->toolBar->addAction( IconCache::instance()->icon( "document-save-as", 16 ), this->tr( "Save as" ));
+        this->toolBar->addAction( IconCache::instance()->icon( "document-revert", 16 ), this->tr( "Revert" ));
+        this->toolBar->addAction( IconCache::instance()->icon( "edit-delete", 16 ), this->tr( "Remove" ));
+        this->toolBar->addWidget( new QLabel( this->tr( "Style:" )));
+        this->toolBar->addWidget( new QComboBox());
+    } else if ( this->mode() == Custom ) {
+        this->ui->styleSheetEditor->setPlainText( styleSheet );
+    }
 }
 
 /**
  * @brief StyleEditor::~StyleEditor
  */
 StyleEditor::~StyleEditor() {
+    delete this->delegate;
+    delete this->model;
+    delete this->toolBar;
     delete ui;
 }
+
+/**
+ * @brief StyleDemoModel::data
+ * @param role
+ * @return
+ */
+QVariant StyleDemoModel::data( const QModelIndex &index, int role ) const {
+    if ( role == Qt::DisplayRole )
+        return QString( "Folder %1" ).arg( index.row() + 1 );
+
+    if ( role == Qt::DecorationRole )
+        return IconCache::instance()->icon( "inode-directory", 48 );
+
+    return QVariant();
+}
+
+/**
+ * @brief StyleEditor::on_tabWidget_currentChanged
+ * @param index
+ */
+void StyleEditor::on_tabWidget_currentChanged( int index ) {
+    if ( index == 0 ) {
+       this->ui->view->setStyleSheet( this->customStyleSheet());
+       this->ui->title->setStyleSheet( this->customStyleSheet());
+    }
+}
+
+/**
+ * @brief StyleEditor::customStyleSheet
+ * @return
+ */
+QString StyleEditor::customStyleSheet() const {
+    return this->ui->styleSheetEditor->toPlainText();
+}
+

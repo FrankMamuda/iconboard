@@ -39,7 +39,7 @@ public:
     explicit IconProxyModel( QObject *parent = nullptr );
     ~IconProxyModel();
     QVariant data( const QModelIndex &index, int role = Qt::DisplayRole ) const;
-    void clearIconCache() { this->iconTable.clear(); }
+    void clearCache() { this->cache.clear(); }
 
 signals:
     void iconFound( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index ) const;
@@ -50,10 +50,10 @@ private slots:
             return;
 
         emit this->dataChanged( index, index );
-        this->iconTable[fileName] = icon;
+        this->cache[fileName] = icon;
     }
 
 private:
-    QHash<QString, QIcon> iconTable;
+    QHash<QString, QIcon> cache;
     FolderView *view;
 };

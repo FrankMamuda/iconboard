@@ -40,6 +40,9 @@ public:
     QIcon addSymlinkLabel( const QIcon &icon, int originalSize, const QString theme = QString::null );
     QIcon iconForFilename( const QString &fileName, int iconSize );
 
+public slots:
+    void clearCache() { this->cache.clear(); }
+
 private:
     QHash<QString, QIcon> cache;
 };

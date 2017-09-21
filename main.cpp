@@ -20,6 +20,7 @@
 // includes
 //
 #include <QDebug>
+#include <QIconEngine>
 #include "traywidget.h"
 #include "indexcache.h"
 #include "iconindex.h"
@@ -50,8 +51,11 @@
  *  [DONE] single instance
  *  [DONE] fixed custom stylesheet font issues
  *  [DONE] remove QListView border
+ *  [DONE] start-on-boot option
+ *  [DONE] fix tray context menu for linux
+ *  [DONE] 'about' dialog
+ *  [DONE] custom hilight/selection color - use selection-background-color: in qss
  *  [DONE?] weird QPersistentIndex corruption bugfix
- *  [DONE?] start-on-boot option
  *  lock to specific resolution
  *  lock to desktop screen
  *  periodic (timed settings save)
@@ -61,7 +65,6 @@
  *  backup configuration
  *  custom sorting
  *  custom alignment
- *  custom hilight/selection color
  *  free placement, free scaling
  *  whole desktop replacement option
  *  multi column list
@@ -71,8 +74,6 @@
  *  caching of extracted icons and thumbnails
  *  drive names (from shortcuts)
  *  predefined styles
- *  fix tray context menu for linux
- *  'about' dialog
  *  extract icons from links themselves not their targets
  */
 
@@ -102,6 +103,10 @@ int main( int argc, char *argv[] ) {
     XMLTools::instance()->readConfiguration( XMLTools::Variables );
 
     // request a trivial icon early to avoid QObject::moveToThread bug
+#ifdef Q_OS_LINUX
+    QIcon i;
+    Q_UNUSED( i )
+#endif
     IconCache::instance()->iconForFilename( QDir::currentPath(), 0 );
 
     // setup icons

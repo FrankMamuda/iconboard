@@ -23,8 +23,8 @@
 #include "iconindex.h"
 #include "indexcache.h"
 #include "variable.h"
-
 #include <QPainter>
+#include <QMimeDatabase>
 #ifdef Q_OS_WIN
 #include <QtWin>
 #include <QDir>
@@ -33,7 +33,6 @@
 #include <shellapi.h>
 #include <Winuser.h>
 #include <QPainter>
-#include <QMimeDatabase>
 #endif
 
 /**
@@ -53,21 +52,26 @@ IconCache::IconCache( QObject *parent ) : QObject( parent ) {
 QIcon IconCache::icon( const QString &iconName, int scale, const QString theme ) {
     QIcon icon;
     QString alias;
+    QString themeName( theme );
+
+    // revert to default if empty
+    if ( themeName.isEmpty())
+        themeName = IconIndex::instance()->defaultTheme();
 
     // return empty icon on invalid themes
-    if ( !QString::compare( theme, "system" ) || theme.isEmpty())
+    if ( !QString::compare( themeName, "system" ))
         return QIcon();
 
     // make unique icons for different sizes
-    alias = QString( "%1_%2_%3" ).arg( iconName ).arg( theme ).arg( scale );
+    alias = QString( "%1_%2_%3" ).arg( iconName ).arg( themeName ).arg( scale );
 
     // retrieve icon from index cache if it is not available in internal cache
     if ( !this->cache.contains( alias )) {
-        icon = IndexCache::instance()->icon( iconName, scale, theme );
+        icon = IndexCache::instance()->icon( iconName, scale, themeName );
 
         // handle missing icons
         if ( icon.isNull()) {
-            icon = IndexCache::instance()->icon( "application-x-zerosize", scale, theme );
+            icon = IndexCache::instance()->icon( "application-x-zerosize", scale, themeName );
             if ( icon.isNull())
                 return QIcon();
         }
@@ -283,7 +287,7 @@ QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
     }
 
     if ( icon.isNull())
-        icon = IconCache::instance()->icon( iconName, iconSize, IconIndex::instance()->defaultTheme());
+        icon = IconCache::instance()->icon( iconName, iconSize );
 
     if ( info.isSymLink())
         icon = IconCache::instance()->addSymlinkLabel( icon, iconSize );

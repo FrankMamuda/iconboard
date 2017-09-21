@@ -21,28 +21,27 @@
 //
 // includes
 //
-#include <QDialog>
-#include <QToolBar>
+//#include <QApplication>
+//#include <QDesktopWidget>
+//#include <QScreen>
+#include <QPainter>
+#include <QFrame>
+#include <QDebug>
 
 /**
- * The Ui namespace
+ * @brief The BackgroundFrame class
  */
-namespace Ui {
-class StyleSheetDialog;
-}
-
-/**
- * @brief The StyleSheetDialog class
- */
-class StyleSheetDialog : public QDialog {
+class BackgroundFrame : public QFrame {
     Q_OBJECT
 
 public:
-    explicit StyleSheetDialog( QWidget *parent = 0, const QString &styleSheet = QString::null );
-    ~StyleSheetDialog();
-    QString customStyleSheet() const;
+    BackgroundFrame( QWidget *parent ) : QFrame( parent ) {}
 
-private:
-    Ui::StyleSheetDialog *ui;
-    QToolBar *toolBar;
+protected:
+    void paintEvent( QPaintEvent *event ) {
+        QPainter painter( this );
+        QBrush brush( Qt::black, Qt::FDiagPattern );
+        painter.fillRect( this->rect(), brush );
+        QFrame::paintEvent( event );
+    }
 };

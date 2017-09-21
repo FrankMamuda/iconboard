@@ -41,7 +41,7 @@
  * @brief TrayWidget::TrayWidget
  * @param parent
  */
-TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), desktop( new QDesktopWidget()), menu( new QMenu( this )) {
+TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), menu( new QMenu( this )) {
     // init ui
     this->ui->setupUi( this );
 
@@ -55,30 +55,42 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
 #ifdef Q_OS_WIN
     this->getWindowHandles();
 #endif
-    this->wallpaper = desktop->grab();
 
     // connect tray icon
     this->connect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )), this, SLOT( trayIconActivated( QSystemTrayIcon::ActivationReason )));
     this->connect( qApp, SIGNAL( aboutToQuit()), this, SLOT( writeConfiguration()));
 
     // set up icons
-    this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add", 16, IconIndex::instance()->defaultTheme()));
-    this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove", 16, IconIndex::instance()->defaultTheme()));
-    this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid", 16, IconIndex::instance()->defaultTheme()));
-    this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility", 16, IconIndex::instance()->defaultTheme()));
+    this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add", 16 ));
+    this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove", 16 ));
+    this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid", 16 ));
+    this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility", 16 ));
 
     // reload on changed virtual geometry
     this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
 
     // setup context menu
-    this->menu->addAction( IconCache::instance()->icon( "view-list-icons", 16, IconIndex::instance()->defaultTheme()), this->tr( "Widget list" ), this, SLOT( show()));
-    this->menu->addAction( IconCache::instance()->icon( "configure", 16, IconIndex::instance()->defaultTheme()), this->tr( "Settings" ), this, SLOT( showSettingsDialog()));
+    QAction *actionSettings, *actionAbout, *actionStyle;
+    this->menu->addAction( IconCache::instance()->icon( "view-list-icons", 16 ), this->tr( "Widget list" ), this, SLOT( show()));
+    actionSettings = this->menu->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" ));
+    actionSettings->connect( actionSettings, &QAction::triggered, this, [ actionSettings, this ]() {
+        Settings settingsDialog;
+        settingsDialog.exec();
+    });
 #ifdef QT_DEBUG
-    this->menu->addAction( this->tr( "Style editor" ), this, SLOT( showStyleDialog()));
+    actionStyle = this->menu->addAction( this->tr( "Style editor" ));
+    actionStyle->connect( actionStyle, &QAction::triggered, this, [ actionStyle, this ]() {
+        StyleEditor styleDialog;
+        styleDialog.exec();
+    });
 #endif
     this->menu->addSeparator();
-    this->menu->addAction( IconCache::instance()->icon( "help-about", 16, IconIndex::instance()->defaultTheme()), this->tr( "About" ), this, SLOT( showAboutDialog()));
-    this->menu->addAction( IconCache::instance()->icon( "application-exit", 16, IconIndex::instance()->defaultTheme()), this->tr( "Exit" ), qApp, SLOT( quit()));
+    actionAbout = this->menu->addAction( IconCache::instance()->icon( "help-about", 16 ), this->tr( "About" ));
+    actionAbout->connect( actionAbout, &QAction::triggered, this, [ actionAbout, this ]() {
+        About aboutDialog;
+        aboutDialog.exec();
+    });
+    this->menu->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" ), qApp, SLOT( quit()));
     this->tray->setContextMenu( this->menu );
 
     // read configuration
@@ -99,7 +111,7 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
 TrayWidget::~TrayWidget() {
     this->disconnect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )));
     //delete this->cache;
-    delete this->desktop;
+    //delete this->desktop;
     delete this->model;
     delete this->menu;
     delete this->tray;
@@ -165,29 +177,6 @@ void TrayWidget::getWindowHandles() {
  */
 void TrayWidget::on_widgetList_doubleClicked( const QModelIndex & ) {
     this->on_actionShow_triggered();
-}
-
-/**
- * @brief TrayWidget::showSettingsDialog
- */
-void TrayWidget::showSettingsDialog() {
-    Settings settingsDialog;
-    settingsDialog.exec();
-}
-
-/**
- * @brief TrayWidget::showStyleDialog
- */
-void TrayWidget::showStyleDialog() {
-    StyleEditor styleDialog;
-    styleDialog.exec();
-}
-/**
- * @brief TrayWidget::showAboutDialog
- */
-void TrayWidget::showAboutDialog() {
-    About aboutDialog;
-    aboutDialog.exec();
 }
 
 /**
@@ -315,6 +304,9 @@ void TrayWidget::reload() {
     // clear widget list
     this->widgetList.clear();
 
+    // clear icon cache
+    IconCache::instance()->clearCache();
+
     // reload widget list
     this->readConfiguration();
 }
@@ -323,7 +315,7 @@ void TrayWidget::reload() {
  * @brief TrayWidget::iconThemeChanged
  * @param value
  */
-void TrayWidget::iconThemeChanged(QVariant value) {
+void TrayWidget::iconThemeChanged( QVariant value ) {
     QString themeName;
 
     themeName = value.toString();
