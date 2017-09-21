@@ -1,0 +1,40 @@
+QLabel#title {
+    background-color: rgba( 207, 207, 207, 200 );
+    color: black;
+    padding: 4px;
+    font-weight: bold;
+}
+
+QListView#view {
+    background-color: rgba( 223, 223, 223, 160 );
+    color: black;
+    font-size: 9pt;
+    outline: none;
+    border: 0px;
+}
+
+QScrollBar:vertical {
+    width:10px;
+    background: rgba( 0, 0, 0, 32 );
+    margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba( 255, 255, 255, 180 );
+    border-radius: 4px;
+    width: 8px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    min-height: 9px;
+    max-height: 32px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}

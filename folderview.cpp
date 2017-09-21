@@ -37,6 +37,7 @@
 #ifdef Q_OS_WIN
 #include <QPointer>
 #include <shlobj.h>
+#include <styles.h>
 #endif
 
 //
@@ -75,22 +76,24 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
     this->ui->view->setDragDropMode( QAbstractItemView::NoDragDrop );
     this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
 
-    this->ui->view->setDragEnabled(true);
-    this->ui->view->setAcceptDrops(true);
-    this->ui->view->setDropIndicatorShown(true);
+    // enable drag & drop
+    this->ui->view->setDragEnabled( true );
+    this->ui->view->setAcceptDrops( true );
+    this->ui->view->setDropIndicatorShown( true );
 
     // set up view delegate
     this->delegate = new FolderDelegate( this->ui->view );
     this->ui->view->setItemDelegate( this->delegate );
 
     // set title
+    this->ui->title->setAutoFillBackground( true );
     if ( dir.isRoot())
         this->ui->title->setText( QStorageInfo( dir ).displayName());
     else
         this->ui->title->setText( dir.dirName());
 
     // set default stylesheet
-    styleSheet.setFileName( ":/stylesheets/stylesheet.qss" );
+    styleSheet.setFileName( ":/stylesheets/dark.qss" );
     if ( styleSheet.open( QFile::ReadOnly )) {
         this->defaultStyleSheet = styleSheet.readAll().constData();
         styleSheet.close();
@@ -157,6 +160,19 @@ void FolderView::displayContextMenu( const QPoint &point ) {
     appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Appearance" ));
     styleMenu = appearanceMenu->addMenu( this->tr( "Style" ));
     styleMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" ), this, SLOT( editStylesheet()));
+
+    // add builtin/predefined style chooser
+    foreach ( const StyleEntry style, StyleManager::instance()->list ) {
+        QAction *action = styleMenu->addAction( style.name());
+        action->setData( style.styleSheet());
+
+        // connect via lambda
+        this->connect(
+            action, &QAction::triggered,
+            [=]() { this->setCustomStyleSheet( action->data().toString(), true ); }
+        );
+    }
+
     appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
     actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16 ), this->tr( "List mode" ), this, SLOT( toggleViewMode()));
     actionListMode->setCheckable( true );
@@ -215,10 +231,10 @@ void FolderView::setCustomTitle( const QString &title ) {
  * @brief FolderView::setCustomStyleSheet
  * @param stylesheet
  */
-void FolderView::setCustomStyleSheet( const QString &stylesheet ) {
+void FolderView::setCustomStyleSheet( const QString &stylesheet, bool force ) {
     this->m_customStyleSheet = stylesheet;
 
-    if ( stylesheet.isEmpty())
+    if ( stylesheet.isEmpty() && !force )
         this->setDefaultStyleSheet();
     else {
         this->setStyleSheet( stylesheet );

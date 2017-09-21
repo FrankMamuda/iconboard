@@ -37,7 +37,8 @@ SOURCES += main.cpp\
     variable.cpp \
     mapperwidget.cpp \
     xmltools.cpp \
-    styleeditor.cpp
+    styleeditor.cpp \
+    styles.cpp
 
 HEADERS  += \
     folderview.h \

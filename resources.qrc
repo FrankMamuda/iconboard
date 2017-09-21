@@ -4,6 +4,7 @@
         <file alias="link">icons/link.svg</file>
     </qresource>
     <qresource prefix="/stylesheets">
-        <file>stylesheet.qss</file>
+        <file>dark.qss</file>
+        <file>light.qss</file>
     </qresource>
 </RCC>

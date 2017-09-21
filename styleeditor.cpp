@@ -39,8 +39,6 @@ StyleEditor::StyleEditor( QWidget *parent, Modes mode, const QString &styleSheet
     this->ui->view->setModel( this->model );
     this->delegate = new FolderDelegate( this->ui->view );
     this->ui->view->setItemDelegate( this->delegate );
-    this->ui->view->setStyleSheet( this->ui->styleSheetEditor->toPlainText());
-    this->ui->title->setStyleSheet( this->ui->styleSheetEditor->toPlainText());
 
     // set up tab widget
     if ( this->ui->tabWidget->count() != 2 )
@@ -67,6 +65,7 @@ StyleEditor::StyleEditor( QWidget *parent, Modes mode, const QString &styleSheet
         // add toolbar buttons
         this->toolBar->addAction( IconCache::instance()->icon( "document-save", 16 ), this->tr( "Save" ));
         this->toolBar->addAction( IconCache::instance()->icon( "document-save-as", 16 ), this->tr( "Save as" ));
+        this->toolBar->addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename" ));
         this->toolBar->addAction( IconCache::instance()->icon( "document-revert", 16 ), this->tr( "Revert" ));
         this->toolBar->addAction( IconCache::instance()->icon( "edit-delete", 16 ), this->tr( "Remove" ));
         this->toolBar->addWidget( new QLabel( this->tr( "Style:" )));
@@ -74,6 +73,11 @@ StyleEditor::StyleEditor( QWidget *parent, Modes mode, const QString &styleSheet
     } else if ( this->mode() == Custom ) {
         this->ui->styleSheetEditor->setPlainText( styleSheet );
     }
+
+    // do this after
+    this->ui->view->setStyleSheet( this->ui->styleSheetEditor->toPlainText());
+    this->ui->title->setStyleSheet( this->ui->styleSheetEditor->toPlainText());
+    this->ui->title->setAutoFillBackground( true );
 }
 
 /**

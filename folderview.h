@@ -125,7 +125,7 @@ public:
 public slots:
     void displayContextMenu( const QPoint &point );
     void setCustomTitle( const QString &title );
-    void setCustomStyleSheet( const QString &stylesheet );
+    void setCustomStyleSheet( const QString &stylesheet, bool force = false );
     void setDefaultStyleSheet();
     void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }
     void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }

@@ -54,6 +54,7 @@
  *  [DONE] start-on-boot option
  *  [DONE] fix tray context menu for linux
  *  [DONE] 'about' dialog
+ *  [DONE] predefined styles
  *  [DONE] custom hilight/selection color - use selection-background-color: in qss
  *  [DONE?] weird QPersistentIndex corruption bugfix
  *  lock to specific resolution
@@ -73,7 +74,6 @@
  *  extract shell icons from dirs on symlinks
  *  caching of extracted icons and thumbnails
  *  drive names (from shortcuts)
- *  predefined styles
  *  extract icons from links themselves not their targets
  */
 

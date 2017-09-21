@@ -23,6 +23,7 @@
 #include "variable.h"
 #include "traywidget.h"
 #include "folderview.h"
+#include "styles.h"
 #include <QBuffer>
 #include <QDir>
 #include <QDomDocument>
@@ -67,7 +68,6 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
 
     case Styles:
         path = configDir.absolutePath() + "/" + XMLFiles::Styles;
-        qDebug() << "write out" << path;
         break;
 
     case NoMode:
@@ -166,14 +166,22 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
 
     case Styles:
         // begin style element
-        stream.writeStartElement( "style" );
+        foreach ( const StyleEntry style, StyleManager::instance()->list ) {
+            // skip built in styles
+            if ( style.builtIn())
+                continue;
 
-        // stylesheet (for better readability store as attribute)
-        stream.writeAttribute( "name", QString( "super awesome style" ).replace( "\r", "" ));
-        stream.writeAttribute( "stylesheet", QString( "junk" ).replace( "\r", "" ));
+            // begin style element
+            stream.writeStartElement( "style" );
 
-        // end style element
-        stream.writeEndElement();
+            // stylesheet (for better readability store as attribute)
+            stream.writeAttribute( "name", style.name());
+            stream.writeAttribute( "stylesheet", style.styleSheet().replace( "\r", "" ));
+            stream.writeAttribute( "builtIn", QString::number( static_cast<int>( style.builtIn())));
+
+            // end style element
+            stream.writeEndElement();
+        }
         break;
 
     case NoMode:
@@ -343,6 +351,15 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
 
                 if ( Variable::instance()->contains( key ))
                     Variable::instance()->setValue( key, value, true );
+            } else if ( !QString::compare( element.tagName(), "style" ) && mode == Styles ) {
+                QString name, styleSheet;
+
+                childNode = element.firstChild();
+                name = element.attribute( "name" );
+                styleSheet = element.attribute( "styleSheet" );
+
+                if ( !StyleManager::instance()->contains( name ) && !name.isNull() && !styleSheet.isNull())
+                    StyleManager::instance()->add( name, styleSheet, false );
             }
         }
         node = node.nextSibling();
