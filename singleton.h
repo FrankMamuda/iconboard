@@ -24,6 +24,7 @@
 #include <QtGlobal>
 #include <QScopedPointer>
 #include "callonce.h"
+#include <QDebug>
 
 /**
  * @brief The Singleton class
@@ -89,8 +90,15 @@ Singleton<T>::~Singleton() {
 
     createdPtr = (T*)Singleton<T>::singletonPtr.fetchAndStoreOrdered( nullptr );
 
-    if ( createdPtr != nullptr )
-        delete createdPtr;
+    if ( createdPtr != nullptr ) {
+        // perform delayed deletion of qobjects (safer)
+        // avoiding segfaults on linux in ~QHash
+        QObject *object = qobject_cast<QObject*>( createdPtr );
+        if ( object == nullptr )
+            delete createdPtr;
+        else
+            object->deleteLater();
+    }
 
     Singleton<T>::create.store( nullptr );
 }

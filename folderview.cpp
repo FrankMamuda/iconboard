@@ -34,10 +34,9 @@
 #include "styleeditor.h"
 #include "iconcache.h"
 #include "iconindex.h"
+#include "styles.h"
 #ifdef Q_OS_WIN
-#include <QPointer>
 #include <shlobj.h>
-#include <styles.h>
 #endif
 
 //
@@ -539,7 +538,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
                 // get offset from previous mouse position
                 offset = mouseEvent->globalPos() - this->mousePos;
-
+#ifdef Q_OS_WIN
                 // get screen offset
                 screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
 
@@ -547,10 +546,10 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                 newPos = this->pos() - screenOffset + offset;
 
                 // use winapi to move the window (avoiding buggy Qt setGeometry)
-#ifdef Q_OS_WIN
+
                 MoveWindow(( HWND )this->winId(), newPos.x(), newPos.y(), this->width(), this->height(), true );
 #else
-                this->move( newPos.x(), newPos.y());
+                this->move( this->x() + offset.x(), this->y() + offset.y());
 #endif
                 // update last mouse position
                 this->mousePos = mouseEvent->globalPos();
@@ -766,14 +765,6 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
     // TODO: context menu in other environments
 #endif
 }
-
-/**
- * @brief FolderView::makeContextMenu
- */
-/*void FolderView::makeContextMenu()
-{
-
-}*/
 
 /**
  * @brief FileSystemModel::flags

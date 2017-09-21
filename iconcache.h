@@ -32,6 +32,7 @@ class IconCache : public QObject {
 
 public:
     IconCache( QObject *parent = 0 );
+    ~IconCache() { this->clearCache(); }
     static IconCache *createInstance() { return new IconCache(); }
     static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
     QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );

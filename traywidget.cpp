@@ -74,7 +74,7 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
     this->menu->addAction( IconCache::instance()->icon( "view-list-icons", 16 ), this->tr( "Widget list" ), this, SLOT( show()));
     actionSettings = this->menu->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" ));
     actionSettings->connect( actionSettings, &QAction::triggered, this, [ actionSettings, this ]() {
-        Settings settingsDialog;
+        Settings settingsDialog( this );
         settingsDialog.exec();
     });
 #ifdef QT_DEBUG

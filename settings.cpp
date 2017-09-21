@@ -188,7 +188,7 @@ void Settings::setValue( const QString &key, bool internal ) {
  * @brief Settings::on_closeButton_clicked
  */
 void Settings::on_closeButton_clicked() {
-    this->close();
+    this->accept();
 }
 
 /**

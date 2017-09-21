@@ -87,6 +87,9 @@ int main( int argc, char *argv[] ) {
     QString themeName;
     Application app( argc, argv );
 
+    // fixes auto close behaviour on linux
+    QApplication::setQuitOnLastWindowClosed( false );
+
     // create an instance of app
     if ( !app.lock())
         return EXIT_FAILURE;
