@@ -194,6 +194,7 @@ void TrayWidget::on_actionAdd_triggered() {
 #endif
         this->widgetList.last()->show();
         this->widgetList.last()->setDefaultStyleSheet();
+        this->widgetList.last()->sort();
         this->ui->widgetList->reset();
     }
 }

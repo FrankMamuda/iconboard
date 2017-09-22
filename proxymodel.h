@@ -22,7 +22,7 @@
 // includes
 //
 #include <QIcon>
-#include <QIdentityProxyModel>
+#include <QSortFilterProxyModel>
 
 //
 // classes
@@ -32,12 +32,12 @@ class FolderView;
 /**
  * @brief The IconProxyModel class
  */
-class IconProxyModel : public QIdentityProxyModel {
+class ProxyModel : public QSortFilterProxyModel {
     Q_OBJECT
 
 public:
-    explicit IconProxyModel( QObject *parent = nullptr );
-    ~IconProxyModel();
+    explicit ProxyModel( QObject *parent = nullptr );
+    ~ProxyModel();
     QVariant data( const QModelIndex &index, int role = Qt::DisplayRole ) const;
     void clearCache() { this->cache.clear(); }
 
@@ -52,6 +52,9 @@ private slots:
         emit this->dataChanged( index, index );
         this->cache[fileName] = icon;
     }
+
+protected:
+    bool lessThan( const QModelIndex &left, const QModelIndex &right ) const;
 
 private:
     QHash<QString, QIcon> cache;

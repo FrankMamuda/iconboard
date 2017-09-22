@@ -20,7 +20,7 @@
 // includes
 //
 #include "folderview.h"
-#include "iconproxymodel.h"
+#include "proxymodel.h"
 #include "iconcache.h"
 #include "styleeditor.h"
 #include "ui_styleeditor.h"

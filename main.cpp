@@ -26,7 +26,7 @@
 #include "iconindex.h"
 #include "iconcache.h"
 #include "variable.h"
-#include "iconproxymodel.h"
+#include "proxymodel.h"
 #include "application.h"
 #include "xmltools.h"
 

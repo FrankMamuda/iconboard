@@ -31,14 +31,14 @@ SOURCES += main.cpp\
     iconindex.cpp \
     iconcache.cpp \
     indexcache.cpp \
-    iconproxymodel.cpp \
     screenmapper.cpp \
     settings.cpp \
     variable.cpp \
     mapperwidget.cpp \
     xmltools.cpp \
     styleeditor.cpp \
-    styles.cpp
+    styles.cpp \
+    proxymodel.cpp
 
 HEADERS  += \
     folderview.h \
@@ -51,7 +51,6 @@ HEADERS  += \
     callonce.h \
     singleton.h \
     indexcache.h \
-    iconproxymodel.h \
     screenmapper.h \
     settings.h \
     variable.h \
@@ -61,7 +60,8 @@ HEADERS  += \
     about.h \
     styles.h \
     styleeditor.h \
-    backgroundframe.h
+    backgroundframe.h \
+    proxymodel.h
 
 FORMS    += \
     folderview.ui \

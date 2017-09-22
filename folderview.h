@@ -34,7 +34,8 @@
 //
 class FolderDelegate;
 class TrayWidget;
-class IconProxyModel;
+class ProxyModel;
+class FilterModel;
 
 /**
  * @brief The Ui namespace
@@ -99,6 +100,8 @@ public:
 #endif
     bool isReadOnly() const;
     Qt::SortOrder sortOrder() const { return this->m_sortOrder; }
+    bool directoriesFirst() const { return this->m_dirsFirst; }
+    bool isCaseSensitive() const { return this->m_caseSensitive; }
 
     // grab areas for frameless resizing
     enum Areas {
@@ -132,6 +135,9 @@ public slots:
     void setIconSize();
     void setReadOnly( bool enable = true );
     void setSortOrder( Qt::SortOrder order );
+    void setDirectoriesFirst( bool enable = true ) { this->m_dirsFirst = enable; }
+    void setCaseSensitive( bool enable = false ) { this->m_caseSensitive = enable; }
+    void sort();
 
 protected:
     void paintEvent( QPaintEvent *event );
@@ -139,7 +145,6 @@ protected:
 
 private slots:
     void changeDirectory();
-    void renameView();
 #ifdef Q_OS_WIN
     void setupFrame( HWND windowParent );
 #else
@@ -147,16 +152,11 @@ private slots:
 #endif
     void makeGrabAreas();
     void on_view_clicked( const QModelIndex &index );
-    void editStylesheet();
-    void toggleViewMode();
-    void toggleAccessMode();
     void on_view_customContextMenuRequested( const QPoint &pos );
-    //void makeContextMenu();
-    void toggleSortOrder();
 
 private:
     Ui::FolderView *ui;
-    IconProxyModel *proxyModel;
+    ProxyModel *proxyModel;
     FileSystemModel *model;
     FolderDelegate *delegate;
     QPoint mousePos;
@@ -168,5 +168,7 @@ private:
     QString m_customStyleSheet;
     QString defaultStyleSheet;
     Qt::SortOrder m_sortOrder;
-    //QMenu menu;
+    bool m_dirsFirst;
+    bool m_caseSensitive;
+    FilterModel *filterModel;
 };

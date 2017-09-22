@@ -22,32 +22,33 @@
 #include <QFileSystemModel>
 #include <QtConcurrent>
 #include "folderview.h"
-#include "iconproxymodel.h"
+#include "proxymodel.h"
 #include "iconcache.h"
+#include <QDebug>
 
 /**
- * @brief IconProxyModel::IconProxyModel
+ * @brief ProxyModel::ProxyModel
  * @param parent
  */
-IconProxyModel::IconProxyModel( QObject *parent ) : QIdentityProxyModel( parent ) {
+ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ) {
     this->view = qobject_cast<FolderView*>( parent );
     this->connect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )), this, SLOT( updateModel( QString, QIcon, QPersistentModelIndex )));
 }
 
 /**
- * @brief IconProxyModel::~IconProxyModel
+ * @brief ProxyModel::~ProxyModel
  */
-IconProxyModel::~IconProxyModel() {
+ProxyModel::~ProxyModel() {
     this->disconnect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )));
 }
 
 /**
- * @brief IconProxyModel::data
+ * @brief ProxyModel::data
  * @param index
  * @param role
  * @return
  */
-QVariant IconProxyModel::data( const QModelIndex &index, int role ) const {
+QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
     QString fileName;
     QPersistentModelIndex persistentIndex( index );
     int iconSize;
@@ -71,8 +72,52 @@ QVariant IconProxyModel::data( const QModelIndex &index, int role ) const {
         if ( fileName.endsWith( ".lnk" ))
             return fileName.remove( ".lnk" ).split( "/" ).last();
 
-        return QIdentityProxyModel::data( index, Qt::DisplayRole ).toString();
+        return QSortFilterProxyModel::data( index, Qt::DisplayRole ).toString();
     }
 
-    return QIdentityProxyModel::data( index, role );
+    return QSortFilterProxyModel::data( index, role );
+}
+
+/**
+ * @brief ProxyModel::lessThan
+ * @param left
+ * @param right
+ * @return
+ */
+bool ProxyModel::lessThan( const QModelIndex &left, const QModelIndex &right ) const {
+    bool compare;
+    QFileInfo leftInfo, rightInfo;
+
+    if ( this->sortColumn() == 0 ) {
+        FileSystemModel *fileSystemModel;
+
+        fileSystemModel = qobject_cast<FileSystemModel*>( this->sourceModel());
+        if ( fileSystemModel == nullptr || this->view == nullptr ) {
+            return QSortFilterProxyModel::lessThan( left, right );
+        }
+
+        compare = this->view->sortOrder() == Qt::AscendingOrder ? true : false;
+        leftInfo  = fileSystemModel->fileInfo( left );
+        rightInfo = fileSystemModel->fileInfo( right );
+        //qDebug() << "sort" << leftInfo.fileName() << rightInfo.fileName() << compare << this->view->isCaseSensitive() << this->
+
+        if ( this->view->directoriesFirst()) {
+            if ( !leftInfo.isDir() && rightInfo.isDir())
+                return !compare;
+
+            if ( leftInfo.isDir() && !rightInfo.isDir())
+                return compare;
+        }
+
+        bool value;
+        if ( this->view->isCaseSensitive()) {
+            value = QString::localeAwareCompare( leftInfo.fileName(), rightInfo.fileName());
+            return compare ? value : !value;
+        }
+
+        value = QString::localeAwareCompare( leftInfo.fileName().toLower(), rightInfo.fileName().toLower());
+        return compare ? value : !value;
+    }
+
+    return QSortFilterProxyModel::lessThan( left, right );
 }

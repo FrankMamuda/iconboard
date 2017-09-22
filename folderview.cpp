@@ -30,7 +30,7 @@
 #include "folderview.h"
 #include "folderdelegate.h"
 #include "traywidget.h"
-#include "iconproxymodel.h"
+#include "proxymodel.h"
 #include "styleeditor.h"
 #include "iconcache.h"
 #include "iconindex.h"
@@ -53,7 +53,8 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
                         #ifdef Q_OS_WIN
                         HWND windowParent,
                         #endif
-                        TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ), m_sortOrder( Qt::AscendingOrder ) {
+                        TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ), m_sortOrder( Qt::AscendingOrder )/*, menu( new QMenu( this ))*/,
+                        m_dirsFirst( true ), m_caseSensitive( false ) {
     QDir dir( rootPath );
     QFile styleSheet;
 
@@ -64,10 +65,13 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
     this->ui->view->setViewMode( QListView::IconMode );
     //this->model->setResolveSymlinks( false );
 #ifdef PROXY_MODEL
-    this->proxyModel = new IconProxyModel( this );
+    this->proxyModel = new ProxyModel( this );
+    // NOTE: doesn't work
+    this->proxyModel->setDynamicSortFilter( true );
     this->proxyModel->setSourceModel( this->model );
     this->ui->view->setModel( this->proxyModel );
     this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( rootPath )));
+
 #else
     this->ui->view->setModel( this->model );
     this->ui->view->setRootIndex( this->model->setRootPath( rootPath )));
@@ -111,6 +115,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
  * @brief FolderView::~FolderView
  */
 FolderView::~FolderView() {
+    //delete this->menu;
 #ifdef PROXY_MODEL
     delete this->proxyModel;
 #endif
@@ -149,68 +154,137 @@ int FolderView::iconSize() const {
  * @param point
  */
 void FolderView::displayContextMenu( const QPoint &point ) {
-    QMenu menu, *appearanceMenu, *styleMenu, *sortMenu;
-    QAction *actionListMode, *actionReadOnly, *actionSortAscending, *actionDirsFirst, *actionCaseSensitive;
+    QMenu menu;
+    QAction *actionReadOnly;
 
+    // change directory
     menu.addAction( IconCache::instance()->icon( "inode-directory", 16 ), this->tr( "Change directory" ), this, SLOT( changeDirectory()));
-    menu.addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename view" ), this, SLOT( renameView()));
+
+    // rename view lambda
+    this->connect( menu.addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename view" )), &QAction::triggered, [this]() {
+        QString title;
+        bool ok;
+
+        title = QInputDialog::getText( this->parentWidget(), this->tr( "Rename view" ), this->tr( "Title:" ), QLineEdit::Normal, this->model->rootDirectory().dirName(), &ok );
+        if ( ok && !title.isEmpty())
+            this->setCustomTitle( title );
+    } );
+
+    // close view
     menu.addAction( IconCache::instance()->icon( "view-close", 16 ), this->tr( "Hide" ), this, SLOT( hide()));
+
+    // add separator
     menu.addSeparator();
-    appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Appearance" ));
-    styleMenu = appearanceMenu->addMenu( this->tr( "Style" ));
-    styleMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" ), this, SLOT( editStylesheet()));
 
-    // add builtin/predefined style chooser
-    foreach ( const StyleEntry style, StyleManager::instance()->list ) {
-        QAction *action = styleMenu->addAction( style.name());
-        action->setData( style.styleSheet());
+    //
+    // begin APPEARANCE menu
+    //
+    {
+        QMenu *appearanceMenu;
+        QAction *actionListMode;
 
-        // connect via lambda
-        this->connect(
-            action, &QAction::triggered,
-            [=]() { this->setCustomStyleSheet( action->data().toString(), true ); }
-        );
+        // create appearance menu
+        appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Appearance" ));
+
+        // icon size
+        appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
+
+        //
+        // begin STYLE menu
+        //
+        {
+            QMenu *styleMenu;
+
+            // add style menu
+            styleMenu = appearanceMenu->addMenu( this->tr( "Style" ));
+
+            // custom stylesheet lambda
+            this->connect( styleMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" )), &QAction::triggered, [this]() {
+                StyleEditor dialog( this, StyleEditor::Custom, this->currentStyleSheet());
+                int result;
+
+                result = dialog.exec();
+                if ( result == QDialog::Accepted )
+                    this->setCustomStyleSheet( dialog.customStyleSheet());
+            } );
+
+            // add builtin/predefined style chooser
+            foreach ( const StyleEntry style, StyleManager::instance()->list ) {
+                // connect via lambda
+                this->connect( styleMenu->addAction( style.name()), &QAction::triggered, [this, style]() {
+                    this->setCustomStyleSheet( style.styleSheet(), true );
+                } );
+            }
+        }
+
+        // end STYLE menu
+
+        // view mode lambda
+        actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16 ), this->tr( "List mode" ));
+        actionListMode->setCheckable( true );
+        actionListMode->setChecked( this->viewMode() == QListView::ListMode );
+        this->connect( actionListMode, &QAction::triggered, [this]() {
+            this->setViewMode( this->viewMode() == QListView::IconMode ? QListView::ListMode : QListView::IconMode );
+        } );
+    }
+    // end APPEARANCE menu
+
+    // add separator
+    menu.addSeparator();
+
+    //
+    // begin SORT menu
+    //
+    {
+        QMenu *sortMenu;
+        QAction *actionSortOrder, *actionDirsFirst, *actionCaseSensitive;
+
+        // sort menu
+        sortMenu = menu.addMenu( IconCache::instance()->icon( "format-list-ordered", 16 ), this->tr( "Sort" ));
+
+        // sort order lambda
+        actionSortOrder = sortMenu->addAction( IconCache::instance()->icon( "view-sort-ascending", 16 ), this->tr( "Ascending order" ));
+        actionSortOrder->setCheckable( true );
+        actionSortOrder->setChecked( this->sortOrder() == Qt::AscendingOrder );
+        this->connect( actionSortOrder, &QAction::triggered, [this]() {
+            this->setSortOrder( this->sortOrder() == Qt::AscendingOrder ? Qt::DescendingOrder : Qt::AscendingOrder );
+            qDebug() << "sortOrder of" << this->title() << "changed to" << this->sortOrder();
+            this->sort();
+        } );
+
+        // directories first sort
+        actionDirsFirst = sortMenu->addAction( this->tr( "Directories first" ));
+        actionDirsFirst->setCheckable( true );
+        actionDirsFirst->setChecked( this->directoriesFirst());
+        this->connect( actionDirsFirst, &QAction::triggered, [this]() {
+            this->setDirectoriesFirst( !this->directoriesFirst());
+            qDebug() << "dirsFirst of" << this->title() << "changed to" << this->directoriesFirst();
+            this->sort();
+        } );
+
+        // case sensitive sort
+        actionCaseSensitive = sortMenu->addAction( this->tr( "Case sensitive" ));
+        actionCaseSensitive->setCheckable( true );
+        this->connect( actionCaseSensitive, &QAction::triggered, [this]() {
+            this->setCaseSensitive( !this->isCaseSensitive());
+            qDebug() << "caseSensitive of" << this->title() << "changed to" << this->isCaseSensitive();
+            this->sort();
+        } );
     }
 
-    appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
-    actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16 ), this->tr( "List mode" ), this, SLOT( toggleViewMode()));
-    actionListMode->setCheckable( true );
-
-    if ( this->viewMode() == QListView::ListMode )
-        actionListMode->setChecked( true );
-    else
-        actionListMode->setChecked( false );
-
+    // add separator
     menu.addSeparator();
 
-    sortMenu = menu.addMenu( IconCache::instance()->icon( "format-list-ordered", 16 ), this->tr( "Sort" ));
-    actionSortAscending = sortMenu->addAction( IconCache::instance()->icon( "view-sort-ascending", 16 ), this->tr( "Ascending order" ), this, SLOT( toggleSortOrder()));
-    if ( this->sortOrder() == Qt::AscendingOrder)
-        actionSortAscending->setChecked( true );
-    else
-        actionSortAscending->setChecked( false );
-
-    //actionSortAscending->connect( actionSortAscending, &QAction::triggered, this, [ actionSortAscending, this ]() {
-    //    //this->setO
-    //    fw.setOrder( Qt::AscendingOrder );
-    //});
-    actionSortAscending->setCheckable( true );
-    actionDirsFirst = sortMenu->addAction( this->tr( "Directories first" ), this, SLOT( editStylesheet()));
-    actionDirsFirst->setCheckable( true );
-    actionCaseSensitive = sortMenu->addAction( this->tr( "Case sensitive" ), this, SLOT( editStylesheet()));
-    actionCaseSensitive->setCheckable( true );
-
-    menu.addSeparator();
-
-    actionReadOnly = menu.addAction( this->tr( "Read only" ), this, SLOT( toggleAccessMode()));
+    // read only lambda
+    actionReadOnly = menu.addAction( this->tr( "Read only" ));
     actionReadOnly->setCheckable( true );
+    actionReadOnly->setChecked( this->model->isReadOnly());
     actionReadOnly->setDisabled( true );
+    this->connect( actionReadOnly, &QAction::triggered, [this]() {
+        this->setReadOnly( !this->isReadOnly());
+    } );
 
-    if ( this->model->isReadOnly())
-        actionReadOnly->setChecked( true );
-    else
-        actionReadOnly->setChecked( false );
-
+    // show menu
     menu.exec( this->mapToGlobal( point ));
 }
 
@@ -303,67 +377,11 @@ void FolderView::changeDirectory() {
 }
 
 /**
- * @brief FolderView::renameView
- */
-void FolderView::renameView() {
-    QString title;
-    bool ok;
-
-    title = QInputDialog::getText( this->parentWidget(), this->tr( "Rename view" ), this->tr( "Title:" ), QLineEdit::Normal, this->model->rootDirectory().dirName(), &ok );
-    if ( ok && !title.isEmpty())
-        this->setCustomTitle( title );
-}
-
-/**
- * @brief FolderView::editStylesheet
- */
-void FolderView::editStylesheet() {
-    StyleEditor dialog( this, StyleEditor::Custom, this->currentStyleSheet());
-    int result;
-
-    result = dialog.exec();
-    if ( result == QDialog::Accepted )
-        this->setCustomStyleSheet( dialog.customStyleSheet());
-}
-
-/**
- * @brief FolderView::toggleViewMode
- */
-void FolderView::toggleViewMode() {
-    if ( this->viewMode() == QListView::IconMode )
-        this->setViewMode( QListView::ListMode );
-    else
-        this->setViewMode( QListView::IconMode );
-}
-
-/**
- * @brief FolderView::toggleAccessMode
- */
-void FolderView::toggleAccessMode() {
-    this->setReadOnly( !this->isReadOnly());
-}
-
-/**
- * @brief FolderView::toggleSortOrder
- */
-void FolderView::toggleSortOrder() {
-    if ( this->sortOrder() == Qt::AscendingOrder )
-        this->setSortOrder( Qt::DescendingOrder );
-    else
-        this->setSortOrder( Qt::AscendingOrder );
-}
-
-/**
  * @brief FolderView::setReadOnly
  */
 void FolderView::setReadOnly( bool enable ) {
     this->model->setReadOnly( enable );
-
-    if ( enable )
-        this->ui->view->setDragDropMode( QListView::DropOnly );
-    else
-        this->ui->view->setDragDropMode( QListView::NoDragDrop );
-
+    this->ui->view->setDragDropMode( enable ? QListView::DropOnly : QListView::NoDragDrop );
 }
 
 /**
@@ -372,7 +390,20 @@ void FolderView::setReadOnly( bool enable ) {
  */
 void FolderView::setSortOrder( Qt::SortOrder order ) {
     this->m_sortOrder = order;
-    this->model->sort( 0, order );
+}
+
+/**
+ * @brief FolderView::sort
+ * @param order
+ */
+void FolderView::sort() {
+    this->proxyModel->sort( 0 );
+
+    // FIXME: for some reason we have to reset model
+    this->ui->view->setModel( nullptr );
+    this->ui->view->setModel( this->proxyModel );
+    this->proxyModel->setSourceModel( this->model );
+    this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( this->rootPath() )));
 }
 
 /**
