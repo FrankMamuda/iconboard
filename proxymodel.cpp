@@ -27,30 +27,29 @@
 #include <QDebug>
 
 /**
- * @brief ProxyModel::ProxyModel
+ * @brief ProxyIdentityModel::ProxyIdentityModel
  * @param parent
  */
-ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ) {
+ProxyIdentityModel::ProxyIdentityModel( QObject *parent ) : QIdentityProxyModel( parent ) {
     this->view = qobject_cast<FolderView*>( parent );
-    this->connect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )), this, SLOT( updateModel( QString, QIcon, QPersistentModelIndex )));
+    this->connect( this, SIGNAL( iconFound( QString, QIcon, QModelIndex )), this, SLOT( updateModel( QString, QIcon, QModelIndex )));
 }
 
 /**
- * @brief ProxyModel::~ProxyModel
+ * @brief ProxyIdentityModel::~ProxyIdentityModel
  */
-ProxyModel::~ProxyModel() {
-    this->disconnect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )));
+ProxyIdentityModel::~ProxyIdentityModel() {
+    this->disconnect( this, SIGNAL( iconFound( QString, QIcon, QModelIndex )));
 }
 
 /**
- * @brief ProxyModel::data
+ * @brief ProxyIdentityModel::data
  * @param index
  * @param role
  * @return
  */
-QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
+QVariant ProxyIdentityModel::data( const QModelIndex &index, int role ) const {
     QString fileName;
-    QPersistentModelIndex persistentIndex( index );
     int iconSize;
 
     if ( role == QFileSystemModel::FileIconRole ) {
@@ -60,62 +59,66 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
         if ( this->cache.contains( fileName ))
             return this->cache[fileName];
 
-        QtConcurrent::run( [ this, fileName, persistentIndex, iconSize ] {
+        QtConcurrent::run( [ this, fileName, index, iconSize ] {
             QIcon icon;
 
             icon = IconCache::instance()->iconForFilename( fileName, iconSize );
             if ( !icon.isNull())
-                emit this->iconFound( fileName, icon, persistentIndex );
+                emit this->iconFound( fileName, icon, index );
         } );
     } else if ( role == Qt::DisplayRole ) {
         fileName = index.data( QFileSystemModel::FilePathRole ).toString();
         if ( fileName.endsWith( ".lnk" ))
             return fileName.remove( ".lnk" ).split( "/" ).last();
 
-        return QSortFilterProxyModel::data( index, Qt::DisplayRole ).toString();
+        return QIdentityProxyModel::data( index, Qt::DisplayRole ).toString();
     }
 
-    return QSortFilterProxyModel::data( index, role );
+    return QIdentityProxyModel::data( index, role );
 }
 
 /**
- * @brief ProxyModel::lessThan
+ * @brief ProxySortModel::ProxySortModel
+ * @param parent
+ */
+ProxySortModel::ProxySortModel( QObject *parent ) : QSortFilterProxyModel( parent ) {
+    this->view = qobject_cast<FolderView*>( parent );
+}
+
+/**
+ * @brief ProxySortModel::lessThan
  * @param left
  * @param right
  * @return
  */
-bool ProxyModel::lessThan( const QModelIndex &left, const QModelIndex &right ) const {
-    bool compare;
-    QFileInfo leftInfo, rightInfo;
-
+bool ProxySortModel::lessThan( const QModelIndex &left, const QModelIndex &right ) const {
     if ( this->sortColumn() == 0 ) {
+        QFileInfo leftInfo, rightInfo;
         FileSystemModel *fileSystemModel;
+        bool compare, value;
 
         fileSystemModel = qobject_cast<FileSystemModel*>( this->sourceModel());
-        if ( fileSystemModel == nullptr || this->view == nullptr ) {
+        if ( fileSystemModel == nullptr || this->view == nullptr )
             return QSortFilterProxyModel::lessThan( left, right );
-        }
 
         compare = this->view->sortOrder() == Qt::AscendingOrder ? true : false;
         leftInfo  = fileSystemModel->fileInfo( left );
         rightInfo = fileSystemModel->fileInfo( right );
-        //qDebug() << "sort" << leftInfo.fileName() << rightInfo.fileName() << compare << this->view->isCaseSensitive() << this->
 
         if ( this->view->directoriesFirst()) {
             if ( !leftInfo.isDir() && rightInfo.isDir())
-                return !compare;
+                return false;
 
             if ( leftInfo.isDir() && !rightInfo.isDir())
-                return compare;
+                return true;
         }
 
-        bool value;
         if ( this->view->isCaseSensitive()) {
-            value = QString::localeAwareCompare( leftInfo.fileName(), rightInfo.fileName());
+            value = leftInfo.fileName() < rightInfo.fileName();
             return compare ? value : !value;
         }
 
-        value = QString::localeAwareCompare( leftInfo.fileName().toLower(), rightInfo.fileName().toLower());
+        value = leftInfo.fileName().toLower() < rightInfo.fileName().toLower();
         return compare ? value : !value;
     }
 

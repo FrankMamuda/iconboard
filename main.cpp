@@ -55,6 +55,7 @@
  *  [DONE] fix tray context menu for linux
  *  [DONE] 'about' dialog
  *  [DONE] predefined styles
+ *  [DONE] custom sorting
  *  [DONE] custom hilight/selection color - use selection-background-color: in qss
  *  [DONE?] weird QPersistentIndex corruption bugfix
  *  lock to specific resolution
@@ -64,7 +65,6 @@
  *  pseudo-folders (with drag-drop support)
  *  non-read only folders
  *  backup configuration
- *  custom sorting
  *  custom alignment
  *  free placement, free scaling
  *  whole desktop replacement option
@@ -75,6 +75,7 @@
  *  caching of extracted icons and thumbnails
  *  drive names (from shortcuts)
  *  extract icons from links themselves not their targets
+ *  thumbnail caching as an option
  */
 
 /**

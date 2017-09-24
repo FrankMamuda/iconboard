@@ -53,8 +53,9 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
                         #ifdef Q_OS_WIN
                         HWND windowParent,
                         #endif
-                        TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), trayWidget( trayParent ), m_sortOrder( Qt::AscendingOrder )/*, menu( new QMenu( this ))*/,
-                        m_dirsFirst( true ), m_caseSensitive( false ) {
+                        TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ),
+    trayWidget( trayParent ), m_sortOrder( Qt::AscendingOrder ),
+    m_dirsFirst( true ), m_caseSensitive( false ) {
     QDir dir( rootPath );
     QFile styleSheet;
 
@@ -63,19 +64,12 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
 
     // set up listView and its model
     this->ui->view->setViewMode( QListView::IconMode );
-    //this->model->setResolveSymlinks( false );
-#ifdef PROXY_MODEL
-    this->proxyModel = new ProxyModel( this );
-    // NOTE: doesn't work
-    this->proxyModel->setDynamicSortFilter( true );
-    this->proxyModel->setSourceModel( this->model );
-    this->ui->view->setModel( this->proxyModel );
-    this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( rootPath )));
-
-#else
-    this->ui->view->setModel( this->model );
-    this->ui->view->setRootIndex( this->model->setRootPath( rootPath )));
-#endif
+    this->iconModel = new ProxyIdentityModel( this );
+    this->sortModel = new ProxySortModel( this );
+    this->sortModel->setSourceModel( this->model );
+    this->iconModel->setSourceModel( this->sortModel );
+    this->ui->view->setModel( this->iconModel );
+    this->ui->view->setRootIndex( this->iconModel->mapFromSource( this->sortModel->mapFromSource( this->model->setRootPath( rootPath ))));
     this->ui->view->setDragDropMode( QAbstractItemView::NoDragDrop );
     this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
 
@@ -117,7 +111,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
 FolderView::~FolderView() {
     //delete this->menu;
 #ifdef PROXY_MODEL
-    delete this->proxyModel;
+    delete this->iconModel;
 #endif
     delete this->delegate;
     delete this->model;
@@ -348,7 +342,7 @@ void FolderView::setIconSize() {
         this->ui->view->setItemDelegate( this->delegate );
 
 #ifdef PROXY_MODEL
-        this->proxyModel->clearCache();
+        this->iconModel->clearCache();
 #endif
     }
 }
@@ -363,16 +357,7 @@ void FolderView::changeDirectory() {
 
     if ( dir.exists()) {
         this->model->setRootPath( dir.absolutePath());
-#ifdef PROXY_MODEL
-        this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->index( dir.absolutePath())));
-#else
-        this->ui->view->setRootIndex( this->model->index( dir.absolutePath()));
-#endif
-
-        // this has to be done to properly reset view
-        this->delegate->clearCache();
-        this->ui->view->setItemDelegate( nullptr );
-        this->ui->view->setItemDelegate( this->delegate );
+        this->sort();
     }
 }
 
@@ -397,13 +382,19 @@ void FolderView::setSortOrder( Qt::SortOrder order ) {
  * @param order
  */
 void FolderView::sort() {
-    this->proxyModel->sort( 0 );
+    this->sortModel->sort( 0 );
 
     // FIXME: for some reason we have to reset model
     this->ui->view->setModel( nullptr );
-    this->ui->view->setModel( this->proxyModel );
-    this->proxyModel->setSourceModel( this->model );
-    this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( this->rootPath() )));
+    this->ui->view->setModel( this->iconModel );
+    this->sortModel->setSourceModel( this->model );
+    this->iconModel->setSourceModel( this->sortModel );
+    this->ui->view->setRootIndex( this->iconModel->mapFromSource( this->sortModel->mapFromSource( this->model->setRootPath( this->rootPath()))));
+
+    // this has to be done to properly reset view
+    this->delegate->clearCache();
+    this->ui->view->setItemDelegate( nullptr );
+    this->ui->view->setItemDelegate( this->delegate );
 }
 
 /**
@@ -716,11 +707,7 @@ void FolderView::on_view_clicked( const QModelIndex &index ) {
     if ( !index.isValid())
         return;
 
-#ifdef PROXY_MODEL
-    QDesktopServices::openUrl( QUrl::fromLocalFile( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()));
-#else
-    QDesktopServices::openUrl( QUrl::fromLocalFile( this->model->data( index, QFileSystemModel::FilePathRole ).toString()));
-#endif
+    QDesktopServices::openUrl( QUrl::fromLocalFile( this->model->data( this->sortModel->mapToSource( this->iconModel->mapToSource( index )), QFileSystemModel::FilePathRole ).toString()));
     this->ui->view->clearSelection();
 }
 
@@ -790,7 +777,7 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
         return;
 
 #ifdef Q_OS_WIN
-    FolderView::openShellContextMenuForObject( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()).utf16()), QCursor::pos(), ( HWND )this->winId());
+    FolderView::openShellContextMenuForObject( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( this->model->data( this->sortModel->mapToSource( this->iconModel->mapToSource( index )), QFileSystemModel::FilePathRole ).toString()).utf16()), QCursor::pos(), ( HWND )this->winId());
     this->ui->view->selectionModel()->clear();
 #else
     // TODO: context menu in other environments

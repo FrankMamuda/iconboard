@@ -34,7 +34,8 @@
 //
 class FolderDelegate;
 class TrayWidget;
-class ProxyModel;
+class ProxyIdentityModel;
+class ProxySortModel;
 class FilterModel;
 
 /**
@@ -156,7 +157,8 @@ private slots:
 
 private:
     Ui::FolderView *ui;
-    ProxyModel *proxyModel;
+    ProxyIdentityModel *iconModel;
+    ProxySortModel *sortModel;
     FileSystemModel *model;
     FolderDelegate *delegate;
     QPoint mousePos;
