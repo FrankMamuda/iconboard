@@ -3,7 +3,7 @@
         <file alias="launcher_96">launcher_96.png</file>
         <file alias="link">icons/link.svg</file>
     </qresource>
-    <qresource prefix="/stylesheets">
+    <qresource prefix="/styleSheets">
         <file>dark.qss</file>
         <file>light.qss</file>
     </qresource>

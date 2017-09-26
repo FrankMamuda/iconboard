@@ -23,7 +23,7 @@
 #include "variable.h"
 #include "traywidget.h"
 #include "folderview.h"
-#include "styles.h"
+#include "themes.h"
 #include <QBuffer>
 #include <QDir>
 #include <QDomDocument>
@@ -50,7 +50,6 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
     QDir configDir( QDir::homePath() + "/.iconBoard/" );
 #endif
 
-
     if ( !configDir.exists())
         configDir.mkpath( configDir.absolutePath());
 
@@ -66,8 +65,8 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
             return;
         break;
 
-    case Styles:
-        path = configDir.absolutePath() + "/" + XMLFiles::Styles;
+    case Themes:
+        path = configDir.absolutePath() + "/" + XMLFiles::Themes;
         break;
 
     case NoMode:
@@ -126,8 +125,8 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
             stream.writeStartElement( "widget" );
             stream.writeAttribute( "rootPath", widget->rootPath());
 
-            // stylesheet (for better readability store as attribute)
-            stream.writeAttribute( "stylesheet", widget->customStyleSheet().replace( "\r", "" ));
+            // styleSheet (for better readability store as attribute)
+            stream.writeAttribute( "styleSheet", widget->customStyleSheet().replace( "\r", "" ));
 
             // geometry
             stream.writeEmptyElement( "geometry" );
@@ -170,22 +169,21 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
     }
         break;
 
-    case Styles:
-        // begin style element
-        foreach ( const StyleEntry style, StyleManager::instance()->list ) {
-            // skip built in styles
-            if ( style.builtIn())
+    case Themes:
+        // begin theme element
+        foreach ( Theme *theme, Themes::instance()->list ) {
+            // skip built in themes
+            if ( theme->builtIn())
                 continue;
 
-            // begin style element
-            stream.writeStartElement( "style" );
+            // begin theme element
+            stream.writeStartElement( "theme" );
 
-            // stylesheet (for better readability store as attribute)
-            stream.writeAttribute( "name", style.name());
-            stream.writeAttribute( "stylesheet", style.styleSheet().replace( "\r", "" ));
-            stream.writeAttribute( "builtIn", QString::number( static_cast<int>( style.builtIn())));
+            // styleSheet (for better readability store as attribute)
+            stream.writeAttribute( "name", theme->name());
+            stream.writeAttribute( "styleSheet", theme->styleSheet().replace( "\r", "" ));
 
-            // end style element
+            // end theme element
             stream.writeEndElement();
         }
         break;
@@ -244,6 +242,10 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
             return;
         break;
 
+    case Themes:
+        path = configDir.absolutePath() + "/" + XMLFiles::Themes;
+        break;
+
     case NoMode:
     default:
         qDebug() << "XMLTools::readConfiguration: error - invalid mode";
@@ -284,7 +286,7 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
 #endif
                 widgetGeometry = widget->geometry();
 
-                styleSheet = element.attribute( "stylesheet" );
+                styleSheet = element.attribute( "styleSheet" );
 
                 while ( !childNode.isNull()) {
                     childElement = childNode.toElement();
@@ -366,15 +368,15 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
 
                 if ( Variable::instance()->contains( key ))
                     Variable::instance()->setValue( key, value, true );
-            } else if ( !QString::compare( element.tagName(), "style" ) && mode == Styles ) {
+            } else if ( !QString::compare( element.tagName(), "theme" ) && mode == Themes ) {
                 QString name, styleSheet;
 
                 childNode = element.firstChild();
                 name = element.attribute( "name" );
                 styleSheet = element.attribute( "styleSheet" );
 
-                if ( !StyleManager::instance()->contains( name ) && !name.isNull() && !styleSheet.isNull())
-                    StyleManager::instance()->add( name, styleSheet, false );
+                if ( !Themes::instance()->contains( name ) && !name.isNull() && !styleSheet.isNull())
+                    Themes::instance()->add( name, styleSheet, false );
             }
         }
         node = node.nextSibling();

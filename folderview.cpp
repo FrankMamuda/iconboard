@@ -31,10 +31,10 @@
 #include "folderdelegate.h"
 #include "traywidget.h"
 #include "proxymodel.h"
-#include "styleeditor.h"
+#include "ThemeEditor.h"
 #include "iconcache.h"
 #include "iconindex.h"
-#include "styles.h"
+#include "themes.h"
 #ifdef Q_OS_WIN
 #include <shlobj.h>
 #endif
@@ -89,8 +89,8 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
     else
         this->ui->title->setText( dir.dirName());
 
-    // set default stylesheet
-    styleSheet.setFileName( ":/stylesheets/dark.qss" );
+    // set default styleSheet
+    styleSheet.setFileName( ":/styleSheets/dark.qss" );
     if ( styleSheet.open( QFile::ReadOnly )) {
         this->defaultStyleSheet = styleSheet.readAll().constData();
         styleSheet.close();
@@ -184,34 +184,34 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
 
         //
-        // begin STYLE menu
+        // begin THEME menu
         //
         {
-            QMenu *styleMenu;
+            QMenu *themeMenu;
 
-            // add style menu
-            styleMenu = appearanceMenu->addMenu( this->tr( "Style" ));
+            // add theme menu
+            themeMenu = appearanceMenu->addMenu( this->tr( "Theme" ));
 
-            // custom stylesheet lambda
-            this->connect( styleMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" )), &QAction::triggered, [this]() {
-                StyleEditor dialog( this, StyleEditor::Custom, this->currentStyleSheet());
+            // custom styleSheet lambda
+            this->connect( themeMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" )), &QAction::triggered, [this]() {
+                ThemeEditor dialog( this, ThemeEditor::Custom, this->currentStyleSheet());
                 int result;
 
                 result = dialog.exec();
                 if ( result == QDialog::Accepted )
-                    this->setCustomStyleSheet( dialog.customStyleSheet());
+                    this->setCustomStyleSheet( dialog.currentStyleSheet());
             } );
 
-            // add builtin/predefined style chooser
-            foreach ( const StyleEntry style, StyleManager::instance()->list ) {
+            // add builtin/predefined theme chooser
+            foreach ( Theme *theme, Themes::instance()->list ) {
                 // connect via lambda
-                this->connect( styleMenu->addAction( style.name()), &QAction::triggered, [this, style]() {
-                    this->setCustomStyleSheet( style.styleSheet(), true );
+                this->connect( themeMenu->addAction( theme->name()), &QAction::triggered, [this, theme]() {
+                    this->setCustomStyleSheet( theme->styleSheet(), true );
                 } );
             }
         }
 
-        // end STYLE menu
+        // end THEME menu
 
         // view mode lambda
         actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16 ), this->tr( "List mode" ));
@@ -242,7 +242,6 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         actionSortOrder->setChecked( this->sortOrder() == Qt::AscendingOrder );
         this->connect( actionSortOrder, &QAction::triggered, [this]() {
             this->setSortOrder( this->sortOrder() == Qt::AscendingOrder ? Qt::DescendingOrder : Qt::AscendingOrder );
-            qDebug() << "sortOrder of" << this->title() << "changed to" << this->sortOrder();
             this->sort();
         } );
 
@@ -252,7 +251,6 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         actionDirsFirst->setChecked( this->directoriesFirst());
         this->connect( actionDirsFirst, &QAction::triggered, [this]() {
             this->setDirectoriesFirst( !this->directoriesFirst());
-            qDebug() << "dirsFirst of" << this->title() << "changed to" << this->directoriesFirst();
             this->sort();
         } );
 
@@ -261,7 +259,6 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         actionCaseSensitive->setCheckable( true );
         this->connect( actionCaseSensitive, &QAction::triggered, [this]() {
             this->setCaseSensitive( !this->isCaseSensitive());
-            qDebug() << "caseSensitive of" << this->title() << "changed to" << this->isCaseSensitive();
             this->sort();
         } );
     }
@@ -296,15 +293,15 @@ void FolderView::setCustomTitle( const QString &title ) {
 
 /**
  * @brief FolderView::setCustomStyleSheet
- * @param stylesheet
+ * @param styleSheet
  */
-void FolderView::setCustomStyleSheet( const QString &stylesheet, bool force ) {
-    this->m_customStyleSheet = stylesheet;
+void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force ) {
+    this->m_customStyleSheet = styleSheet;
 
-    if ( stylesheet.isEmpty() && !force )
+    if ( styleSheet.isEmpty() && !force )
         this->setDefaultStyleSheet();
     else {
-        this->setStyleSheet( stylesheet );
+        this->setStyleSheet( styleSheet );
 
         // this has to be done to properly reset view
         this->delegate->clearCache();

@@ -35,7 +35,7 @@
 #include "xmltools.h"
 #include "iconindex.h"
 #include "about.h"
-#include "styleeditor.h"
+#include "ThemeEditor.h"
 
 /**
  * @brief TrayWidget::TrayWidget
@@ -70,20 +70,19 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
     this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
 
     // setup context menu
-    QAction *actionSettings, *actionAbout, *actionStyle;
+    QAction *actionSettings, *actionAbout, *actionTheme;
     this->menu->addAction( IconCache::instance()->icon( "view-list-icons", 16 ), this->tr( "Widget list" ), this, SLOT( show()));
     actionSettings = this->menu->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" ));
     actionSettings->connect( actionSettings, &QAction::triggered, this, [ actionSettings, this ]() {
         Settings settingsDialog( this );
         settingsDialog.exec();
     });
-#ifdef QT_DEBUG
-    actionStyle = this->menu->addAction( this->tr( "Style editor" ));
-    actionStyle->connect( actionStyle, &QAction::triggered, this, [ actionStyle, this ]() {
-        StyleEditor styleDialog;
-        styleDialog.exec();
+    actionTheme = this->menu->addAction( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme editor" ));
+    actionTheme->connect( actionTheme, &QAction::triggered, this, [ actionTheme, this ]() {
+        ThemeEditor themeDialog;
+        themeDialog.exec();
     });
-#endif
+
     this->menu->addSeparator();
     actionAbout = this->menu->addAction( IconCache::instance()->icon( "help-about", 16 ), this->tr( "About" ));
     actionAbout->connect( actionAbout, &QAction::triggered, this, [ actionAbout, this ]() {
@@ -110,8 +109,6 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
  */
 TrayWidget::~TrayWidget() {
     this->disconnect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )));
-    //delete this->cache;
-    //delete this->desktop;
     delete this->model;
     delete this->menu;
     delete this->tray;
@@ -342,10 +339,10 @@ void TrayWidget::readConfiguration() {
  * @brief TrayWidget::writeConfiguration
  */
 void TrayWidget::writeConfiguration() {
+#ifdef QT_DEBUG
+    qDebug() << "TrayWidget::writeConfiguration";
+#endif
     XMLTools::instance()->writeConfiguration( XMLTools::Widgets, this );
     XMLTools::instance()->writeConfiguration( XMLTools::Variables );
-
-#ifdef QT_DEBUG
-    XMLTools::instance()->writeConfiguration( XMLTools::Styles );
-#endif
+    XMLTools::instance()->writeConfiguration( XMLTools::Themes );
 }

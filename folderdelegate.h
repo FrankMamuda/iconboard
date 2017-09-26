@@ -39,7 +39,7 @@ Q_DECLARE_METATYPE( ListItem )
 /**
  * @brief The FolderDelegate class
  */
-// TODO: allow changing these in stylesheet via props
+// TODO: allow changing these in styleSheet via props
 namespace FolderDelegateNamespace {
 static const int MarginTop = 4;
 static const int MarginSide = 24;

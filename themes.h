@@ -26,18 +26,18 @@
 #include "singleton.h"
 
 /**
- * @brief The BuiltInStyles namespace
+ * @brief The BuiltInThemes namespace
  */
-namespace BuiltInStyles {
-const static QStringList Styles = QStringList() << "dark" << "light";
+namespace BuiltInThemes {
+const static QStringList Names = QStringList() << "dark" << "light";
 }
 
 /**
- * @brief The StyleEntry class
+ * @brief The Theme class
  */
-class StyleEntry {
+class Theme {
 public:
-    StyleEntry( const QString &name = QString::null, const QString &styleSheet = QString::null, bool builtIn = true ) : m_name( name ), m_styleSheet( styleSheet ), m_builtIn( builtIn ) {}
+    Theme( const QString &name = QString::null, const QString &styleSheet = QString::null, bool builtIn = true ) : m_name( name ), m_styleSheet( styleSheet ), m_builtIn( builtIn ) {}
     QString name() const { return this->m_name; }
     QString styleSheet() const { return this->m_styleSheet; }
     bool builtIn() const { return this->m_builtIn; }
@@ -50,22 +50,24 @@ private:
     QString m_styleSheet;
     bool m_builtIn;
 };
+Q_DECLARE_METATYPE( Theme* )
 
 /**
- * @brief The StyleManager class
+ * @brief The Theme class
  */
-class StyleManager : public QObject {
+class Themes: public QObject {
     Q_OBJECT
 
 public:
-    StyleManager();
-    static StyleManager *createInstance() { return new StyleManager(); }
-    static StyleManager *instance() { return Singleton<StyleManager>::instance( StyleManager::createInstance ); }
-    bool contains( const QString &name ) const { return this->list.contains( name ); }
-    QMap<QString, StyleEntry> list;
+    Themes();
+    ~Themes();
+    static Themes *createInstance() { return new Themes(); }
+    static Themes *instance() { return Singleton<Themes>::instance( Themes::createInstance ); }
+    bool contains( const QString &name ) const;
+    QList<Theme*> list;
+    Theme *find( const QString &name ) const;
 
 public slots:
     void add( const QString &name, const QString &styleSheet, bool builtIn = true );
     void remove( const QString &name );
-    void rename( const QString &oldName, const QString &newName );
 };

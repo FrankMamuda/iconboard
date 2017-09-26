@@ -36,9 +36,9 @@ SOURCES += main.cpp\
     variable.cpp \
     mapperwidget.cpp \
     xmltools.cpp \
-    styleeditor.cpp \
-    styles.cpp \
-    proxymodel.cpp
+    proxymodel.cpp \
+    themeeditor.cpp \
+    themes.cpp
 
 HEADERS  += \
     folderview.h \
@@ -58,10 +58,10 @@ HEADERS  += \
     mapperwidget.h \
     xmltools.h \
     about.h \
-    styles.h \
-    styleeditor.h \
+    themeeditor.h \
     backgroundframe.h \
-    proxymodel.h
+    proxymodel.h \
+    themes.h
 
 FORMS    += \
     folderview.ui \
@@ -69,7 +69,7 @@ FORMS    += \
     screenmapper.ui \
     settings.ui \
     about.ui \
-    styleeditor.ui
+    themeeditor.ui
 
 RESOURCES += \
     resources.qrc

@@ -20,7 +20,7 @@
 // includes
 //
 #include <QDebug>
-#include <QIconEngine>
+#include <QScreen>
 #include "traywidget.h"
 #include "indexcache.h"
 #include "iconindex.h"
@@ -29,11 +29,12 @@
 #include "proxymodel.h"
 #include "application.h"
 #include "xmltools.h"
+#include "themes.h"
 
 /*
  * TODO list:
  *  [DONE] hidden widgets
- *  [DONE] custom stylesheet support
+ *  [DONE] custom styleSheet support
  *  [DONE] xml safe strings in config
  *  [DONE] "open with" dialog
  *  [DONE] bugfix for right click on item and hilight rect
@@ -49,15 +50,16 @@
  *  [DONE] weird QObject::moveToThread fix
  *  [DONE] focusless scrolling (mouseOver scrolling)
  *  [DONE] single instance
- *  [DONE] fixed custom stylesheet font issues
+ *  [DONE] fixed custom styleSheet font issues
  *  [DONE] remove QListView border
  *  [DONE] start-on-boot option
  *  [DONE] fix tray context menu for linux
  *  [DONE] 'about' dialog
- *  [DONE] predefined styles
+ *  [DONE] predefined themes
+ *  [DONE] theme editor
  *  [DONE] custom sorting
  *  [DONE] custom hilight/selection color - use selection-background-color: in qss
- *  [DONE?] weird QPersistentIndex corruption bugfix
+ *  [DONE] weird QPersistentIndex corruption bugfix - reverted to QModelIndex
  *  lock to specific resolution
  *  lock to desktop screen
  *  periodic (timed settings save)
@@ -70,12 +72,15 @@
  *  whole desktop replacement option
  *  multi column list
  *  custom per-item icons
+ *  sometimes widgets get hidden on exit (in settings)
  *  performace issues with large directories
  *  extract shell icons from dirs on symlinks
  *  caching of extracted icons and thumbnails
  *  drive names (from shortcuts)
  *  extract icons from links themselves not their targets
  *  thumbnail caching as an option
+ *  wait for QtConcurrent threads to end (threadpool?)
+ *  tokens for concurrent threads
  */
 
 /**
@@ -99,12 +104,14 @@ int main( int argc, char *argv[] ) {
     qRegisterMetaType<Entry>( "Entry" );
     qRegisterMetaType<Match>( "Match" );
     qRegisterMetaType<MatchList>( "MatchList" );
+    qRegisterMetaType<Theme*>( "Theme*" );
 
     // add default variables
     Variable::instance()->add( "ui_displaySymlinkIcon", true );
     Variable::instance()->add( "app_runOnStartup", false );
     Variable::instance()->add( "ui_iconTheme", "system" );
     XMLTools::instance()->readConfiguration( XMLTools::Variables );
+    XMLTools::instance()->readConfiguration( XMLTools::Themes );
 
     // request a trivial icon early to avoid QObject::moveToThread bug
 #ifdef Q_OS_LINUX
