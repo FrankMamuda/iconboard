@@ -60,9 +60,11 @@
  *  [DONE] custom sorting
  *  [DONE] custom hilight/selection color - use selection-background-color: in qss
  *  [DONE] weird QPersistentIndex corruption bugfix - reverted to QModelIndex
+ *  [DONE] periodic (timed settings save)
+ *  [DONE] thread safe exit (wait for QtConcurrent threads to end)
+ *  [DONE] performace issues (using isReadable() to avoid timeouts)
  *  lock to specific resolution
  *  lock to desktop screen
- *  periodic (timed settings save)
  *  root folder ('My Computer') folder support
  *  pseudo-folders (with drag-drop support)
  *  non-read only folders
@@ -72,15 +74,11 @@
  *  whole desktop replacement option
  *  multi column list
  *  custom per-item icons
- *  sometimes widgets get hidden on exit (in settings)
- *  performace issues with large directories
  *  extract shell icons from dirs on symlinks
  *  caching of extracted icons and thumbnails
  *  drive names (from shortcuts)
  *  extract icons from links themselves not their targets
  *  thumbnail caching as an option
- *  wait for QtConcurrent threads to end (threadpool?)
- *  tokens for concurrent threads
  */
 
 /**
@@ -105,6 +103,7 @@ int main( int argc, char *argv[] ) {
     qRegisterMetaType<Match>( "Match" );
     qRegisterMetaType<MatchList>( "MatchList" );
     qRegisterMetaType<Theme*>( "Theme*" );
+    qRegisterMetaType<ProxyIcon>( "ProxyIcon" );
 
     // add default variables
     Variable::instance()->add( "ui_displaySymlinkIcon", true );

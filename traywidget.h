@@ -25,6 +25,8 @@
 #include <QSystemTrayIcon>
 #include <QDesktopWidget>
 #include <QMenu>
+#include <QTimerEvent>
+#include <QTimer>
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
@@ -74,9 +76,13 @@ private slots:
     void reload();
     void iconThemeChanged( QVariant value );
 
+protected:
+    void timerEvent( QTimerEvent *event );
+
 private:
     Ui::TrayWidget *ui;
     QSystemTrayIcon *tray;
     WidgetModel *model;
     QMenu *menu;
+    QTimer timer;
 };

@@ -58,7 +58,7 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
 
     // connect tray icon
     this->connect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )), this, SLOT( trayIconActivated( QSystemTrayIcon::ActivationReason )));
-    this->connect( qApp, SIGNAL( aboutToQuit()), this, SLOT( writeConfiguration()));
+    //this->connect( qApp, SIGNAL( aboutToQuit()), this, SLOT( writeConfiguration()));
 
     // set up icons
     this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add", 16 ));
@@ -89,7 +89,17 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
         About aboutDialog;
         aboutDialog.exec();
     });
-    this->menu->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" ), qApp, SLOT( quit()));
+
+    // exit lambda
+    this->connect( this->menu->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, [this]() {
+        this->writeConfiguration();
+
+        foreach ( FolderView *fw, this->widgetList )
+            delete fw;
+
+        qApp->quit();
+    } );
+
     this->tray->setContextMenu( this->menu );
 
     // read configuration
@@ -102,6 +112,9 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
     // not currently available
     this->ui->actionMap->setEnabled( false );
 #endif
+
+    // save settings every 60 seconds
+    this->startTimer( 5000 );
 }
 
 /**
@@ -328,6 +341,14 @@ void TrayWidget::iconThemeChanged( QVariant value ) {
 }
 
 /**
+ * @brief TrayWidget::timerEvent
+ * @param event
+ */
+void TrayWidget::timerEvent( QTimerEvent * ) {
+    this->writeConfiguration();
+}
+
+/**
  * @brief TrayWidget::readConfiguration
  */
 void TrayWidget::readConfiguration() {
@@ -339,9 +360,6 @@ void TrayWidget::readConfiguration() {
  * @brief TrayWidget::writeConfiguration
  */
 void TrayWidget::writeConfiguration() {
-#ifdef QT_DEBUG
-    qDebug() << "TrayWidget::writeConfiguration";
-#endif
     XMLTools::instance()->writeConfiguration( XMLTools::Widgets, this );
     XMLTools::instance()->writeConfiguration( XMLTools::Variables );
     XMLTools::instance()->writeConfiguration( XMLTools::Themes );

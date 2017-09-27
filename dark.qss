@@ -3,6 +3,7 @@ QLabel#title {
     color: white;
     padding: 4px;
     font-weight: bold;
+    font-size: 10pt;
 }
 
 QListView#view {

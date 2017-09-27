@@ -43,7 +43,8 @@ XMLTools::XMLTools( QObject *parent ) : QObject( parent ) {
  * @param mode
  */
 void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
-    QString path;
+    QString path, savedData, newData;
+
 #ifdef QT_DEBUG
     QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
 #else
@@ -75,14 +76,13 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
         return;
     }
 
-    // load xml file
+    // read xml file and create buffer
     QFile xmlFile( path );
-    if ( !xmlFile.open( QFile::WriteOnly | QFile::Text | QFile::Truncate )) {
-        qDebug() << "XMLTools::writeConfiguration: error - could not open configuration file" << path;
-        return;
-    }
+    QBuffer xmlBuffer;
+    xmlBuffer.open( QBuffer::WriteOnly | QBuffer::Text | QBuffer::Truncate );
 
-    QXmlStreamWriter stream( &xmlFile );
+    // create stream
+    QXmlStreamWriter stream( &xmlBuffer );
     stream.setAutoFormatting( true );
     stream.writeStartDocument();
     stream.writeStartElement( "configuration" );
@@ -199,6 +199,33 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
 
     // end document
     stream.writeEndDocument();
+
+    // close buffer
+    xmlBuffer.close();
+
+    // read existing config from file
+    if ( xmlFile.open( QFile::ReadOnly | QIODevice::Text )) {
+        savedData = xmlFile.readAll();
+        xmlFile.close();
+    }
+
+    // read new config from buffer
+    if ( xmlBuffer.open( QFile::ReadOnly | QIODevice::Text )) {
+        newData = xmlBuffer.readAll();
+        xmlBuffer.close();
+    }
+
+    // compare data
+    if ( !QString::compare( savedData, newData )) {
+        //qDebug() << "XMLTools::writeConfiguration: data identical, aboring save" << mode;
+    } else {
+        // write out as binary (not QIODevice::Text) to avoid CR line endings
+        if ( !xmlFile.open( QFile::WriteOnly | QFile::Truncate )) {
+            qDebug() << "XMLTools::writeConfiguration: error - could not open configuration file" << path;
+            return;
+        }
+        xmlFile.write( newData.toUtf8().replace( "\r", "" ));
+    }
 
     // close file
     xmlFile.close();

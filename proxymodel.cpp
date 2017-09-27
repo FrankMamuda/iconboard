@@ -27,30 +27,53 @@
 #include <QDebug>
 
 /**
- * @brief ProxyIdentityModel::ProxyIdentityModel
+ * @brief ProxyModel::ProxyModel
  * @param parent
  */
-ProxyIdentityModel::ProxyIdentityModel( QObject *parent ) : QIdentityProxyModel( parent ) {
+ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ), m_stopping( false ) {
     this->view = qobject_cast<FolderView*>( parent );
     this->connect( this, SIGNAL( iconFound( QString, QIcon, QModelIndex )), this, SLOT( updateModel( QString, QIcon, QModelIndex )));
 }
 
 /**
- * @brief ProxyIdentityModel::~ProxyIdentityModel
+ * @brief ProxyModel::~ProxyModel
  */
-ProxyIdentityModel::~ProxyIdentityModel() {
+ProxyModel::~ProxyModel() {
     this->disconnect( this, SIGNAL( iconFound( QString, QIcon, QModelIndex )));
 }
 
 /**
- * @brief ProxyIdentityModel::data
+ * @brief ProxyModel::waitForThreads
+ */
+void ProxyModel::waitForThreads() {
+    // stop receiving any pending updates
+    this->blockSignals( true );
+
+    // signal all active threads to stop
+    this->stop();
+
+    // wait for threads to finish computation and empty the thread pool
+    foreach ( QFuture<void> future, this->threadPool )
+        future.waitForFinished();
+    this->threadPool.clear();
+
+    // allow updates and new threads
+    this->blockSignals( false );
+    this->reset();
+}
+
+/**
+ * @brief ProxyModel::data
  * @param index
  * @param role
  * @return
  */
-QVariant ProxyIdentityModel::data( const QModelIndex &index, int role ) const {
+QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
     QString fileName;
     int iconSize;
+
+    if ( this->isStopping())
+        return QVariant();
 
     if ( role == QFileSystemModel::FileIconRole ) {
         fileName = index.data( QFileSystemModel::FilePathRole ).toString();
@@ -59,39 +82,40 @@ QVariant ProxyIdentityModel::data( const QModelIndex &index, int role ) const {
         if ( this->cache.contains( fileName ))
             return this->cache[fileName];
 
-        QtConcurrent::run( [ this, fileName, index, iconSize ] {
+        // run fetcher
+        QFuture<void> future = QtConcurrent::run( [ this, fileName, index, iconSize ] {
             QIcon icon;
 
+            if ( this->isStopping())
+                return;
+
+            QFileInfo info( fileName );
+            if ( !info.isReadable())
+                return;
+
             icon = IconCache::instance()->iconForFilename( fileName, iconSize );
-            if ( !icon.isNull())
+            if ( !icon.isNull() || this->isStopping())
                 emit this->iconFound( fileName, icon, index );
         } );
+        this->threadPool.append( future );
     } else if ( role == Qt::DisplayRole ) {
         fileName = index.data( QFileSystemModel::FilePathRole ).toString();
         if ( fileName.endsWith( ".lnk" ))
             return fileName.remove( ".lnk" ).split( "/" ).last();
 
-        return QIdentityProxyModel::data( index, Qt::DisplayRole ).toString();
+        return QSortFilterProxyModel::data( index, Qt::DisplayRole ).toString();
     }
 
-    return QIdentityProxyModel::data( index, role );
+    return QSortFilterProxyModel::data( index, role );
 }
 
 /**
- * @brief ProxySortModel::ProxySortModel
- * @param parent
- */
-ProxySortModel::ProxySortModel( QObject *parent ) : QSortFilterProxyModel( parent ) {
-    this->view = qobject_cast<FolderView*>( parent );
-}
-
-/**
- * @brief ProxySortModel::lessThan
+ * @brief ProxyModel::lessThan
  * @param left
  * @param right
  * @return
  */
-bool ProxySortModel::lessThan( const QModelIndex &left, const QModelIndex &right ) const {
+bool ProxyModel::lessThan( const QModelIndex &left, const QModelIndex &right ) const {
     if ( this->sortColumn() == 0 ) {
         QFileInfo leftInfo, rightInfo;
         FileSystemModel *fileSystemModel;

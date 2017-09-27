@@ -167,24 +167,6 @@ QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
                         if ( pixmap.isNull())
                             return QIcon();
 
-                        if ( jumbo ) {
-                            // NOTE: ugly hack
-                            //
-                            //        reasoning behind this is that jumbo icon returns
-                            //        256x256 icon even if the actual icon is 16x16
-                            //
-                            //        this essentially checks whether most 3/4 of the
-                            //        icon is blank
-                            //
-                            image = pixmap.toImage();
-                            for ( y = 64; y < 256; y++ ) {
-                                for ( k = 64; k < 256; k++ ) {
-                                    if ( image.pixelColor( y, k ).alphaF() > 0.0f )
-                                        ok = true;
-                                }
-                            }
-                        }
-
                         if ( !pixmap.isNull() && pixmap.width()) {
                             if ( !jumbo )
                                 ok = true;
@@ -269,8 +251,16 @@ QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
     bool ok;
     QString filePath( fileName );
 
-    if ( info.isSymLink())
+    if ( info.isDir())
+        return IconCache::instance()->icon( "inode-directory", iconSize );
+
+    if ( info.isSymLink()) {
         filePath = info.symLinkTarget();
+
+        QFileInfo target( info.symLinkTarget());
+        if ( target.isDir())
+            return IconCache::instance()->icon( "inode-directory", iconSize );
+    }
 
     // get mimetype by matching content
     iconName = db.mimeTypeForFile( filePath, QMimeDatabase::MatchContent ).iconName();

@@ -21,6 +21,7 @@
 //
 // includes
 //
+#include <QFutureWatcher>
 #include <QIcon>
 #include <QIdentityProxyModel>
 #include <QSortFilterProxyModel>
@@ -31,16 +32,33 @@
 class FolderView;
 
 /**
- * @brief The ProxyIdentityModel class
+ * @brief The ProxyIcon struct
  */
-class ProxyIdentityModel : public QIdentityProxyModel {
+struct ProxyIcon {
+    ProxyIcon( const QString &f = QString::null, const QIcon &i = QIcon(), const QModelIndex &n = QModelIndex()) : fileName( f ), icon( i ), index( n ) {}
+    QString fileName;
+    QIcon icon;
+    QModelIndex index;
+};
+Q_DECLARE_METATYPE( ProxyIcon )
+
+/**
+ * @brief The ProxyModel class
+ */
+class ProxyModel : public QSortFilterProxyModel {
     Q_OBJECT
 
 public:
-    explicit ProxyIdentityModel( QObject *parent = nullptr );
-    ~ProxyIdentityModel();
+    explicit ProxyModel( QObject *parent = nullptr );
+    ~ProxyModel();
     QVariant data( const QModelIndex &index, int role = Qt::DisplayRole ) const;
+    bool isStopping() const { QMutexLocker( &this->m_mutex ); return m_stopping; }
+
+public slots:
     void clearCache() { this->cache.clear(); }
+    void waitForThreads();
+    void stop() { this->m_stopping = true; }
+    void reset() { this->m_stopping = false; }
 
 signals:
     void iconFound( const QString &fileName, const QIcon &icon, const QModelIndex &index ) const;
@@ -59,22 +77,8 @@ protected:
 
 private:
     QHash<QString, QIcon> cache;
+    mutable QList<QFuture<void> > threadPool;
     FolderView *view;
-};
-
-
-/**
- * @brief The ProxySortModel class
- */
-class ProxySortModel : public QSortFilterProxyModel {
-    Q_OBJECT
-
-public:
-    explicit ProxySortModel( QObject *parent = nullptr );
-
-protected:
-    bool lessThan( const QModelIndex &left, const QModelIndex &right ) const;
-
-private:
-    FolderView *view;
+    mutable QMutex m_mutex;
+    bool m_stopping;
 };

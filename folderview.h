@@ -34,8 +34,8 @@
 //
 class FolderDelegate;
 class TrayWidget;
-class ProxyIdentityModel;
-class ProxySortModel;
+class ProxyModel;
+class ProxyModel;
 class FilterModel;
 
 /**
@@ -145,7 +145,6 @@ protected:
     bool eventFilter( QObject *object, QEvent *event );
 
 private slots:
-    void changeDirectory();
 #ifdef Q_OS_WIN
     void setupFrame( HWND windowParent );
 #else
@@ -154,11 +153,11 @@ private slots:
     void makeGrabAreas();
     void on_view_clicked( const QModelIndex &index );
     void on_view_customContextMenuRequested( const QPoint &pos );
+    void displaySymlinkLabelsChanged();
 
 private:
     Ui::FolderView *ui;
-    ProxyIdentityModel *iconModel;
-    ProxySortModel *sortModel;
+    ProxyModel *proxyModel;
     FileSystemModel *model;
     FolderDelegate *delegate;
     QPoint mousePos;
