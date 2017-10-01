@@ -83,11 +83,7 @@ class FolderView : public QWidget {
     Q_PROPERTY( Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder )
 
 public:
-#ifdef Q_OS_WIN
-    explicit FolderView( QWidget *parent, const QString &rootPath, HWND windowParent, TrayWidget *trayParent );
-#else
     explicit FolderView( QWidget *parent, const QString &rootPath, TrayWidget *trayParent );
-#endif
     ~FolderView();
     QString title() const { if ( !this->customTitle().isNull()) return this->customTitle(); return this->ui->title->text(); }
     QString rootPath() const { return this->model->rootPath(); }
@@ -145,11 +141,7 @@ protected:
     bool eventFilter( QObject *object, QEvent *event );
 
 private slots:
-#ifdef Q_OS_WIN
-    void setupFrame( HWND windowParent );
-#else
     void setupFrame();
-#endif
     void makeGrabAreas();
     void on_view_clicked( const QModelIndex &index );
     void on_view_customContextMenuRequested( const QPoint &pos );

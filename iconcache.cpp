@@ -131,9 +131,7 @@ QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
 #ifdef Q_OS_WIN
     SHFILEINFO shellInfo;
     QPixmap pixmap;
-    QImage image;
     int index;
-    int y, k;
 
     ok = false;
 

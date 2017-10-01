@@ -241,7 +241,7 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
     QDomDocument document;
     QDomNode node, childNode;
     QDomElement element, childElement;
-    TrayWidget *trayWidget;
+    TrayWidget *trayWidget = nullptr;
 
 #ifdef QT_DEBUG
     QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
@@ -300,17 +300,12 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
                 bool isVisible = true;
                 bool readOnly = true;
                 QRect widgetGeometry;
-                QPoint screenOffset;
                 Qt::SortOrder sortOrder = Qt::AscendingOrder;
                 bool dirsFirst = true;
                 bool caseSensitive = false;
 
                 childNode = element.firstChild();
-#ifdef Q_OS_WIN
-                widget = new FolderView( nullptr, element.attribute( "rootPath" ), trayWidget->worker, trayWidget );
-#else
-                widget = new FolderView( nullptr, element.attribute( "rootPath" ), trayWidget );
-#endif
+                widget = new FolderView( trayWidget->desktop, element.attribute( "rootPath" ), trayWidget );
                 widgetGeometry = widget->geometry();
 
                 styleSheet = element.attribute( "styleSheet" );
@@ -351,24 +346,7 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
                 if ( isVisible )
                     widget->show();
 
-                //
-                // NOTE: code refactored for use in mutiple monitor systems
-                //       this still makes Qt complain about invalid geometry, but that does not matter at all
-                //
-
-                // get screen offset
-                screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
-
-                // offset geometry and mouse position
-                widgetGeometry.translate( -screenOffset );
-
-                // use winapi to resize the window (avoiding buggy Qt setGeometry)
-#ifdef Q_OS_WIN
-                MoveWindow(( HWND )widget->winId(), widgetGeometry.x(), widgetGeometry.y(), widgetGeometry.width(), widgetGeometry.height(), true );
-#else
                 widget->setGeometry( widgetGeometry );
-#endif
-
                 widget->setCaseSensitive( caseSensitive );
                 widget->setDirectoriesFirst( dirsFirst );
                 widget->setReadOnly( readOnly );

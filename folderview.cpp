@@ -46,12 +46,10 @@
  * @param rootPath
  */
 FolderView::FolderView( QWidget *parent, const QString &rootPath,
-                        #ifdef Q_OS_WIN
-                        HWND windowParent,
-                        #endif
                         TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ),
     trayWidget( trayParent ), m_sortOrder( Qt::AscendingOrder ),
-    m_dirsFirst( true ), m_caseSensitive( false ) {
+    m_dirsFirst( true ), m_caseSensitive( false )
+{
     QDir dir( rootPath );
     QFile styleSheet;
 
@@ -90,13 +88,8 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath,
         styleSheet.close();
     }
 
-    // get window handles and set as child window
-#ifdef Q_OS_WIN
-    this->setupFrame( windowParent );
-#else
+    // remove frame
     this->setupFrame();
-    this->setWindowFlags( this->windowFlags() | Qt::WindowStaysOnBottomHint | Qt::Tool );
-#endif
 
     // connect variable
     Variable::instance()->bind( "ui_displaySymlinkIcon", this, SLOT( displaySymlinkLabelsChanged()));
@@ -550,27 +543,12 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
         case QEvent::MouseMove:
             if ( this->gesture == Drag ) {
-                QPoint offset, newPos, screenOffset;
-
-                //
-                // NOTE: code refactored for use in mutiple monitor systems
-                //
+                QPoint offset;
 
                 // get offset from previous mouse position
                 offset = mouseEvent->globalPos() - this->mousePos;
-#ifdef Q_OS_WIN
-                // get screen offset
-                screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
-
-                // get new position offsetting it by screen and mouse offsets
-                newPos = this->pos() - screenOffset + offset;
-
-                // use winapi to move the window (avoiding buggy Qt setGeometry)
-
-                MoveWindow(( HWND )this->winId(), newPos.x(), newPos.y(), this->width(), this->height(), true );
-#else
                 this->move( this->x() + offset.x(), this->y() + offset.y());
-#endif
+
                 // update last mouse position
                 this->mousePos = mouseEvent->globalPos();
 
@@ -578,10 +556,6 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
             } else if ( this->gesture == Resize ) {
                 QRect updatedGeometry;
                 QPoint screenOffset, updatedMouse;
-
-                //
-                // NOTE: code refactored for use in mutiple monitor systems
-                //
 
                 // get screen offset
                 screenOffset = QApplication::primaryScreen()->availableVirtualGeometry().topLeft();
@@ -638,11 +612,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                     updatedGeometry.setTop( this->geometry().y() - screenOffset.y());
 
                 // use winapi to resize the window (avoiding buggy Qt setGeometry)
-#ifdef Q_OS_WIN
-                MoveWindow(( HWND )this->winId(), updatedGeometry.x(), updatedGeometry.y(), updatedGeometry.width(), updatedGeometry.height(), true );
-#else
                 this->setGeometry( updatedGeometry );
-#endif
 
                 // update last mouse position
                 this->mousePos = mouseEvent->globalPos();
@@ -671,27 +641,20 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 /**
  * @brief FolderView::setupFrame
  */
-#ifdef Q_OS_WIN
-void FolderView::setupFrame( HWND windowParent ) {
-#else
 void FolderView::setupFrame() {
-#endif
     // enable mouse tracking
     this->setMouseTracking( true );
 
     // filter events
     this->installEventFilter( this );
 
-    // make this a child window of desktop shell
-#ifdef Q_OS_WIN
-    SetParent(( HWND )this->winId(), windowParent );
-#endif
-
     // set appropriate window flags
-    this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint );
+    this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::Tool | Qt::WindowDoesNotAcceptFocus );
     this->setAttribute( Qt::WA_TranslucentBackground );
     this->setAttribute( Qt::WA_NoSystemBackground );
     this->setAttribute( Qt::WA_Hover );
+    this->setAttribute( Qt::WA_ShowWithoutActivating );
+    this->setFocusPolicy( Qt::NoFocus );
 
     // make mouse grab areas
     this->makeGrabAreas();

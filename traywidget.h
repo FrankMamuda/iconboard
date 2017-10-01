@@ -46,6 +46,22 @@ class TrayWidget;
 }
 
 /**
+ * @brief The DesktopWidget class
+ */
+class DesktopWidget : public QWidget {
+    Q_OBJECT
+
+public:
+    DesktopWidget( QWidget *parent = nullptr );
+
+protected:
+    bool nativeEvent( const QByteArray &eventType, void *message, long *result );
+
+private:
+    bool nativeEventIgnored;
+};
+
+/**
  * @brief The TrayWidget class
  */
 class TrayWidget : public QMainWindow {
@@ -55,18 +71,12 @@ public:
     explicit TrayWidget( QWidget *parent = 0 );
     ~TrayWidget();
     QList<FolderView*> widgetList;
-    //QPixmap wallpaper;
-#ifdef Q_OS_WIN
-    HWND worker;
-#endif
+    DesktopWidget *desktop;
 
 private slots:
     void trayIconActivated( QSystemTrayIcon::ActivationReason reason );
     void readConfiguration();
     void writeConfiguration();
-#ifdef Q_OS_WIN
-    void getWindowHandles();
-#endif
     void on_widgetList_doubleClicked( const QModelIndex &index );
     void on_actionAdd_triggered();
     void on_actionRemove_triggered();

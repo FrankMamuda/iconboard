@@ -79,6 +79,7 @@
  *  drive names (from shortcuts)
  *  extract icons from links themselves not their targets
  *  thumbnail caching as an option
+ *  fix ASSERT: "!"QSortFilterProxyModel: index from wrong model passed to mapFromSource"" in file itemmodels\qsortfilterproxymodel.cpp
  */
 
 /**

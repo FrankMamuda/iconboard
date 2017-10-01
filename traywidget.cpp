@@ -45,20 +45,17 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
     // init ui
     this->ui->setupUi( this );
 
+    // initialize desktop widget
+    this->desktop = new DesktopWidget;
+
     // show tray icon
     this->tray->show();
 
     // init model
     this->ui->widgetList->setModel( this->model );
 
-    // set up desktop widget
-#ifdef Q_OS_WIN
-    this->getWindowHandles();
-#endif
-
     // connect tray icon
     this->connect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )), this, SLOT( trayIconActivated( QSystemTrayIcon::ActivationReason )));
-    //this->connect( qApp, SIGNAL( aboutToQuit()), this, SLOT( writeConfiguration()));
 
     // set up icons
     this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add", 16 ));
@@ -122,6 +119,7 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
  */
 TrayWidget::~TrayWidget() {
     this->disconnect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )));
+    delete this->desktop;
     delete this->model;
     delete this->menu;
     delete this->tray;
@@ -150,38 +148,6 @@ void TrayWidget::trayIconActivated( QSystemTrayIcon::ActivationReason reason ) {
 }
 
 /**
- * @brief FolderView::getWindowHandles
- */
-#ifdef Q_OS_WIN
-void TrayWidget::getWindowHandles() {
-    HWND desktop, progman, shell = nullptr, worker = nullptr;
-
-    // get desktop window
-    desktop = GetDesktopWindow();
-    if ( desktop == nullptr )
-        return;
-
-    // get progman
-    progman = FindWindowEx( desktop, 0, L"Progman", L"Program Manager" );
-    if ( progman == nullptr )
-        return;
-
-    // get first worker and shell
-    SendMessageTimeout( progman, 0x052C, 0, 0, SMTO_NORMAL, 3000, NULL );
-    while( shell == nullptr ) {
-        worker = FindWindowEx( desktop, worker, L"WorkerW", 0 );
-        if ( worker != nullptr )
-            shell = FindWindowEx( worker, 0, L"SHELLDLL_DefView", 0 );
-        else
-            break;
-    }
-
-    // store worker handle
-    this->worker = worker;
-}
-#endif
-
-/**
  * @brief TrayWidget::on_widgetList_doubleClicked
  * @param index
  */
@@ -197,11 +163,7 @@ void TrayWidget::on_actionAdd_triggered() {
 
     dir.setPath( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
     if ( dir.exists()) {
-#ifdef Q_OS_WIN
-        this->widgetList << new FolderView( nullptr, dir.absolutePath(), this->worker, this );
-#else
-        this->widgetList << new FolderView( nullptr, dir.absolutePath(), this );
-#endif
+        this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this );
         this->widgetList.last()->show();
         this->widgetList.last()->setDefaultStyleSheet();
         this->widgetList.last()->sort();
@@ -363,4 +325,29 @@ void TrayWidget::writeConfiguration() {
     XMLTools::instance()->writeConfiguration( XMLTools::Widgets, this );
     XMLTools::instance()->writeConfiguration( XMLTools::Variables );
     XMLTools::instance()->writeConfiguration( XMLTools::Themes );
+}
+
+/**
+ * @brief DesktopWidget::nativeEvent
+ * @param eventType
+ * @param message
+ * @param result
+ * @return
+ */
+DesktopWidget::DesktopWidget(QWidget *parent) : QWidget( parent ), nativeEventIgnored( false ) {
+    SetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE, ( GetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE) | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | ~WS_EX_APPWINDOW ));
+}
+
+bool DesktopWidget::nativeEvent( const QByteArray &eventType, void *message, long *result ) {
+    MSG *msg;
+
+    msg = static_cast<MSG*>( message );
+    if ( msg->message == WM_WINDOWPOSCHANGED ) {
+        if ( !this->nativeEventIgnored ) {
+            this->nativeEventIgnored = true;
+            SetWindowPos( reinterpret_cast<HWND>( this->winId()), HWND_BOTTOM, 0,0,0,0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE );
+            this->nativeEventIgnored = false;
+        }
+    }
+    return QWidget::nativeEvent( eventType, message, result );
 }
