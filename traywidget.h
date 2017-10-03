@@ -79,7 +79,9 @@ public:
     static TrayWidget *createInstance() { return new TrayWidget(); }
     static TrayWidget *instance() { return Singleton<TrayWidget>::instance( TrayWidget::createInstance ); }
     QList<FolderView*> widgetList;
+#ifdef Q_OS_WIN
     DesktopWidget *desktop;
+#endif
 
 public slots:
     void initialize();

@@ -525,7 +525,12 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
             // steal input thread form foreground
             AttachThreadInput( foregroundThread, curentThread, TRUE );
-            SetForegroundWindow(( HWND )this->winId());
+#ifdef ALT_FOCUS
+            ShowWindow( reinterpret_cast<HWND>( this->winId()), SW_SHOWNOACTIVATE );
+            SetWindowPos( reinterpret_cast<HWND>( this->winId()), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE );
+#else
+            SetForegroundWindow( reinterpret_cast<HWND>( this->winId()));
+#endif
             AttachThreadInput( foregroundThread, curentThread, FALSE );
 #else
             // TODO: steal focus in X11 and other environments

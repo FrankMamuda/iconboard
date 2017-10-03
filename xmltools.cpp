@@ -289,7 +289,11 @@ void XMLTools::readConfiguration( Modes mode ) {
                 QRect vGeom, pGeom;
 
                 childNode = element.firstChild();
+#ifdef Q_OS_WIN
                 widget = new FolderView( TrayWidget::instance()->desktop, element.attribute( "rootPath" ));
+#else
+                widget = new FolderView( nullptr, element.attribute( "rootPath" ));
+#endif
                 widgetGeometry = widget->geometry();
 
                 styleSheet = element.attribute( "styleSheet" );

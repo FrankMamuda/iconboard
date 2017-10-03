@@ -72,7 +72,7 @@
  *      using QModelIndex instead QPersistentIndex is a bad idea - segfaults
  *      might also be related to "index from wrong model passed to mapFromSource" bug
  *    reverted back to QPersistentIndex - yet to see any corruption
- *      very random, hard to reproduce
+ *      very random, hard to reproduce - not really, crashes all the time in Win10
  *
  *  [URGENT]
  *  [checklist for first public release]
@@ -81,6 +81,8 @@
  *    i18n
  *    cleanup
  *    GitHub page
+ *    linux segfaul on icon theme change (might be Qt version related)
+ *    QPersistentIndex corruption fix
  *
  *  [NOT URGENT]
  *  [to be implemented in future versions]
@@ -99,6 +101,7 @@
  *    extract icons from links themselves not their targets
  *    thumbnail loading as an option
  *    folderView spacing, other props
+ *    macOS issues
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -106,6 +109,12 @@
  *    includes
  *    private/public members
  *    static/const functions and mutables
+ *
+ *  [macOS]
+ *    z-order issue (disappears on desktop)
+ *    icon should not be visible in dock
+ *    resize/move issues
+ *    application bundle icon
  */
 
 /**

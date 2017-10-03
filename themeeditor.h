@@ -23,7 +23,7 @@
 //
 #include "iconcache.h"
 #include "folderdelegate.h"
-#include "ui_ThemeEditor.h"
+#include "ui_themeeditor.h"
 #include "themes.h"
 #include <QAbstractListModel>
 #include <QComboBox>

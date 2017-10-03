@@ -35,7 +35,7 @@
 #include "xmltools.h"
 #include "iconindex.h"
 #include "about.h"
-#include "ThemeEditor.h"
+#include "themeeditor.h"
 
 /**
  * @brief TrayWidget::TrayWidget
@@ -45,6 +45,12 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::T
     // init ui
     this->ui->setupUi( this );
 }
+
+#ifdef Q_OS_WIN
+#ifndef QT_DEBUG
+void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG, DWORD, DWORD );
+#endif
+#endif
 
 /**
  * @brief TrayWidget::initialize
@@ -66,8 +72,6 @@ void TrayWidget::initialize() {
     // initialize desktop widget
 #ifdef Q_OS_WIN
     this->desktop = new DesktopWidget;
-#else
-    this->desktop = nullptr;
 #endif
 
     // show tray icon
@@ -205,7 +209,11 @@ void TrayWidget::on_actionAdd_triggered() {
 
     dir.setPath( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
     if ( dir.exists()) {
+#ifdef Q_OS_WIN
         this->widgetList << new FolderView( this->desktop, dir.absolutePath());
+#else
+        this->widgetList << new FolderView( nullptr, dir.absolutePath());
+#endif
         this->widgetList.last()->show();
         this->widgetList.last()->setDefaultStyleSheet();
         this->widgetList.last()->sort();
@@ -411,6 +419,7 @@ bool DesktopWidget::nativeEvent( const QByteArray &eventType, void *message, lon
  * @param event
  * @param hwnd
  */
+#ifndef QT_DEBUG
 void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG, DWORD, DWORD ) {
     if ( event == EVENT_SYSTEM_FOREGROUND ) {
         foreach ( FolderView *widget, TrayWidget::instance()->widgetList ) {
@@ -422,4 +431,5 @@ void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG,
             TrayWidget::instance()->desktop->lowerWindow();
     }
 }
+#endif
 #endif
