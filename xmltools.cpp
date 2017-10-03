@@ -342,7 +342,7 @@ void XMLTools::readConfiguration( Modes mode ) {
                 widget->setDirectoriesFirst( dirsFirst );
                 widget->setReadOnly( readOnly );
                 widget->setSortOrder( sortOrder );
-                widget->setCustomStyleSheet( styleSheet );
+                widget->setCustomStyleSheet( styleSheet, false, true );
                 widget->sort();
                 TrayWidget::instance()->widgetList << widget;
             } else if ( !QString::compare( element.tagName(), "variable" ) && mode == Variables ) {

@@ -32,64 +32,80 @@
 
 /*
  * TODO list:
- *  [DONE] hidden widgets
- *  [DONE] custom styleSheet support
- *  [DONE] xml safe strings in config
- *  [DONE] "open with" dialog
- *  [DONE] bugfix for right click on item and hilight rect
- *  [DONE] list mode
- *  [DONE] custom icon size
- *  [DONE] extract icons from symlinks
- *  [DONE] QFileSystemWatcher - no need
- *  [DONE] geometry fix for multiple monitors
- *  [DONE] icon extraction issues on MSVC builds
- *  [DONE] centred icons (if smaller than icon size)
- *  [DONE] settings dialog with custom variables
- *  [DONE] remove hilight in list mode
- *  [DONE] weird QObject::moveToThread fix
- *  [DONE] focusless scrolling (mouseOver scrolling)
- *  [DONE] single instance
- *  [DONE] fixed custom styleSheet font issues
- *  [DONE] remove QListView border
- *  [DONE] start-on-boot option
- *  [DONE] fix tray context menu for linux
- *  [DONE] 'about' dialog
- *  [DONE] predefined themes
- *  [DONE] theme editor
- *  [DONE] custom sorting
- *  [DONE] custom hilight/selection color - use selection-background-color: in qss
- *  [DONE] periodic (timed settings save)
- *  [DONE] thread safe exit (wait for QtConcurrent threads to end)
- *  [DONE] performace issues (using isReadable() to avoid timeouts)
- *  [DONE] fix z-order change after "ToggleDesktop" on windows
- *  [DONE] detect widget off screen
- *  [REVERTED] weird QPersistentIndex corruption bugfix
- *      - using QModelIndex instead QPersistentIndex is a bad idea - segfaults
- *        might also be related to "index from wrong model passed to mapFromSource" bug
- *      - reverted back to QPersistentIndex - yet to see any corruption
- *        very random, hard to reproduce
- *  lock to specific resolution
- *  lock to desktop screen
- *  root folder ('My Computer') folder support
- *  pseudo-folders (with drag-drop support)
- *  non-read only folders
- *  custom alignment
- *  free placement, free scaling
- *  whole desktop replacement option
- *  multi column list
- *  custom per-item icons
- *  extract shell icons from dirs on symlinks
- *  disk-caching of extracted icons and thumbnails
- *  drive names (from shortcuts)
- *  extract icons from links themselves not their targets
- *  thumbnail loading as an option
- *  fix random segfaults on open
- *  cleanup:
- *      - proper Q_PROPERTY implementation in classes
- *      - allocs/deallocs
- *      - includes
- *      - private/public members
- *      - static/const functions and mutables
+ * [DONE]
+ *    hidden widgets
+ *    custom styleSheet support
+ *    xml safe strings in config
+ *    "open with" dialog
+ *    bugfix for right click on item and hilight rect
+ *    list mode
+ *    custom icon size
+ *    extract icons from symlinks
+ *    QFileSystemWatcher - no need
+ *    geometry fix for multiple monitors
+ *    icon extraction issues on MSVC builds
+ *    centred icons (if smaller than icon size)
+ *    settings dialog with custom variables
+ *    remove hilight in list mode
+ *    weird QObject::moveToThread fix
+ *    focusless scrolling (mouseOver scrolling)
+ *    single instance
+ *    fixed custom styleSheet font issues
+ *    remove QListView border
+ *    start-on-boot option
+ *    fix tray context menu for linux
+ *    'about' dialog
+ *    predefined themes
+ *    theme editor
+ *    custom sorting
+ *    custom hilight/selection color - use selection-background-color: in qss
+ *    periodic (timed settings save)
+ *    thread safe exit (wait for QtConcurrent threads to end)
+ *    performace issues (using isReadable() to avoid timeouts)
+ *    fix z-order change after "ToggleDesktop" on windows
+ *    detect widget off screen
+ *    styleSheet issues for closed widgets
+ *    remove screenMapper from release builds
+
+ * [REVERTED]
+ *    weird QPersistentIndex corruption bugfix
+ *      using QModelIndex instead QPersistentIndex is a bad idea - segfaults
+ *      might also be related to "index from wrong model passed to mapFromSource" bug
+ *    reverted back to QPersistentIndex - yet to see any corruption
+ *      very random, hard to reproduce
+ *
+ *  [URGENT]
+ *  [checklist for first public release]
+ *    non-read only folders with drag & drop
+ *    fix random segfaults on open
+ *    i18n
+ *    cleanup
+ *    GitHub page
+ *
+ *  [NOT URGENT]
+ *  [to be implemented in future versions]
+ *    lock to specific resolution
+ *    lock to desktop screen
+ *    root folder ('My Computer') folder support
+ *    pseudo-folders (with drag-drop support)
+ *    custom alignment
+ *    free placement, free scaling
+ *    whole desktop replacement option
+ *    multi column list
+ *    custom per-item icons
+ *    extract shell icons from dirs on symlinks
+ *    disk-caching of extracted icons and thumbnails
+ *    drive names (from shortcuts)
+ *    extract icons from links themselves not their targets
+ *    thumbnail loading as an option
+ *    folderView spacing, other props
+ *
+ *  [CLEANUP]
+ *    proper Q_PROPERTY implementation in classes
+ *    allocs/deallocs
+ *    includes
+ *    private/public members
+ *    static/const functions and mutables
  */
 
 /**

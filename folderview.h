@@ -124,7 +124,7 @@ public:
 public slots:
     void displayContextMenu( const QPoint &point );
     void setCustomTitle( const QString &title );
-    void setCustomStyleSheet( const QString &styleSheet, bool force = false );
+    void setCustomStyleSheet( const QString &styleSheet, bool force = false, bool noUpdate = false );
     void setDefaultStyleSheet();
     void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }
     void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }
@@ -138,6 +138,7 @@ public slots:
 protected:
     void paintEvent( QPaintEvent *event );
     bool eventFilter( QObject *object, QEvent *event );
+    void showEvent( QShowEvent *event );
 
 private slots:
     void setupFrame();

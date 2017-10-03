@@ -138,8 +138,8 @@ void TrayWidget::initialize() {
     Variable::instance()->bind( "ui_iconTheme", this, SLOT( iconThemeChanged( QVariant )));
 
 #ifndef QT_DEBUG
-    // not currently available
-    this->ui->actionMap->setEnabled( false );
+    // not available in release
+    this->ui->toolBar->removeAction( this->ui->actionMap );
 #endif
 
     // save settings every 60 seconds

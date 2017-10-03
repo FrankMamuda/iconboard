@@ -300,7 +300,7 @@ void FolderView::setCustomTitle( const QString &title ) {
  * @brief FolderView::setCustomStyleSheet
  * @param styleSheet
  */
-void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force ) {
+void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force, bool noUpdate ) {
     this->m_customStyleSheet = styleSheet;
 
     if ( styleSheet.isEmpty() && !force )
@@ -309,9 +309,11 @@ void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force ) {
         this->setStyleSheet( styleSheet );
 
         // this has to be done to properly reset view
-        this->delegate->clearCache();
-        this->ui->view->setItemDelegate( nullptr );
-        this->ui->view->setItemDelegate( this->delegate );
+        if ( !noUpdate ) {
+            this->delegate->clearCache();
+            this->ui->view->setItemDelegate( nullptr );
+            this->ui->view->setItemDelegate( this->delegate );
+        }
     }
 }
 
@@ -750,3 +752,14 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
 
     return ( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDropEnabled );
 }*/
+
+/**
+ * @brief FolderView::showEvent
+ * @param event
+ */
+void FolderView::showEvent( QShowEvent *event ) {
+    QWidget::showEvent( event );
+
+    // TODO: set stylesheet here
+    this->setCustomStyleSheet( this->currentStyleSheet());
+}
