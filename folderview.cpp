@@ -19,8 +19,8 @@
 //
 // includes
 //
-#include <QFileDialog>
 #include <QDebug>
+#include <QFileDialog>
 #include <QInputDialog>
 #include <QDesktopServices>
 #include <QPainter>
@@ -29,11 +29,9 @@
 #include <QStorageInfo>
 #include "folderview.h"
 #include "folderdelegate.h"
-#include "traywidget.h"
 #include "proxymodel.h"
-#include "ThemeEditor.h"
+#include "themeeditor.h"
 #include "iconcache.h"
-#include "iconindex.h"
 #include "themes.h"
 #include "variable.h"
 #ifdef Q_OS_WIN
@@ -45,11 +43,7 @@
  * @param parent
  * @param rootPath
  */
-FolderView::FolderView( QWidget *parent, const QString &rootPath,
-                        TrayWidget *trayParent ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ),
-    trayWidget( trayParent ), m_sortOrder( Qt::AscendingOrder ),
-    m_dirsFirst( true ), m_caseSensitive( false )
-{
+FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ) {
     QDir dir( rootPath );
     QFile styleSheet;
 

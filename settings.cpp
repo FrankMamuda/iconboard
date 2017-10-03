@@ -27,6 +27,7 @@
 #include "settings.h"
 #include "ui_settings.h"
 #include "iconindex.h"
+#include "iconcache.h"
 
 /**
  * @brief Settings::Settings
@@ -37,6 +38,7 @@ Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings 
 
     // set up ui
     this->ui->setupUi( this );
+    this->ui->closeButton->setIcon( IconCache::instance()->icon( "dialog-close", 16 ));
 
     // connect for updates
     this->connect( Variable::instance(), SIGNAL( valueChanged( QString )), this, SLOT( externalValueChanged( QString )));

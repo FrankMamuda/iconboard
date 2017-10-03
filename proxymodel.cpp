@@ -32,14 +32,14 @@
  */
 ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ), m_stopping( false ) {
     this->view = qobject_cast<FolderView*>( parent );
-    this->connect( this, SIGNAL( iconFound( QString, QIcon, QModelIndex )), this, SLOT( updateModel( QString, QIcon, QModelIndex )));
+    this->connect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )), this, SLOT( updateModel( QString, QIcon, QPersistentModelIndex )));
 }
 
 /**
  * @brief ProxyModel::~ProxyModel
  */
 ProxyModel::~ProxyModel() {
-    this->disconnect( this, SIGNAL( iconFound( QString, QIcon, QModelIndex )));
+    this->disconnect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )));
 }
 
 /**
@@ -63,6 +63,24 @@ void ProxyModel::waitForThreads() {
 }
 
 /**
+ * @brief ProxyModel::updateModel
+ * @param fileName
+ * @param icon
+ * @param index
+ */
+void ProxyModel::updateModel( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index ) {
+    if ( icon.isNull())
+        return;
+
+    if ( !index.isValid())
+        return;
+
+    // NOTE: random segfault here (might be fixed by using QPersistentModelIndex)
+    emit this->dataChanged( index, index );
+    this->cache[fileName] = icon;
+}
+
+/**
  * @brief ProxyModel::data
  * @param index
  * @param role
@@ -83,7 +101,8 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
             return this->cache[fileName];
 
         // run fetcher
-        QFuture<void> future = QtConcurrent::run( [ this, fileName, index, iconSize ] {
+        QPersistentModelIndex persistentIndex( index );
+        QFuture<void> future = QtConcurrent::run( [ this, fileName, persistentIndex, iconSize ] {
             QIcon icon;
 
             if ( this->isStopping())
@@ -95,7 +114,7 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
 
             icon = IconCache::instance()->iconForFilename( fileName, iconSize );
             if ( !icon.isNull() || this->isStopping())
-                emit this->iconFound( fileName, icon, index );
+                emit this->iconFound( fileName, icon, persistentIndex );
         } );
         this->threadPool.append( future );
     } else if ( role == Qt::DisplayRole ) {

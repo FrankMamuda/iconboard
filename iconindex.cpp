@@ -19,8 +19,8 @@
 //
 // includes
 //
-#include <QFile>
 #include <QDebug>
+#include <QFile>
 #include <QRegularExpression>
 #include <QElapsedTimer>
 #include "iconindex.h"

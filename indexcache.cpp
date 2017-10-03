@@ -19,8 +19,8 @@
 //
 // includes
 //
-#include <QDir>
 #include <QDebug>
+#include <QDir>
 #include <QDomDocument>
 #include <QPixmap>
 #include <QIcon>

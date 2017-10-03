@@ -32,7 +32,6 @@
 #include <commoncontrols.h>
 #include <shellapi.h>
 #include <Winuser.h>
-#include <QPainter>
 #endif
 
 /**

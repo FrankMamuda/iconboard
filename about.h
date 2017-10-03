@@ -24,6 +24,7 @@
 #include <QApplication>
 #include <QDialog>
 #include "ui_about.h"
+#include "iconcache.h"
 
 //
 // namespaces
@@ -40,7 +41,11 @@ class About : public QDialog {
     Q_CLASSINFO( "description", "About dialog" )
 
 public:
-    explicit About( QWidget *parent = nullptr ) : QDialog( parent ), ui( new Ui::About ) { this->ui->setupUi( this ); }
+    explicit About( QWidget *parent = nullptr ) : QDialog( parent ), ui( new Ui::About ) {
+        this->ui->setupUi( this );
+        this->ui->aboutQt->setIcon( IconCache::instance()->icon( "help-about", 16 ));
+        this->ui->exitButton->setIcon( IconCache::instance()->icon( "dialog-close", 16 ));
+    }
     ~About() { delete this->ui; }
 
 private:

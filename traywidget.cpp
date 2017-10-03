@@ -41,12 +41,34 @@
  * @brief TrayWidget::TrayWidget
  * @param parent
  */
-TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), menu( new QMenu( this )) {
+TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::TrayWidget ), tray( new QSystemTrayIcon( QIcon( ":/icons/launcher_96" ))), model( new WidgetModel( this, this )), menu( new QMenu( this )) {
     // init ui
     this->ui->setupUi( this );
+}
+
+/**
+ * @brief TrayWidget::initialize
+ */
+void TrayWidget::initialize() {
+
+    // set hook
+#ifdef Q_OS_WIN
+#ifdef QT_DEBUG
+    // no need for unnecessary hooks in testing environment
+    this->hook = nullptr;
+#else
+    this->hook = SetWinEventHook( EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, nullptr,
+                                  handleWinEvent,
+                                  0, 0, 0 );
+#endif
+#endif
 
     // initialize desktop widget
+#ifdef Q_OS_WIN
     this->desktop = new DesktopWidget;
+#else
+    this->desktop = nullptr;
+#endif
 
     // show tray icon
     this->tray->show();
@@ -62,6 +84,7 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
     this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove", 16 ));
     this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid", 16 ));
     this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility", 16 ));
+    this->ui->buttonClose->setIcon( IconCache::instance()->icon( "dialog-close", 16 ));
 
     // reload on changed virtual geometry
     this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
@@ -94,6 +117,15 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
         foreach ( FolderView *fw, this->widgetList )
             delete fw;
 
+#ifdef Q_OS_WIN
+        if ( this->hook != nullptr ) {
+            UnhookWinEvent( this->hook );
+            this->hook = nullptr;
+        }
+#endif
+
+        qDebug() << "TrayWidget: exit call received";
+
         qApp->quit();
     } );
 
@@ -118,8 +150,18 @@ TrayWidget::TrayWidget( QWidget *parent ) : QMainWindow( parent/*, Qt::Tool*/ ),
  * @brief TrayWidget::~TrayWidget
  */
 TrayWidget::~TrayWidget() {
+#ifdef Q_OS_WIN
+    if ( this->hook != nullptr ) {
+        UnhookWinEvent( this->hook );
+        this->hook = nullptr;
+    }
+#endif
+
     this->disconnect( this->tray, SIGNAL( activated( QSystemTrayIcon::ActivationReason )));
+
+#ifdef Q_OS_WIN
     delete this->desktop;
+#endif
     delete this->model;
     delete this->menu;
     delete this->tray;
@@ -163,7 +205,7 @@ void TrayWidget::on_actionAdd_triggered() {
 
     dir.setPath( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
     if ( dir.exists()) {
-        this->widgetList << new FolderView( this->desktop, dir.absolutePath(), this );
+        this->widgetList << new FolderView( this->desktop, dir.absolutePath());
         this->widgetList.last()->show();
         this->widgetList.last()->setDefaultStyleSheet();
         this->widgetList.last()->sort();
@@ -314,7 +356,7 @@ void TrayWidget::timerEvent( QTimerEvent * ) {
  * @brief TrayWidget::readConfiguration
  */
 void TrayWidget::readConfiguration() {
-    XMLTools::instance()->readConfiguration( XMLTools::Widgets, this );
+    XMLTools::instance()->readConfiguration( XMLTools::Widgets );
     this->ui->widgetList->reset();
 }
 
@@ -322,9 +364,29 @@ void TrayWidget::readConfiguration() {
  * @brief TrayWidget::writeConfiguration
  */
 void TrayWidget::writeConfiguration() {
-    XMLTools::instance()->writeConfiguration( XMLTools::Widgets, this );
+    XMLTools::instance()->writeConfiguration( XMLTools::Widgets );
     XMLTools::instance()->writeConfiguration( XMLTools::Variables );
     XMLTools::instance()->writeConfiguration( XMLTools::Themes );
+}
+
+#ifdef Q_OS_WIN
+/**
+ * @brief DesktopWidget::DesktopWidget
+ * @param parent
+ */
+DesktopWidget::DesktopWidget(QWidget *parent) : QWidget( parent ), nativeEventIgnored( false ) {
+    SetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE, ( GetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE) | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | ~WS_EX_APPWINDOW ));
+}
+
+/**
+ * @brief DesktopWidget::lowerWindow
+ */
+void DesktopWidget::lowerWindow() {
+    if ( !this->nativeEventIgnored ) {
+        this->nativeEventIgnored = true;
+        SetWindowPos( reinterpret_cast<HWND>( this->winId()), HWND_BOTTOM, 0,0,0,0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE );
+        this->nativeEventIgnored = false;
+    }
 }
 
 /**
@@ -334,20 +396,30 @@ void TrayWidget::writeConfiguration() {
  * @param result
  * @return
  */
-DesktopWidget::DesktopWidget(QWidget *parent) : QWidget( parent ), nativeEventIgnored( false ) {
-    SetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE, ( GetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE) | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | ~WS_EX_APPWINDOW ));
-}
-
 bool DesktopWidget::nativeEvent( const QByteArray &eventType, void *message, long *result ) {
     MSG *msg;
 
     msg = static_cast<MSG*>( message );
-    if ( msg->message == WM_WINDOWPOSCHANGED ) {
-        if ( !this->nativeEventIgnored ) {
-            this->nativeEventIgnored = true;
-            SetWindowPos( reinterpret_cast<HWND>( this->winId()), HWND_BOTTOM, 0,0,0,0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE );
-            this->nativeEventIgnored = false;
-        }
-    }
+    if ( msg->message == WM_WINDOWPOSCHANGED )
+        this->lowerWindow();
+
     return QWidget::nativeEvent( eventType, message, result );
 }
+
+/**
+ * @brief handleWinEvent this basically fixes the wrong z-order after using "Show Desktop" button
+ * @param event
+ * @param hwnd
+ */
+void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG, DWORD, DWORD ) {
+    if ( event == EVENT_SYSTEM_FOREGROUND ) {
+        foreach ( FolderView *widget, TrayWidget::instance()->widgetList ) {
+            if ( reinterpret_cast<HWND>( widget->winId()) == hwnd )
+                TrayWidget::instance()->desktop->lowerWindow();
+        }
+
+        if ( reinterpret_cast<HWND>( TrayWidget::instance()->desktop->winId()))
+            TrayWidget::instance()->desktop->lowerWindow();
+    }
+}
+#endif

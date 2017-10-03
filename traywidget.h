@@ -30,6 +30,7 @@
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
+#include "singleton.h"
 
 //
 // classes
@@ -48,11 +49,15 @@ class TrayWidget;
 /**
  * @brief The DesktopWidget class
  */
+#ifdef Q_OS_WIN
 class DesktopWidget : public QWidget {
     Q_OBJECT
 
 public:
     DesktopWidget( QWidget *parent = nullptr );
+
+public slots:
+    void lowerWindow();
 
 protected:
     bool nativeEvent( const QByteArray &eventType, void *message, long *result );
@@ -60,6 +65,7 @@ protected:
 private:
     bool nativeEventIgnored;
 };
+#endif
 
 /**
  * @brief The TrayWidget class
@@ -70,8 +76,13 @@ class TrayWidget : public QMainWindow {
 public:
     explicit TrayWidget( QWidget *parent = 0 );
     ~TrayWidget();
+    static TrayWidget *createInstance() { return new TrayWidget(); }
+    static TrayWidget *instance() { return Singleton<TrayWidget>::instance( TrayWidget::createInstance ); }
     QList<FolderView*> widgetList;
     DesktopWidget *desktop;
+
+public slots:
+    void initialize();
 
 private slots:
     void trayIconActivated( QSystemTrayIcon::ActivationReason reason );
@@ -95,4 +106,7 @@ private:
     WidgetModel *model;
     QMenu *menu;
     QTimer timer;
+#ifdef Q_OS_WIN
+    HWINEVENTHOOK hook;
+#endif
 };

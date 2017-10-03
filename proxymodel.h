@@ -61,16 +61,10 @@ public slots:
     void reset() { this->m_stopping = false; }
 
 signals:
-    void iconFound( const QString &fileName, const QIcon &icon, const QModelIndex &index ) const;
+    void iconFound( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index ) const;
 
 private slots:
-    void updateModel( const QString &fileName, const QIcon &icon, const QModelIndex &index ) {
-        if ( icon.isNull())
-            return;
-
-        emit this->dataChanged( index, index );
-        this->cache[fileName] = icon;
-    }
+    void updateModel( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index );
 
 protected:
     bool lessThan( const QModelIndex &left, const QModelIndex &right ) const;

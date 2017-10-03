@@ -42,7 +42,7 @@ XMLTools::XMLTools( QObject *parent ) : QObject( parent ) {
  * @brief XMLTools::writeConfiguration
  * @param mode
  */
-void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
+void XMLTools::writeConfiguration( Modes mode ) {
     QString path, savedData, newData;
 
 #ifdef QT_DEBUG
@@ -62,8 +62,6 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
 
     case Widgets:
         path = configDir.absolutePath() + "/" + XMLFiles::Widgets;
-        if ( object == nullptr )
-            return;
         break;
 
     case Themes:
@@ -114,14 +112,7 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
 
     case Widgets:
     {
-        TrayWidget *trayWidget;
-
-        // get tray widget
-        trayWidget = qobject_cast<TrayWidget *>( object );
-        if ( trayWidget == nullptr )
-            return;
-
-        foreach ( FolderView *widget, trayWidget->widgetList ) {
+        foreach ( FolderView *widget, TrayWidget::instance()->widgetList ) {
             stream.writeStartElement( "widget" );
             stream.writeAttribute( "rootPath", widget->rootPath());
 
@@ -236,12 +227,11 @@ void XMLTools::writeConfiguration( Modes mode, QObject *object ) {
  * @param mode
  * @param object
  */
-void XMLTools::readConfiguration( Modes mode, QObject *object ) {
+void XMLTools::readConfiguration( Modes mode ) {
     QString path;
     QDomDocument document;
     QDomNode node, childNode;
     QDomElement element, childElement;
-    TrayWidget *trayWidget = nullptr;
 
 #ifdef QT_DEBUG
     QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
@@ -260,13 +250,6 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
 
     case Widgets:
         path = configDir.absolutePath() + "/" + XMLFiles::Widgets;
-        if ( object == nullptr )
-            return;
-
-        // get tray widget
-        trayWidget = qobject_cast<TrayWidget *>( object );
-        if ( trayWidget == nullptr )
-            return;
         break;
 
     case Themes:
@@ -303,9 +286,10 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
                 Qt::SortOrder sortOrder = Qt::AscendingOrder;
                 bool dirsFirst = true;
                 bool caseSensitive = false;
+                QRect vGeom, pGeom;
 
                 childNode = element.firstChild();
-                widget = new FolderView( trayWidget->desktop, element.attribute( "rootPath" ), trayWidget );
+                widget = new FolderView( TrayWidget::instance()->desktop, element.attribute( "rootPath" ));
                 widgetGeometry = widget->geometry();
 
                 styleSheet = element.attribute( "styleSheet" );
@@ -346,6 +330,13 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
                 if ( isVisible )
                     widget->show();
 
+
+                // detect if widget is off-screen
+                vGeom = qApp->primaryScreen()->virtualGeometry();
+                pGeom = qApp->primaryScreen()->geometry();
+                if ( !vGeom.contains( widgetGeometry ))
+                    widgetGeometry = QRect( pGeom.width() / 2 - widgetGeometry.width() / 2, pGeom.height() / 2 - widgetGeometry.height() / 2, widgetGeometry.width(), widgetGeometry.height());
+
                 widget->setGeometry( widgetGeometry );
                 widget->setCaseSensitive( caseSensitive );
                 widget->setDirectoriesFirst( dirsFirst );
@@ -353,7 +344,7 @@ void XMLTools::readConfiguration( Modes mode, QObject *object ) {
                 widget->setSortOrder( sortOrder );
                 widget->setCustomStyleSheet( styleSheet );
                 widget->sort();
-                trayWidget->widgetList << widget;
+                TrayWidget::instance()->widgetList << widget;
             } else if ( !QString::compare( element.tagName(), "variable" ) && mode == Variables ) {
                 QString key;
                 QVariant value;

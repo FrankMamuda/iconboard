@@ -49,6 +49,6 @@ public:
         Widgets,
         Themes
     };
-    void writeConfiguration( Modes mode, QObject *object = nullptr );
-    void readConfiguration( Modes mode, QObject *object = nullptr );
+    void writeConfiguration( Modes mode );
+    void readConfiguration( Modes mode );
 };

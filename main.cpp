@@ -20,11 +20,10 @@
 // includes
 //
 #include <QDebug>
-#include <QScreen>
 #include "traywidget.h"
-#include "indexcache.h"
 #include "iconindex.h"
 #include "iconcache.h"
+#include "indexcache.h"
 #include "variable.h"
 #include "proxymodel.h"
 #include "application.h"
@@ -59,27 +58,38 @@
  *  [DONE] theme editor
  *  [DONE] custom sorting
  *  [DONE] custom hilight/selection color - use selection-background-color: in qss
- *  [DONE] weird QPersistentIndex corruption bugfix - reverted to QModelIndex
  *  [DONE] periodic (timed settings save)
  *  [DONE] thread safe exit (wait for QtConcurrent threads to end)
  *  [DONE] performace issues (using isReadable() to avoid timeouts)
+ *  [DONE] fix z-order change after "ToggleDesktop" on windows
+ *  [DONE] detect widget off screen
+ *  [REVERTED] weird QPersistentIndex corruption bugfix
+ *      - using QModelIndex instead QPersistentIndex is a bad idea - segfaults
+ *        might also be related to "index from wrong model passed to mapFromSource" bug
+ *      - reverted back to QPersistentIndex - yet to see any corruption
+ *        very random, hard to reproduce
  *  lock to specific resolution
  *  lock to desktop screen
  *  root folder ('My Computer') folder support
  *  pseudo-folders (with drag-drop support)
  *  non-read only folders
- *  backup configuration
  *  custom alignment
  *  free placement, free scaling
  *  whole desktop replacement option
  *  multi column list
  *  custom per-item icons
  *  extract shell icons from dirs on symlinks
- *  caching of extracted icons and thumbnails
+ *  disk-caching of extracted icons and thumbnails
  *  drive names (from shortcuts)
  *  extract icons from links themselves not their targets
- *  thumbnail caching as an option
- *  fix ASSERT: "!"QSortFilterProxyModel: index from wrong model passed to mapFromSource"" in file itemmodels\qsortfilterproxymodel.cpp
+ *  thumbnail loading as an option
+ *  fix random segfaults on open
+ *  cleanup:
+ *      - proper Q_PROPERTY implementation in classes
+ *      - allocs/deallocs
+ *      - includes
+ *      - private/public members
+ *      - static/const functions and mutables
  */
 
 /**
@@ -131,8 +141,7 @@ int main( int argc, char *argv[] ) {
     }
 
     // display tray widget
-    TrayWidget trayWidget;
-    Q_UNUSED( trayWidget )
+    TrayWidget::instance()->initialize();
 
     return app.exec();
 }

@@ -33,7 +33,6 @@
 // classes
 //
 class FolderDelegate;
-class TrayWidget;
 class ProxyModel;
 class ProxyModel;
 class FilterModel;
@@ -83,7 +82,7 @@ class FolderView : public QWidget {
     Q_PROPERTY( Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder )
 
 public:
-    explicit FolderView( QWidget *parent, const QString &rootPath, TrayWidget *trayParent );
+    explicit FolderView( QWidget *parent, const QString &rootPath );
     ~FolderView();
     QString title() const { if ( !this->customTitle().isNull()) return this->customTitle(); return this->ui->title->text(); }
     QString rootPath() const { return this->model->rootPath(); }
@@ -156,7 +155,6 @@ private:
     Gestures gesture;
     Areas currentGrabArea;
     QRect grabAreas[Frame::MouseGrabAreas];
-    TrayWidget *trayWidget;
     QString m_customTitle;
     QString m_customStyleSheet;
     QString defaultStyleSheet;
