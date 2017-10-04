@@ -24,7 +24,6 @@
 #include <QMap>
 #include <QVariant>
 #include <QString>
-#include <QDebug>
 #include <QMetaMethod>
 #include "singleton.h"
 

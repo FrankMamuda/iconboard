@@ -21,7 +21,6 @@
 //
 #include <QApplication>
 #include <QScreen>
-#include <QDebug>
 #include "mapperwidget.h"
 #include "screenmapper.h"
 
@@ -68,7 +67,6 @@ void MapperWidget::paintEvent( QPaintEvent *event ) {
             font.setPointSize( screen->geometry().height() / 2 );
             screenPainter.setFont( font );
             screenPainter.drawText( screen->geometry(), QString( "%1" ).arg( index ), textOption );
-            //qDebug() << screen->name() << screen->model() << screen->manufacturer();
         }
 
         // paint widget rect

@@ -34,8 +34,6 @@
 //
 class FolderDelegate;
 class ProxyModel;
-class ProxyModel;
-class FilterModel;
 
 /**
  * @brief The Ui namespace
@@ -75,29 +73,45 @@ public slots:
  */
 class FolderView : public QWidget {
     Q_OBJECT
+    Q_CLASSINFO( "description", "FileSystem folder widget" )
+    Q_DISABLE_COPY( FolderView )
     Q_PROPERTY( QString title READ title )
     Q_PROPERTY( QString rootPath READ rootPath )
+    Q_PROPERTY( QString currentStyleSheet READ currentStyleSheet )
     Q_PROPERTY( QString customTitle READ customTitle WRITE setCustomTitle )
     Q_PROPERTY( QString customStyleSheet READ customStyleSheet WRITE setCustomStyleSheet )
+    Q_PROPERTY( QString defaultStyleSheet READ defaultStyleSheet )
+    Q_PROPERTY( int iconSize READ iconSize WRITE setIconSize )
+    Q_PROPERTY( bool readOnly READ isReadOnly WRITE setReadOnly )
     Q_PROPERTY( Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder )
+    Q_PROPERTY( bool directoriesFirst READ directoriesFirst WRITE setDirectoriesFirst )
+    Q_PROPERTY( bool caseSensitive READ isCaseSensitive WRITE setCaseSensitive )
+    Q_PROPERTY( QListView::ViewMode viewMode READ viewMode WRITE setViewMode )
 
 public:
     explicit FolderView( QWidget *parent, const QString &rootPath );
     ~FolderView();
+
+    // properties
     QString title() const { if ( !this->customTitle().isNull()) return this->customTitle(); return this->ui->title->text(); }
     QString rootPath() const { return this->model->rootPath(); }
     QString currentStyleSheet() const;
     QString customTitle() const { return this->m_customTitle; }
     QString customStyleSheet() const { return this->m_customStyleSheet; }
-    QListView::ViewMode viewMode() const { return this->ui->view->viewMode(); }
+    QString defaultStyleSheet() const { return this->m_defaultStyleSheet; }
     int iconSize() const;
-#ifdef Q_OS_WIN
-    static void openShellContextMenuForObject( const std::wstring &path, QPoint pos, HWND parentWindow );
-#endif
     bool isReadOnly() const;
     Qt::SortOrder sortOrder() const { return this->m_sortOrder; }
     bool directoriesFirst() const { return this->m_dirsFirst; }
     bool isCaseSensitive() const { return this->m_caseSensitive; }
+    QListView::ViewMode viewMode() const { return this->ui->view->viewMode(); }
+
+    // rootIndex for proxy model
+    QModelIndex rootIndex() const { return this->ui->view->rootIndex(); }
+
+#ifdef Q_OS_WIN
+    static void openShellContextMenuForObject( const std::wstring &path, QPoint pos, HWND parentWindow );
+#endif
 
     // grab areas for frameless resizing
     enum Areas {
@@ -122,18 +136,21 @@ public:
     Q_ENUMS( Gestures )
 
 public slots:
-    void displayContextMenu( const QPoint &point );
+    // properties
     void setCustomTitle( const QString &title );
     void setCustomStyleSheet( const QString &styleSheet, bool force = false, bool noUpdate = false );
-    void setDefaultStyleSheet();
-    void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }
     void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }
-    void setIconSize();
     void setReadOnly( bool enable = true );
-    void setSortOrder( Qt::SortOrder order );
+    void setSortOrder( Qt::SortOrder order = Qt::AscendingOrder );
     void setDirectoriesFirst( bool enable = true ) { this->m_dirsFirst = enable; }
     void setCaseSensitive( bool enable = false ) { this->m_caseSensitive = enable; }
+    void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }
+
+    // other functions
     void sort();
+    void displayContextMenu( const QPoint &point );
+    void resetStyleSheet();
+    void setIconSize();
 
 protected:
     void paintEvent( QPaintEvent *event );
@@ -149,18 +166,23 @@ private slots:
 
 private:
     Ui::FolderView *ui;
+
+    // models and delegates
     ProxyModel *proxyModel;
     FileSystemModel *model;
     FolderDelegate *delegate;
+
+    // frame related
     QPoint mousePos;
     Gestures gesture;
     Areas currentGrabArea;
     QRect grabAreas[Frame::MouseGrabAreas];
+
+    // properties
     QString m_customTitle;
     QString m_customStyleSheet;
-    QString defaultStyleSheet;
+    QString m_defaultStyleSheet;
     Qt::SortOrder m_sortOrder;
     bool m_dirsFirst;
     bool m_caseSensitive;
-    FilterModel *filterModel;
 };

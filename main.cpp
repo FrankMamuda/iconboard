@@ -19,7 +19,6 @@
 //
 // includes
 //
-#include <QDebug>
 #include "traywidget.h"
 #include "iconindex.h"
 #include "iconcache.h"
@@ -31,48 +30,16 @@
 #include "themes.h"
 
 /*
- * TODO list:
- * [DONE]
- *    hidden widgets
- *    custom styleSheet support
- *    xml safe strings in config
- *    "open with" dialog
- *    bugfix for right click on item and hilight rect
- *    list mode
- *    custom icon size
- *    extract icons from symlinks
- *    QFileSystemWatcher - no need
- *    geometry fix for multiple monitors
- *    icon extraction issues on MSVC builds
- *    centred icons (if smaller than icon size)
- *    settings dialog with custom variables
- *    remove hilight in list mode
- *    weird QObject::moveToThread fix
- *    focusless scrolling (mouseOver scrolling)
- *    single instance
- *    fixed custom styleSheet font issues
- *    remove QListView border
- *    start-on-boot option
- *    fix tray context menu for linux
- *    'about' dialog
- *    predefined themes
- *    theme editor
- *    custom sorting
- *    custom hilight/selection color - use selection-background-color: in qss
- *    periodic (timed settings save)
- *    thread safe exit (wait for QtConcurrent threads to end)
- *    performace issues (using isReadable() to avoid timeouts)
- *    fix z-order change after "ToggleDesktop" on windows
- *    detect widget off screen
- *    styleSheet issues for closed widgets
- *    remove screenMapper from release builds
-
- * [REVERTED]
+ * TODO/FIXME list:
+ *
+ * [PROXY MODEL BUGS]
  *    weird QPersistentIndex corruption bugfix
  *      using QModelIndex instead QPersistentIndex is a bad idea - segfaults
  *      might also be related to "index from wrong model passed to mapFromSource" bug
  *    reverted back to QPersistentIndex - yet to see any corruption
  *      very random, hard to reproduce - not really, crashes all the time in Win10
+ *    using a different method to update indexes, by comparing fileNames
+ *      a little more inefficient, but gets the job done
  *
  *  [URGENT]
  *  [checklist for first public release]
@@ -81,7 +48,10 @@
  *    i18n
  *    cleanup
  *    GitHub page
- *    linux segfaul on icon theme change (might be Qt version related)
+ *    linux segfault on icon theme change
+ *      might be Qt version related, not sure
+ *      possible solution would be requiring a restart, though this needs a new
+ *        flag in Variable class
  *    QPersistentIndex corruption fix
  *
  *  [NOT URGENT]
@@ -102,6 +72,8 @@
  *    thumbnail loading as an option
  *    folderView spacing, other props
  *    macOS issues
+ *    sorting issues on network folders (dirsFirst not working)
+ *    complete documentation
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -127,8 +99,19 @@ int main( int argc, char *argv[] ) {
     QString themeName;
     Application app( argc, argv );
 
+    // set console output pattern
+    qSetMessagePattern( "%{if-category}%{category}: %{endif}%{function}: %{message}" );
+
     // fixes auto close behaviour on linux
     QApplication::setQuitOnLastWindowClosed( false );
+
+    // request trivial fileInfo early
+    // might fix random "ShGetFileInfoBackground() timed out" bug
+#ifdef Q_OS_WIN
+#if ( QT_VERSION <= QT_VERSION_CHECK( 5, 8, 0 ))
+    QFileInfo( QCoreApplication::applicationFilePath());
+#endif
+#endif
 
     // create an instance of app
     if ( !app.lock())

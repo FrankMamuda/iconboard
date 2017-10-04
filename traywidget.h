@@ -52,6 +52,7 @@ class TrayWidget;
 #ifdef Q_OS_WIN
 class DesktopWidget : public QWidget {
     Q_OBJECT
+    Q_CLASSINFO( "description", "FolderView parent widget that manages proper z-order" )
 
 public:
     DesktopWidget( QWidget *parent = nullptr );
@@ -72,6 +73,7 @@ private:
  */
 class TrayWidget : public QMainWindow {
     Q_OBJECT
+    Q_CLASSINFO( "description", "System tray activated folder widget manager" )
 
 public:
     explicit TrayWidget( QWidget *parent = 0 );

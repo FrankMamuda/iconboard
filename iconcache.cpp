@@ -103,7 +103,15 @@ QIcon IconCache::thumbnail( const QString &path, int scale, bool &ok ) {
     if ( pixmap.isNull() && !pixmap.width())
         return pixmap;
 
-    if ( pixmap.height() > scale || pixmap.width() > scale ) {
+    if ( pixmap.height() < scale || pixmap.width() < scale ) {
+        QPixmap result( scale, scale );
+        result.fill( Qt::transparent );
+        {
+            QPainter painter( &result );
+            painter.drawPixmap( scale / 2 - pixmap.width() / 2, scale / 2 - pixmap.height() / 2, pixmap );
+        }
+        pixmap = result;
+    } else if ( pixmap.height() > scale || pixmap.width() > scale ) {
         if ( pixmap.width() > pixmap.height())
             rect = QRect( pixmap.width() / 2 - pixmap.height() / 2, 0, pixmap.height(), pixmap.height());
         else if ( pixmap.width() < pixmap.height())

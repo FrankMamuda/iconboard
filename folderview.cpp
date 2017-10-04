@@ -19,7 +19,6 @@
 //
 // includes
 //
-#include <QDebug>
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QDesktopServices>
@@ -78,7 +77,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( pa
     // set default styleSheet
     styleSheet.setFileName( ":/styleSheets/dark.qss" );
     if ( styleSheet.open( QFile::ReadOnly )) {
-        this->defaultStyleSheet = styleSheet.readAll().constData();
+        this->m_defaultStyleSheet = styleSheet.readAll().constData();
         styleSheet.close();
     }
 
@@ -304,7 +303,7 @@ void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force, boo
     this->m_customStyleSheet = styleSheet;
 
     if ( styleSheet.isEmpty() && !force )
-        this->setDefaultStyleSheet();
+        this->resetStyleSheet();
     else {
         this->setStyleSheet( styleSheet );
 
@@ -318,10 +317,10 @@ void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force, boo
 }
 
 /**
- * @brief FolderView::setDefaultStyleSheet
+ * @brief FolderView::resetStyleSheet
  */
-void FolderView::setDefaultStyleSheet() {
-    this->setStyleSheet( this->defaultStyleSheet );
+void FolderView::resetStyleSheet() {
+    this->setStyleSheet( this->defaultStyleSheet());
 
     // this has to be done to properly reset view
     this->delegate->clearCache();

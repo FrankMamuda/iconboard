@@ -21,7 +21,6 @@
 //
 #include <QApplication>
 #include <QScreen>
-#include <QDebug>
 #include "screenmapper.h"
 #include "ui_screenmapper.h"
 

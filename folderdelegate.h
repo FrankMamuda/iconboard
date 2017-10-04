@@ -51,6 +51,8 @@ static const int MarginText = 4;
  * @brief The FolderDelegate class
  */
 class FolderDelegate : public QStyledItemDelegate {
+    Q_DISABLE_COPY( FolderDelegate )
+
 public:
     FolderDelegate( QListView *parent );
     ~FolderDelegate() {}

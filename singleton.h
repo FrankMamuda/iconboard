@@ -24,7 +24,6 @@
 #include <QtGlobal>
 #include <QScopedPointer>
 #include "callonce.h"
-#include <QDebug>
 
 /**
  * @brief The Singleton class
@@ -107,5 +106,3 @@ Singleton<T>::~Singleton() {
 template<class T> QBasicAtomicPointer<void> Singleton<T>::create = Q_BASIC_ATOMIC_INITIALIZER( nullptr );
 template<class T> QBasicAtomicInt Singleton<T>::flag = Q_BASIC_ATOMIC_INITIALIZER( Call::Request );
 template<class T> QBasicAtomicPointer<void> Singleton<T>::singletonPtr = Q_BASIC_ATOMIC_INITIALIZER( nullptr );
-
-

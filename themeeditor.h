@@ -54,6 +54,7 @@ public:
  */
 class ThemeEditor : public QDialog {
     Q_OBJECT
+    Q_CLASSINFO( "description", "Theme editing dialog" )
     Q_ENUMS( Modes )
 
 public:

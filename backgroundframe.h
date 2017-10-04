@@ -21,12 +21,8 @@
 //
 // includes
 //
-//#include <QApplication>
-//#include <QDesktopWidget>
-//#include <QScreen>
 #include <QPainter>
 #include <QFrame>
-#include <QDebug>
 
 /**
  * @brief The BackgroundFrame class

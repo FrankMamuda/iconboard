@@ -111,7 +111,7 @@ void Settings::bind( const QString &key, QWidget *widget ) {
             signalMapper->setMapping( comboBox, key );
         }
     } else {
-        qDebug() << "Settings::bind: unsupported container" << widget->metaObject()->className();
+        qWarning() << "unsupported container" << widget->metaObject()->className();
     }
 }
 
@@ -171,11 +171,11 @@ void Settings::setValue( const QString &key, bool internal ) {
                     }
                 }
             } else {
-                qDebug() << "Settings::setValue: empty comboBox for variable" << key;
+                qWarning() << "empty comboBox for variable" << key;
             }
         }
     } else {
-        qDebug() << "Settings::setValue: unsupported container" << widget->metaObject()->className();
+        qWarning() << "unsupported container" << widget->metaObject()->className();
     }
 
     // force update

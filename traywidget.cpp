@@ -128,7 +128,7 @@ void TrayWidget::initialize() {
         }
 #endif
 
-        qDebug() << "TrayWidget: exit call received";
+        qInfo() << "exit call received";
 
         qApp->quit();
     } );
@@ -215,7 +215,7 @@ void TrayWidget::on_actionAdd_triggered() {
         this->widgetList << new FolderView( nullptr, dir.absolutePath());
 #endif
         this->widgetList.last()->show();
-        this->widgetList.last()->setDefaultStyleSheet();
+        this->widgetList.last()->resetStyleSheet();
         this->widgetList.last()->sort();
         this->ui->widgetList->reset();
     }
@@ -297,7 +297,6 @@ void TrayWidget::on_actionMap_triggered() {
     // get widget ptr
     widget = this->widgetList.at( row );
 
-    qDebug() << "set widget rect" << widget->geometry();
     mapperDialog.setWidgetRect( widget->geometry());
     mapperDialog.exec();
 
@@ -315,7 +314,7 @@ void TrayWidget::on_buttonClose_clicked() {
  */
 void TrayWidget::reload() {
     // announce
-    qDebug() << "TrayWidget::reload: reloading configuration";
+    qInfo() << "reloading configuration";
 
     // save existing widget list
     this->writeConfiguration();

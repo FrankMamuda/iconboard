@@ -24,7 +24,6 @@
 #include "folderview.h"
 #include "proxymodel.h"
 #include "iconcache.h"
-#include <QDebug>
 
 /**
  * @brief ProxyModel::ProxyModel
@@ -32,14 +31,22 @@
  */
 ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ), m_stopping( false ) {
     this->view = qobject_cast<FolderView*>( parent );
+#ifdef ALT_PROXY_MODE
+    this->connect( this, SIGNAL( iconFound( QString, QIcon )), this, SLOT( updateModel( QString, QIcon )));
+#else
     this->connect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )), this, SLOT( updateModel( QString, QIcon, QPersistentModelIndex )));
+#endif
 }
 
 /**
  * @brief ProxyModel::~ProxyModel
  */
 ProxyModel::~ProxyModel() {
+#ifdef ALT_PROXY_MODE
+    this->disconnect( this, SIGNAL( iconFound( QString, QIcon )));
+#else
     this->disconnect( this, SIGNAL( iconFound( QString, QIcon, QPersistentModelIndex )));
+#endif
 }
 
 /**
@@ -63,14 +70,55 @@ void ProxyModel::waitForThreads() {
 }
 
 /**
+ * @brief ProxyModel::removeFinishedThreads
+ */
+void ProxyModel::removeFinishedThreads() {
+    foreach ( QFuture<void> future, this->threadPool ) {
+        if ( future.isFinished())
+            this->threadPool.removeOne( future );
+    }
+}
+
+/**
  * @brief ProxyModel::updateModel
  * @param fileName
  * @param icon
  * @param index
  */
+#ifdef ALT_PROXY_MODE
+void ProxyModel::updateModel( const QString &fileName, const QIcon &icon ) {
+    int y;
+    QModelIndex index;
+    bool found = false;
+#else
 void ProxyModel::updateModel( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index ) {
+#endif
+
+    // clean up
+    this->removeFinishedThreads();
+
     if ( icon.isNull())
         return;
+
+#ifdef ALT_PROXY_MODE
+    //
+    // this is a little more inefficient, however we don't have to deal with QPersistentModelIndex
+    // that is prone to corruption
+    //
+    for ( y = 0; y < this->rowCount( this->view->rootIndex()); y++ ) {
+        index = this->index( y, 0, this->view->rootIndex());
+        if ( !index.isValid())
+            continue;
+
+        if ( !QString::compare( index.data( QFileSystemModel::FilePathRole ).toString(), fileName )) {
+            found = true;
+            break;
+        }
+    }
+
+    if ( !found )
+        return;
+#endif
 
     if ( !index.isValid())
         return;
@@ -101,8 +149,12 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
             return this->cache[fileName];
 
         // run fetcher
+#ifdef ALT_PROXY_MODE
+        QFuture<void> future = QtConcurrent::run( [ this, fileName, iconSize ] {
+#else
         QPersistentModelIndex persistentIndex( index );
         QFuture<void> future = QtConcurrent::run( [ this, fileName, persistentIndex, iconSize ] {
+#endif
             QIcon icon;
 
             if ( this->isStopping())
@@ -113,9 +165,15 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
                 return;
 
             icon = IconCache::instance()->iconForFilename( fileName, iconSize );
-            if ( !icon.isNull() || this->isStopping())
+            if ( !icon.isNull() || this->isStopping()) {
+#ifdef ALT_PROXY_MODE
+                emit this->iconFound( fileName, icon );
+#else
                 emit this->iconFound( fileName, icon, persistentIndex );
+#endif
+            }
         } );
+        //pool.start( future );
         this->threadPool.append( future );
     } else if ( role == Qt::DisplayRole ) {
         fileName = index.data( QFileSystemModel::FilePathRole ).toString();

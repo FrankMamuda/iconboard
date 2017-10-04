@@ -37,7 +37,6 @@ namespace Call {
         InProgress,
         Finished
     };
-    Q_GLOBAL_STATIC( QThreadStorage<QAtomicInt*>, onceFlag )
 }
 
 /**
@@ -61,19 +60,5 @@ inline static void qCallOnce( Function func, QBasicAtomicInt &flag ) {
     } else {
         do QThread::yieldCurrentThread();
         while ( !flag.testAndSetAcquire( Finished, Finished ));
-    }
-}
-
-/**
- * @brief qCallOncePerThread
- * @param func
- */
-template <class Function>
-inline static void qCallOncePerThread( Function func ) {
-    using namespace Call;
-
-    if ( !onceFlag()->hasLocalData()) {
-        onceFlag()->setLocalData( new QAtomicInt( Request ));
-        qCallOnce( func, *onceFlag()->localData());
     }
 }

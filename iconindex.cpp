@@ -56,13 +56,13 @@ bool IconIndex::build( const QString &theme ) {
 
     // reject empty theme names
     if ( theme.isEmpty()) {
-        qDebug() << this->tr( "IconIndex::build: empty theme name provided" );
+        qWarning() << this->tr( "empty theme name provided" );
         return false;
     }
 
     // reject system theme
     if ( !QString::compare( theme, "system" )) {
-        qDebug() << this->tr( "IconIndex::build: system theme is not to be built" );
+        qWarning() << this->tr( "system theme is not to be built" );
         return false;
     }
 
@@ -76,7 +76,7 @@ bool IconIndex::build( const QString &theme ) {
     // open theme index file
     indexFile.setFileName( themePath + "index.theme" );
     if ( !indexFile.open( QFile::ReadOnly )) {
-        qDebug() << this->tr( "IconIndex::build: index file \"%1\" not found" ).arg( indexFile.fileName());
+        qCritical() << this->tr( "index file \"%1\" not found" ).arg( indexFile.fileName());
         return false;
     }
 
@@ -99,7 +99,7 @@ bool IconIndex::build( const QString &theme ) {
 
     // performance counters
 #ifdef QT_DEBUG
-    qDebug() << this->tr( "IconIndex::build: \"%1\" index built in %2 msec" ).arg( theme ).arg( timer.elapsed());
+    qInfo() << this->tr( "\"%1\" index built in %2 msec" ).arg( theme ).arg( timer.elapsed());
 #endif
 
     return true;

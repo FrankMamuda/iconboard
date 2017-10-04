@@ -21,7 +21,6 @@
 //
 #include <QApplication>
 #include <QPainter>
-#include <QDebug>
 #include "folderdelegate.h"
 
 /**

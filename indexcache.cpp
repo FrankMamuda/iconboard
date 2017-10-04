@@ -44,7 +44,7 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ) 
 
     // check if cache dir exists
     if ( !directory.exists()) {
-        qDebug() << this->tr( "IndexCache: creating non-existant cache dir" );
+        qInfo() << this->tr( "creating non-existant cache dir" );
         directory.mkpath( this->path());
 
         // additional failsafe
@@ -57,7 +57,7 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ) 
     // set up index file
     this->indexFile.setFilename( this->path() + "/" + IndexCacheNamespace::IndexFilename );
     if ( !this->indexFile.open()) {
-        qDebug() << this->tr( "IndexCache: index file non-writable" );
+        qCritical() << this->tr( "index file non-writable" );
         this->shutdown();
         return;
     } else {
@@ -67,7 +67,7 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ) 
 
     // read data
     if ( !this->read()) {
-        qDebug() << this->tr( "IndexCache: failed to read cache" );
+        qCritical() << this->tr( "failed to read cache" );
         this->shutdown();
         return;
     }
@@ -93,7 +93,7 @@ bool IndexCache::read() {
 
     // check version
     if ( version != IndexCacheNamespace::Version ) {
-        qDebug() << this->tr( "IndexCache::read: version mismatch for index file" );
+        qCritical() << this->tr( "version mismatch for index file" );
         this->shutdown();
         return false;
     }
@@ -105,7 +105,7 @@ bool IndexCache::read() {
     }
 
     // report
-    qDebug() << this->tr( "IndexCache::read: found %1 entries in index file" ).arg( this->index.count());
+    qInfo() << this->tr( "found %1 entries in index file" ).arg( this->index.count());
 
     // return success
     return true;
@@ -136,7 +136,7 @@ bool IndexCache::write( const QString &iconName, int iconScale, const QString &t
 
     // check hash
     if ( iconName.isEmpty() || iconScale < 0 ) {
-        qDebug() << this->tr( "IconCache::write: invalid iconName or scale" );
+        qWarning() << this->tr( "invalid iconName or scale" );
         return false;
     }
 

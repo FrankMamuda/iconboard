@@ -19,6 +19,7 @@
 //
 // includes
 //
+#include <QDebug>
 #include "xmltools.h"
 #include "variable.h"
 #include "traywidget.h"
@@ -70,7 +71,7 @@ void XMLTools::writeConfiguration( Modes mode ) {
 
     case NoMode:
     default:
-        qDebug() << "XMLTools::writeConfiguration: error - invalid mode";
+        qCritical() << "error - invalid mode";
         return;
     }
 
@@ -181,7 +182,7 @@ void XMLTools::writeConfiguration( Modes mode ) {
 
     case NoMode:
     default:
-        qDebug() << "XMLTools::writeConfiguration: error - invalid mode";
+        qCritical() << "error - invalid mode";
         return;
     }
 
@@ -212,7 +213,7 @@ void XMLTools::writeConfiguration( Modes mode ) {
     } else {
         // write out as binary (not QIODevice::Text) to avoid CR line endings
         if ( !xmlFile.open( QFile::WriteOnly | QFile::Truncate )) {
-            qDebug() << "XMLTools::writeConfiguration: error - could not open configuration file" << path;
+            qCritical() << "could not open configuration file" << path;
             return;
         }
         xmlFile.write( newData.toUtf8().replace( "\r", "" ));
@@ -258,7 +259,7 @@ void XMLTools::readConfiguration( Modes mode ) {
 
     case NoMode:
     default:
-        qDebug() << "XMLTools::readConfiguration: error - invalid mode";
+        qCritical() << "error - invalid mode";
         return;
     }
 
@@ -266,7 +267,7 @@ void XMLTools::readConfiguration( Modes mode ) {
     QFile xmlFile( path );
 
     if ( !xmlFile.exists() || !xmlFile.open( QFile::ReadOnly | QFile::Text )) {
-        qDebug() << this->tr( "XMLTools::readConfiguration: no configuration file found" );
+        qCritical() << this->tr( "no configuration file found" );
         return;
     }
 

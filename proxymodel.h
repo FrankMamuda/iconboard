@@ -31,6 +31,11 @@
 //
 class FolderView;
 
+//
+// defines
+//
+#define ALT_PROXY_MODE
+
 /**
  * @brief The ProxyIcon struct
  */
@@ -47,6 +52,7 @@ Q_DECLARE_METATYPE( ProxyIcon )
  */
 class ProxyModel : public QSortFilterProxyModel {
     Q_OBJECT
+    Q_DISABLE_COPY( ProxyModel )
 
 public:
     explicit ProxyModel( QObject *parent = nullptr );
@@ -57,14 +63,23 @@ public:
 public slots:
     void clearCache() { this->cache.clear(); }
     void waitForThreads();
+    void removeFinishedThreads();
     void stop() { this->m_stopping = true; }
     void reset() { this->m_stopping = false; }
 
 signals:
+#ifdef ALT_PROXY_MODE
+    void iconFound( const QString &fileName, const QIcon &icon ) const;
+#else
     void iconFound( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index ) const;
+#endif
 
 private slots:
+#ifdef ALT_PROXY_MODE
+    void updateModel(const QString &fileName, const QIcon &icon );
+#else
     void updateModel( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index );
+#endif
 
 protected:
     bool lessThan( const QModelIndex &left, const QModelIndex &right ) const;

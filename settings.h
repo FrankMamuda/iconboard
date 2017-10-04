@@ -37,6 +37,7 @@ class Settings;
  */
 class Settings : public QDialog {
     Q_OBJECT
+    Q_CLASSINFO( "description", "Settings dialog" )
 
 public:
     explicit Settings( QWidget *parent = 0 );

@@ -250,7 +250,7 @@ void ThemeEditor::saveAs() {
  */
 QVariant ThemeDemoModel::data( const QModelIndex &index, int role ) const {
     if ( role == Qt::DisplayRole )
-        return QString( "Folder %1" ).arg( index.row() + 1 );
+        return this->tr( "Folder %1" ).arg( index.row() + 1 );
 
     if ( role == Qt::DecorationRole )
         return IconCache::instance()->icon( "inode-directory", 48 );
