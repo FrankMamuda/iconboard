@@ -38,7 +38,8 @@ SOURCES += main.cpp\
     xmltools.cpp \
     proxymodel.cpp \
     themeeditor.cpp \
-    themes.cpp
+    themes.cpp \
+    listview.cpp
 
 HEADERS  += \
     folderview.h \
@@ -61,7 +62,8 @@ HEADERS  += \
     themeeditor.h \
     backgroundframe.h \
     proxymodel.h \
-    themes.h
+    themes.h \
+    listview.h
 
 FORMS    += \
     folderview.ui \

@@ -65,6 +65,7 @@
  *    sorting issues on network folders (dirsFirst not working)
  *    complete documentation
  *    QWindow::requestActivate: requestActivate() FolderViewWindow
+ *    QWindowsContext::windowsProc: External WM_DESTROY received
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes

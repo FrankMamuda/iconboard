@@ -62,6 +62,8 @@ public:
         this->setRootPath( path );
         //..this->setReadOnly( true ); // TODO: add as menu (RO by default)
     }
+    Qt::DropActions supportedDropActions() const;
+    Qt::ItemFlags flags( const QModelIndex &index ) const;
 
 public slots:
     void softReset() { emit this->dataChanged( this->index( 0, 0 ), this->index( this->rowCount() - 1, this->columnCount() - 1 )); }
@@ -156,6 +158,7 @@ protected:
     void paintEvent( QPaintEvent *event );
     bool eventFilter( QObject *object, QEvent *event );
     void showEvent( QShowEvent *event );
+    void dropEvent( QDropEvent *event );
 
 private slots:
     void setupFrame();

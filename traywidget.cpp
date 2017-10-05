@@ -249,7 +249,7 @@ void TrayWidget::on_actionRemove_triggered() {
         widget->hide();
         this->widgetList.removeOne( widget );
         this->ui->widgetList->reset();
-        //delete widget;
+        widget->deleteLater();
         break;
 
     case QMessageBox::No:

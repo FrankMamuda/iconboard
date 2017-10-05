@@ -55,13 +55,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( pa
     this->proxyModel->setSourceModel( this->model );
     this->ui->view->setModel( this->proxyModel );
     this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( rootPath )));
-    this->ui->view->setDragDropMode( QAbstractItemView::NoDragDrop );
     this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
-
-    // enable drag & drop
-    this->ui->view->setDragEnabled( true );
-    this->ui->view->setAcceptDrops( true );
-    this->ui->view->setDropIndicatorShown( true );
 
     // set up view delegate
     this->delegate = new FolderDelegate( this->ui->view );
@@ -273,9 +267,10 @@ void FolderView::displayContextMenu( const QPoint &point ) {
     // read only lambda
     actionReadOnly = menu.addAction( this->tr( "Read only" ));
     actionReadOnly->setCheckable( true );
-    actionReadOnly->setChecked( this->model->isReadOnly());
-    actionReadOnly->setDisabled( true );
+    actionReadOnly->setChecked( this->isReadOnly());
+    qDebug() << "RO MENU" << this->isReadOnly();
     this->connect( actionReadOnly, &QAction::triggered, [this]() {
+        qDebug() << "set" << !this->isReadOnly();
         this->setReadOnly( !this->isReadOnly());
     } );
 
@@ -352,8 +347,10 @@ void FolderView::setIconSize() {
  * @brief FolderView::setReadOnly
  */
 void FolderView::setReadOnly( bool enable ) {
+    qDebug() << this->title() << "RO" << enable << this->model->isReadOnly();
     this->model->setReadOnly( enable );
-    this->ui->view->setDragDropMode( enable ? QListView::DropOnly : QListView::NoDragDrop );
+    this->ui->view->setReadOnly( enable );
+    qDebug() << "  " << this->model->isReadOnly();
 }
 
 /**
@@ -744,12 +741,20 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
  * @param index
  * @return
  */
-/*Qt::ItemFlags FileSystemModel::flags(const QModelIndex &index) const {
+Qt::ItemFlags FileSystemModel::flags( const QModelIndex &index ) const {
     if ( !index.isValid())
         return Qt::NoItemFlags;
 
-    return ( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDropEnabled );
-}*/
+    return ( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDropEnabled  | Qt::ItemIsDragEnabled );
+}
+
+/**
+ * @brief DragDropListModel::supportedDropActions
+ * @return
+ */
+Qt::DropActions FileSystemModel::supportedDropActions() const {
+    return Qt::CopyAction | Qt::MoveAction;
+}
 
 /**
  * @brief FolderView::showEvent
@@ -760,4 +765,13 @@ void FolderView::showEvent( QShowEvent *event ) {
 
     // TODO: set stylesheet here
     this->setCustomStyleSheet( this->currentStyleSheet());
+}
+
+/**
+ * @brief FolderView::dropEvent
+ * @param event
+ */
+void FolderView::dropEvent( QDropEvent *event ) {
+    qDebug() << "drop event";
+    QWidget::dropEvent( event );
 }

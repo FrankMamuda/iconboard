@@ -61,6 +61,17 @@ public:
     QVariant data( const QModelIndex &index, int role = Qt::DisplayRole ) const;
     bool isStopping() const { QMutexLocker( &this->m_mutex ); return m_stopping; }
 
+    Qt::ItemFlags flags( const QModelIndex &index ) const {
+        if ( !index.isValid())
+            return Qt::NoItemFlags;
+
+        return ( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDropEnabled  | Qt::ItemIsDragEnabled );
+    }
+
+    Qt::DropActions supportedDropActions() const {
+        return Qt::CopyAction | Qt::MoveAction;
+    }
+
 public slots:
     void clearCache() { this->cache.clear(); }
     void waitForThreads();
