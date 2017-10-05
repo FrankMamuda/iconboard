@@ -32,15 +32,6 @@
 /*
  * TODO/FIXME list:
  *
- * [PROXY MODEL BUGS]
- *    weird QPersistentIndex corruption bugfix
- *      using QModelIndex instead QPersistentIndex is a bad idea - segfaults
- *      might also be related to "index from wrong model passed to mapFromSource" bug
- *    reverted back to QPersistentIndex - yet to see any corruption
- *      very random, hard to reproduce - not really, crashes all the time in Win10
- *    using a different method to update indexes, by comparing fileNames
- *      a little more inefficient, but gets the job done
- *
  *  [URGENT]
  *  [checklist for first public release]
  *    non-read only folders with drag & drop
@@ -52,7 +43,6 @@
  *      might be Qt version related, not sure
  *      possible solution would be requiring a restart, though this needs a new
  *        flag in Variable class
- *    QPersistentIndex corruption fix
  *
  *  [NOT URGENT]
  *  [to be implemented in future versions]
@@ -74,6 +64,7 @@
  *    macOS issues
  *    sorting issues on network folders (dirsFirst not working)
  *    complete documentation
+ *    QWindow::requestActivate: requestActivate() FolderViewWindow
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes

@@ -29,7 +29,7 @@
  * @brief ProxyModel::ProxyModel
  * @param parent
  */
-ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ), m_stopping( false ) {
+ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ), m_stopping( false ), threadPool( new QThreadPool( this )) {
     this->view = qobject_cast<FolderView*>( parent );
 #ifdef ALT_PROXY_MODE
     this->connect( this, SIGNAL( iconFound( QString, QIcon )), this, SLOT( updateModel( QString, QIcon )));
@@ -42,6 +42,9 @@ ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ), m_s
  * @brief ProxyModel::~ProxyModel
  */
 ProxyModel::~ProxyModel() {
+    this->waitForThreads();
+    this->threadPool->deleteLater();
+
 #ifdef ALT_PROXY_MODE
     this->disconnect( this, SIGNAL( iconFound( QString, QIcon )));
 #else
@@ -60,23 +63,11 @@ void ProxyModel::waitForThreads() {
     this->stop();
 
     // wait for threads to finish computation and empty the thread pool
-    foreach ( QFuture<void> future, this->threadPool )
-        future.waitForFinished();
-    this->threadPool.clear();
+    this->threadPool->waitForDone();
 
     // allow updates and new threads
     this->blockSignals( false );
     this->reset();
-}
-
-/**
- * @brief ProxyModel::removeFinishedThreads
- */
-void ProxyModel::removeFinishedThreads() {
-    foreach ( QFuture<void> future, this->threadPool ) {
-        if ( future.isFinished())
-            this->threadPool.removeOne( future );
-    }
 }
 
 /**
@@ -93,9 +84,6 @@ void ProxyModel::updateModel( const QString &fileName, const QIcon &icon ) {
 #else
 void ProxyModel::updateModel( const QString &fileName, const QIcon &icon, const QPersistentModelIndex &index ) {
 #endif
-
-    // clean up
-    this->removeFinishedThreads();
 
     if ( icon.isNull())
         return;
@@ -150,10 +138,10 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
 
         // run fetcher
 #ifdef ALT_PROXY_MODE
-        QFuture<void> future = QtConcurrent::run( [ this, fileName, iconSize ] {
+        QtConcurrent::run( threadPool, [ this, fileName, iconSize ] {
 #else
         QPersistentModelIndex persistentIndex( index );
-        QFuture<void> future = QtConcurrent::run( [ this, fileName, persistentIndex, iconSize ] {
+        QtConcurrent::run( threadPool, [ this, fileName, persistentIndex, iconSize ] {
 #endif
             QIcon icon;
 
@@ -173,8 +161,6 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
 #endif
             }
         } );
-        //pool.start( future );
-        this->threadPool.append( future );
     } else if ( role == Qt::DisplayRole ) {
         fileName = index.data( QFileSystemModel::FilePathRole ).toString();
         if ( fileName.endsWith( ".lnk" ))

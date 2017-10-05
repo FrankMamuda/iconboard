@@ -25,6 +25,7 @@
 #include <QIcon>
 #include <QIdentityProxyModel>
 #include <QSortFilterProxyModel>
+#include <QThreadPool>
 
 //
 // classes
@@ -63,7 +64,6 @@ public:
 public slots:
     void clearCache() { this->cache.clear(); }
     void waitForThreads();
-    void removeFinishedThreads();
     void stop() { this->m_stopping = true; }
     void reset() { this->m_stopping = false; }
 
@@ -86,8 +86,8 @@ protected:
 
 private:
     QHash<QString, QIcon> cache;
-    mutable QList<QFuture<void> > threadPool;
     FolderView *view;
     mutable QMutex m_mutex;
     bool m_stopping;
+    QThreadPool *threadPool;
 };
