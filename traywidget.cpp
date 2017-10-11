@@ -148,6 +148,9 @@ void TrayWidget::initialize() {
 #ifndef QT_DEBUG
     // not available in release
     this->ui->toolBar->removeAction( this->ui->actionMap );
+#else
+    // set another icon to distinguish release from debug build
+    this->tray->setIcon( IconCache::instance()->icon( "help-about", 16 ));
 #endif
 
     // save settings every 60 seconds

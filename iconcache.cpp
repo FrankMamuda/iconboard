@@ -143,7 +143,7 @@ QPixmap IconCache::extractPixmap( const QString &fileName ) {
     QFileInfo info( fileName );
     int flags = SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_LARGEICON;
     int y, k;
-    bool ok;
+    bool ok = false;
 
     // initialize COM (needed for SHGetFileInfo in a threaded environment)
     const HRESULT hrCoInit = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED );
