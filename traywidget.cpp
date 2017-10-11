@@ -36,6 +36,7 @@
 #include "iconindex.h"
 #include "about.h"
 #include "themeeditor.h"
+#include "indexcache.h"
 
 /**
  * @brief TrayWidget::TrayWidget
@@ -116,6 +117,8 @@ void TrayWidget::initialize() {
 
     // exit lambda
     this->connect( this->menu->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, [this]() {
+        IndexCache::instance()->~IndexCache();
+
         this->writeConfiguration();
         this->close();
 

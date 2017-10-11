@@ -80,6 +80,8 @@ public:
     // should be thread safe
     QString path() const { return m_path; }
 
+    int badEntries() const { return this->m_badEntries; }
+
 private slots:
     void setPath( const QString &path ) { QMutexLocker( &this->m_mutex ); this->m_path = path; }
     void shutdown();
@@ -100,4 +102,5 @@ private:
     Match bestMatch( const QString &iconName, int scale, const QString &theme ) const;
     bool contains( const QString &alias ) const { return this->index.contains( alias ); }
     Entry indexEntry( const QString &alias ) const { return this->index[alias]; }
+    int m_badEntries;
 };

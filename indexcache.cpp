@@ -31,7 +31,7 @@
  * @brief IndexCache::IndexCache
  * @param parent
  */
-IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ) {
+IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ), m_badEntries( 0 ) {
     QDir directory;
 
     // set default path
@@ -101,7 +101,12 @@ bool IndexCache::read() {
     // read indexes
     while ( !this->indexFile.atEnd()) {
         this->indexFile >> entry;
-        this->index[entry.alias] = entry;
+
+        QFileInfo info( entry.fileName );
+        if ( info.exists())
+            this->index[entry.alias] = entry;
+        else
+            this->m_badEntries++;
     }
 
     // report
@@ -166,6 +171,14 @@ bool IndexCache::write( const QString &iconName, int iconScale, const QString &t
  * @brief IndexCache::shutdown
  */
 void IndexCache::shutdown() {
+    // here we assume our icon cache is corrupt
+    if ( this->badEntries() >= 10 ) {
+        qInfo() << this->tr( "clearing corrupt index cache" );
+        this->indexFile.resize( 0 );
+        this->indexFile << IndexCacheNamespace::Version;
+        this->m_badEntries = 0;
+    }
+
     // set subsystem as inactive and close the index file
     this->setValid( false );
     this->indexFile.close();

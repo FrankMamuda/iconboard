@@ -71,6 +71,7 @@
  *    corrupt icon index cache fix
  *    option to download icon packs
  *    option not to upscale small icons
+ *    proper shutdown - catch close, deinit all subsystems
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
