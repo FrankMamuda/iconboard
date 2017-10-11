@@ -259,21 +259,28 @@ QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
     QString iconName, absolutePath( info.isSymLink() ? target.absoluteFilePath() : info.absoluteFilePath());
     QMimeDatabase db;
     QIcon icon;
+    bool isDir = info.isDir() || target.isDir();
 
     // get mimetype by matching content
-    iconName = info.isDir() ? "inode-directory" : db.mimeTypeForFile( absolutePath, QMimeDatabase::MatchContent ).iconName();
+    iconName = isDir ? "inode-directory" : db.mimeTypeForFile( absolutePath, QMimeDatabase::MatchContent ).iconName();
 
     // generate thumbnail for images
-    if ( iconName.startsWith( "image-" ))
-        icon = this->thumbnail( absolutePath, iconSize );
+    if ( !isDir ) {
+        if ( iconName.startsWith( "image-" ))
+            icon = this->thumbnail( absolutePath, iconSize );
 #ifdef Q_OS_WIN
-    // get icon from executables
-    if ( iconName.startsWith( "application-x-ms-dos-executable" ) && !info.isSymLink())
-        icon = QIcon( this->extractPixmap( absolutePath ));
-    // get icon from win32 shortcuts
-    if ( icon.isNull() && info.isSymLink())
-        icon = QIcon( this->extractPixmap( fileName ));
+        // get icon from executables
+        if ( iconName.startsWith( "application-x-ms-dos-executable" ) && !info.isSymLink())
+            icon = QIcon( this->extractPixmap( absolutePath ));
+        // get icon from win32 shortcuts
+        if ( icon.isNull() && info.isSymLink())
+            icon = QIcon( this->extractPixmap( fileName ));
+        // get icon from appref-ms files
+        if ( icon.isNull() && fileName.endsWith( ".appref-ms" ))
+            icon = QIcon( this->extractPixmap( fileName ));
 #endif
+    }
+
     // get icon for mimetype
     if ( icon.isNull())
         icon = this->icon( iconName, iconSize );
@@ -288,11 +295,11 @@ QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
         if ( !icon.isNull() && !this->cache.contains( alias ))
             this->add( alias, icon );
     }
-#endif
 
     // add symlink label if required
-    if ( info.isSymLink())
+    if ( info.isSymLink() || fileName.endsWith( ".appref-ms" ))
         icon = this->addSymlinkLabel( icon, iconSize );
+#endif
 
     // return the icon
     return icon;

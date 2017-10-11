@@ -169,9 +169,13 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
             }
         } );
     } else if ( role == Qt::DisplayRole ) {
+#ifdef Q_OS_WIN
         fileName = index.data( QFileSystemModel::FilePathRole ).toString();
         if ( fileName.endsWith( ".lnk" ))
             return fileName.remove( ".lnk" ).split( "/" ).last();
+        else if ( fileName.endsWith( ".appref-ms" ))
+            return fileName.remove( ".appref-ms" ).split( "/" ).last();
+#endif
 
         return QSortFilterProxyModel::data( index, Qt::DisplayRole ).toString();
     }

@@ -66,9 +66,7 @@
  *    complete documentation
  *    QWindow::requestActivate: requestActivate() FolderViewWindow
  *    QWindowsContext::windowsProc: External WM_DESTROY received (might be fixed)
- *    appref-ms parsing
  *    first run dialog
- *    corrupt icon index cache fix
  *    option to download icon packs
  *    option not to upscale small icons
  *    proper shutdown - catch close, deinit all subsystems
