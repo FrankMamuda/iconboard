@@ -117,6 +117,7 @@ void TrayWidget::initialize() {
     // exit lambda
     this->connect( this->menu->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, [this]() {
         this->writeConfiguration();
+        this->close();
 
         foreach ( FolderView *fw, this->widgetList )
             delete fw;
@@ -327,7 +328,7 @@ void TrayWidget::reload() {
     this->widgetList.clear();
 
     // clear icon cache
-    IconCache::instance()->clearCache();
+    IconCache::instance()->clear();
 
     // reload widget list
     this->readConfiguration();

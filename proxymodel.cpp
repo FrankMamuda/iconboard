@@ -114,6 +114,7 @@ void ProxyModel::updateModel( const QString &fileName, const QIcon &icon, const 
     // NOTE: random segfault here (might be fixed by using QPersistentModelIndex)
     emit this->dataChanged( index, index );
     this->cache[fileName] = icon;
+    this->queue.removeOne( fileName );
 }
 
 /**
@@ -136,12 +137,18 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
         if ( this->cache.contains( fileName ))
             return this->cache[fileName];
 
+        // add to queue and avoid duplicates
+        if ( this->queue.contains( fileName ))
+            return QSortFilterProxyModel::data( index, role );
+        else
+            this->queue.append( fileName );
+
         // run fetcher
 #ifdef ALT_PROXY_MODE
-        QtConcurrent::run( threadPool, [ this, fileName, iconSize ] {
+        QtConcurrent::run( this->threadPool, [ this, fileName, iconSize ] {
 #else
         QPersistentModelIndex persistentIndex( index );
-        QtConcurrent::run( threadPool, [ this, fileName, persistentIndex, iconSize ] {
+        QtConcurrent::run( this->threadPool, [ this, fileName, persistentIndex, iconSize ] {
 #endif
             QIcon icon;
 

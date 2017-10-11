@@ -39,6 +39,7 @@
  *    i18n
  *    cleanup
  *    GitHub page
+ *    show TrayWidget if no widgets added (ex. first run)
  *    linux segfault on icon theme change
  *      might be Qt version related, not sure
  *      possible solution would be requiring a restart, though this needs a new
@@ -58,14 +59,18 @@
  *    extract shell icons from dirs on symlinks
  *    disk-caching of extracted icons and thumbnails
  *    drive names (from shortcuts)
- *    extract icons from links themselves not their targets
  *    thumbnail loading as an option
  *    folderView spacing, other props
  *    macOS issues
  *    sorting issues on network folders (dirsFirst not working)
  *    complete documentation
  *    QWindow::requestActivate: requestActivate() FolderViewWindow
- *    QWindowsContext::windowsProc: External WM_DESTROY received
+ *    QWindowsContext::windowsProc: External WM_DESTROY received (might be fixed)
+ *    appref-ms parsing
+ *    first run dialog
+ *    corrupt icon index cache fix
+ *    option to download icon packs
+ *    option not to upscale small icons
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -139,7 +144,11 @@ int main( int argc, char *argv[] ) {
             IconIndex::instance()->setDefaultTheme( themeName );
         }
     }
-
+#ifdef Q_OS_WIN
+    else {
+        IconCache::instance()->preLoadWindowsIcons();
+    }
+#endif
     // display tray widget
     TrayWidget::instance()->initialize();
 

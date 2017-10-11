@@ -25,6 +25,7 @@
 #include "variable.h"
 #include <QPainter>
 #include <QMimeDatabase>
+#include <QDebug>
 #ifdef Q_OS_WIN
 #include <QtWin>
 #include <QDir>
@@ -76,7 +77,7 @@ QIcon IconCache::icon( const QString &iconName, int scale, const QString theme )
         }
 
         // add icon to cache
-        this->cache[alias] = icon;
+        this->add( alias, icon );
     }
 
     // retrieve icon from internal cache
@@ -88,20 +89,18 @@ QIcon IconCache::icon( const QString &iconName, int scale, const QString theme )
  * @brief IconCache::thumbnail
  * @param path
  * @param scale
- * @param ok
  * @return
  */
-QIcon IconCache::thumbnail( const QString &path, int scale, bool &ok ) {
+QIcon IconCache::thumbnail( const QString &path, int scale ) {
     QRect rect;
+    QIcon icon;
     QPixmap pixmap;
 
-    ok = false;
-
     if ( !pixmap.load( path ))
-        return pixmap;
+        return icon;
 
     if ( pixmap.isNull() && !pixmap.width())
-        return pixmap;
+        return icon;
 
     if ( pixmap.height() < scale || pixmap.width() < scale ) {
         QPixmap result( scale, scale );
@@ -125,80 +124,87 @@ QIcon IconCache::thumbnail( const QString &path, int scale, bool &ok ) {
         pixmap = pixmap.scaled( scale, scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
     }
 
-    ok = true;
-    return QIcon( pixmap );
+    if ( !pixmap.isNull())
+        icon = QIcon( pixmap );
+
+    return icon;
 }
 
 /**
- * @brief IconCache::extractIcon
- * @param path
+ * @brief extractPixmap
+ * @param fileName
  * @return
  */
-QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
 #ifdef Q_OS_WIN
-    SHFILEINFO shellInfo;
+QPixmap IconCache::extractPixmap( const QString &fileName ) {
+    SHFILEINFO fileInfo;
     QPixmap pixmap;
-    int index;
+    QImage image;
+    QFileInfo info( fileName );
+    int flags = SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_LARGEICON;
+    int y, k;
+    bool ok;
 
-    ok = false;
+    // initialize COM (needed for SHGetFileInfo in a threaded environment)
+    const HRESULT hrCoInit = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED );
+    if ( FAILED( hrCoInit ))
+        return pixmap;
 
-    // only accept executables
-    if ( !path.endsWith( ".exe" ))
-        return QIcon();
+    memset( &fileInfo, 0, sizeof( SHFILEINFO ));
 
-    memset( &shellInfo, 0, sizeof( SHFILEINFO ));
+    if ( !info.isDir())
+        flags |= SHGFI_USEFILEATTRIBUTES;
 
-#ifdef Q_CC_MSVC
-    // skip this check on msvc - it always fails
-    SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( path ).utf16()), 0, &shellInfo, sizeof( SHFILEINFO ), SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_ICONLOCATION | SHGFI_USEFILEATTRIBUTES | SHGFI_LARGEICON );
-#else
-    if ( SUCCEEDED( SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( path ).utf16()), 0, &shellInfo, sizeof( SHFILEINFO ), SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_ICONLOCATION | SHGFI_USEFILEATTRIBUTES | SHGFI_LARGEICON ))) {
-#endif
-        if ( shellInfo.hIcon ) {
-            if ( QSysInfo::windowsVersion() >= QSysInfo::WV_VISTA ) {
+    const HRESULT hrFileInfo = SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( fileName ).utf16()), 0, &fileInfo, sizeof( SHFILEINFO ), flags );
+
+    if ( SUCCEEDED( hrFileInfo )) {
+        if ( QSysInfo::windowsVersion() >= QSysInfo::WV_VISTA && fileInfo.hIcon ) {
+            auto pixmapFromImageList = [ fileInfo ]( int index, QPixmap &pixmap ) {
                 IImageList *imageList = nullptr;
-                index = 0x2;
-
-                if ( jumbo )
-                    index = 0x4;
+                HICON hIcon = 0;
 
                 if ( SUCCEEDED( SHGetImageList( index, { 0x46eb5926, 0x582e, 0x4017, { 0x9f, 0xdf, 0xe8, 0x99, 0x8d, 0xaa, 0x9, 0x50 }}, reinterpret_cast<void **>( &imageList )))) {
-                    HICON hIcon;
-
-                    if ( SUCCEEDED( imageList->GetIcon( shellInfo.iIcon, ILD_TRANSPARENT, &hIcon ))) {
+                    if ( SUCCEEDED( imageList->GetIcon( fileInfo.iIcon, ILD_TRANSPARENT, &hIcon ))) {
                         pixmap = QtWin::fromHICON( hIcon );
                         DestroyIcon( hIcon );
+                    }
+                }
+            };
 
-                        if ( pixmap.isNull())
-                            return QIcon();
+            // first try to get the jumbo icon
+            pixmapFromImageList( 0x4, pixmap );
 
-                        if ( !pixmap.isNull() && pixmap.width()) {
-                            if ( !jumbo )
-                                ok = true;
-
-                            return QIcon( pixmap );
-                        }
+            // test if most of the image is blank
+            // (invalid jumbo with 48x48 on top left)
+            if ( pixmap.width() >= 64 && pixmap.height() >= 64 ) {
+                image = pixmap.toImage();
+                for ( y = 64; y < pixmap.width(); y++ ) {
+                    for ( k = 64; k < pixmap.height(); k++ ) {
+                        if ( image.pixelColor( y, k ).alphaF() > 0.0f )
+                            ok = true;
                     }
                 }
             }
-            pixmap = QtWin::fromHICON( shellInfo.hIcon );
-            DestroyIcon( shellInfo.hIcon );
 
-            if ( !pixmap.isNull() && pixmap.width()) {
-                ok = true;
-                return QIcon( pixmap );
+            // then try to get the large icon
+            if ( pixmap.isNull() || !ok ) {
+                pixmapFromImageList( 0x2, pixmap );
             }
         }
-#ifndef Q_CC_MSVC
+
+        // if everything fails, get icon the old way
+        if ( pixmap.isNull() && fileInfo.hIcon ) {
+            pixmap = QtWin::fromHICON( fileInfo.hIcon );
+            DestroyIcon( fileInfo.hIcon );
+        }
     }
-#endif
-#else
-    Q_UNUSED( path )
-    Q_UNUSED( ok )
-    Q_UNUSED( jumbo )
-#endif
-    return QIcon();
+
+    // uninitialize COM
+    CoUninitialize();
+
+    return pixmap;
 }
+#endif
 
 /**
  * @brief IconCache::addSymlinkLabel
@@ -206,12 +212,11 @@ QIcon IconCache::extractIcon( const QString &path, bool &ok, bool jumbo ) {
  * @param originalSize
  * @return
  */
-QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize, const QString theme ) {
+QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize ) {
     QPixmap base, overlay;
     QIcon overlayIcon( ":/icons/link" );
     const float factor = 4.0f;
     float overlaySize = originalSize / factor;
-    Q_UNUSED( theme )
     QSize actualSize;
 
     // abort if disabled
@@ -249,43 +254,131 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize, const QSt
  * @return
  */
 QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
-    QMimeDatabase db;
-    QString iconName;
-    QIcon icon;
     QFileInfo info( fileName );
-    bool ok;
-    QString filePath( fileName );
-
-    if ( info.isDir())
-        return IconCache::instance()->icon( "inode-directory", iconSize );
-
-    if ( info.isSymLink()) {
-        filePath = info.symLinkTarget();
-
-        QFileInfo target( info.symLinkTarget());
-        if ( target.isDir())
-            return IconCache::instance()->icon( "inode-directory", iconSize );
-    }
+    QFileInfo target( info.symLinkTarget());
+    QString iconName, absolutePath( info.isSymLink() ? target.absoluteFilePath() : info.absoluteFilePath());
+    QMimeDatabase db;
+    QIcon icon;
 
     // get mimetype by matching content
-    iconName = db.mimeTypeForFile( filePath, QMimeDatabase::MatchContent ).iconName();
+    iconName = info.isDir() ? "inode-directory" : db.mimeTypeForFile( absolutePath, QMimeDatabase::MatchContent ).iconName();
 
-    // extract icons only from executables
-    if ( iconName.contains( "x-ms-dos-executable" )) {
-        // extract jumbo first
-        icon = IconCache::instance()->extractIcon( filePath, ok, true );
-        if ( !ok )
-            icon = IconCache::instance()->extractIcon( filePath, ok );
-    } else if ( iconName.startsWith( "image-" )) {
-        bool ok;
-        icon = IconCache::instance()->thumbnail( filePath, iconSize, ok );
-    }
-
+    // generate thumbnail for images
+    if ( iconName.startsWith( "image-" ))
+        icon = this->thumbnail( absolutePath, iconSize );
+#ifdef Q_OS_WIN
+    // get icon from executables
+    if ( iconName.startsWith( "application-x-ms-dos-executable" ) && !info.isSymLink())
+        icon = QIcon( this->extractPixmap( absolutePath ));
+    // get icon from win32 shortcuts
+    if ( icon.isNull() && info.isSymLink())
+        icon = QIcon( this->extractPixmap( fileName ));
+#endif
+    // get icon for mimetype
     if ( icon.isNull())
-        icon = IconCache::instance()->icon( iconName, iconSize );
+        icon = this->icon( iconName, iconSize );
+#ifdef Q_OS_WIN
+    // if mimetype icon fails (no custom icon theme, for example), get win32 shell icon
+    if ( icon.isNull()) {
+        QString alias;
+        icon = QIcon( this->extractPixmap( absolutePath ));
+        alias = QString( "%1_%2_%3" ).arg( iconName ).arg( IconIndex::instance()->defaultTheme()).arg( iconSize );
 
+        // store shell icon in cache, to avoid unnecessary extractions
+        if ( !icon.isNull() && !this->cache.contains( alias ))
+            this->add( alias, icon );
+    }
+#endif
+
+    // add symlink label if required
     if ( info.isSymLink())
-        icon = IconCache::instance()->addSymlinkLabel( icon, iconSize );
+        icon = this->addSymlinkLabel( icon, iconSize );
 
+    // return the icon
     return icon;
 }
+
+/**
+ * @brief IconCache::preLoadWindowsIcons since win32 does not have icons by default, we load these from system resources
+ */
+#ifdef Q_OS_WIN
+void IconCache::preLoadWindowsIcons() {
+    // icon struct
+    typedef struct WindowsIcon_s {
+        const char *name;
+        int index;
+        int scale;
+    } WindowsIcon_t;
+
+    // icons in imageres.dll
+    WindowsIcon_t imageresDllIcons[] = {
+        // tray menu
+        { "view-list-icons", 148, 16 }, // "Widget List"
+        { "configure", 68, 16 }, // "Settings"
+        { "color-picker", 70, 16 }, // "Theme editor"
+        { "help-about", 81, 16 }, // "About"
+        { "application-exit", 98, 16 }, // "Exit"
+
+        // settings, about, widget list, etc.
+        { "dialog-close", 98, 16 }, // close icon
+
+        // style editor
+        { "document-save", 28, 16 }, // "Save"
+        { "document-save-as", 29, 16 }, // "Save as"
+        { "edit-rename", 94, 16 }, // "Rename"
+        { "document-revert", 86, 16 }, // "Remove"
+        { "edit-delete", 89, 16 }, // "Delete"
+        { "view-preview", 168, 16 }, // "Preview" tab
+        { "inode-directory", 4, 48 }, // Folder icon
+
+        // widget list
+        { "list-remove", 89, 16 }, // "Remove"
+        { "visibility", 4, 16 }, // "Show/Hide"
+
+        // folderView context
+        { "view-close", 98, 16 }, // "Hide"
+        { "document-edit", 70, 16 }, // "Custom stylesheet"
+        { "inode-directory", 4, 16 }, // "Change directory"
+    };
+
+    // icons in shell32.dll
+    WindowsIcon_t shellDllIcons[] = {
+        // widget list
+        { "list-add", 319, 16 }, // "Add"
+    };
+
+    // icon extractor lambda
+    auto pixmapFromDll = [=]( const wchar_t *dllName, const WindowsIcon_t list[], int count ) {
+        int y;
+        HMODULE hMod;
+
+        // open library
+        hMod = GetModuleHandle( dllName );
+        if ( hMod == NULL)
+            hMod = LoadLibrary( dllName );
+
+        if ( hMod == NULL )
+            return;
+
+        // go through icon list
+        for ( y = 0; y < count; y++ ) {
+            QPixmap pixmap;
+            QString alias;
+
+            // get icons
+            pixmap = QtWin::fromHICON( reinterpret_cast<HICON>( LoadImage( hMod, MAKEINTRESOURCE( list[y].index ), IMAGE_ICON, list[y].scale, list[y].scale, LR_DEFAULTCOLOR | LR_SHARED )));
+            if ( !pixmap.isNull()) {
+                alias = QString( "%1_%2_%3" ).arg( list[y].name ).arg( IconIndex::instance()->defaultTheme()).arg( list[y].scale );
+                this->add( alias, QIcon( pixmap ));
+            }
+        }
+
+        // close libarary
+        FreeLibrary( hMod );
+    };
+
+    // load icons from system libraries
+    pixmapFromDll( L"imageres.dll", imageresDllIcons, sizeof( imageresDllIcons ) / sizeof( WindowsIcon_t ));
+    pixmapFromDll( L"shell32.dll", shellDllIcons, sizeof( shellDllIcons ) / sizeof( WindowsIcon_t ) );
+}
+#endif

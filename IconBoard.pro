@@ -65,6 +65,8 @@ HEADERS  += \
     themes.h \
     listview.h
 
+win32:HEADERS +=
+
 FORMS    += \
     folderview.ui \
     traywidget.ui \
@@ -78,4 +80,4 @@ RESOURCES += \
 
 win32:RC_FILE = icon.rc
 win32:QT += winextras
-win32:LIBS += -lgdi32 -luser32 -luuid
+win32:LIBS += -lgdi32 -luser32 -luuid -lole32

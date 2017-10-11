@@ -97,6 +97,7 @@ protected:
 
 private:
     QHash<QString, QIcon> cache;
+    mutable QStringList queue;
     FolderView *view;
     mutable QMutex m_mutex;
     bool m_stopping;

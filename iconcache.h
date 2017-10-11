@@ -32,18 +32,25 @@ class IconCache : public QObject {
 
 public:
     IconCache( QObject *parent = 0 );
-    ~IconCache() { this->clearCache(); }
+    ~IconCache() { this->clear(); }
     static IconCache *createInstance() { return new IconCache(); }
     static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
     QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
-    QIcon thumbnail( const QString &path, int scale, bool &ok );
-    QIcon extractIcon( const QString &path, bool &ok, bool jumbo = false );
-    QIcon addSymlinkLabel( const QIcon &icon, int originalSize, const QString theme = QString::null );
+    QIcon thumbnail( const QString &path, int scale );
+    QIcon addSymlinkLabel( const QIcon &icon, int originalSize );
     QIcon iconForFilename( const QString &fileName, int iconSize );
+#ifdef Q_OS_WIN
+    QPixmap extractPixmap( const QString &fileName );
+    void preLoadWindowsIcons();
+#endif
+
+private slots:
+    void add( const QString &fileName, const QIcon &icon ) { QMutexLocker( &this->m_mutex ); this->cache[fileName] = icon; }
 
 public slots:
-    void clearCache() { this->cache.clear(); }
+    void clear() { QMutexLocker( &this->m_mutex ); this->cache.clear(); }
 
 private:
+    mutable QMutex m_mutex;
     QHash<QString, QIcon> cache;
 };
