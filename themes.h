@@ -59,9 +59,7 @@ class Themes: public QObject {
     Q_OBJECT
 
 public:
-    Themes();
-    ~Themes();
-    static Themes *createInstance() { return new Themes(); }
+    ~Themes() {}
     static Themes *instance() { return Singleton<Themes>::instance( Themes::createInstance ); }
     bool contains( const QString &name ) const;
     QList<Theme*> list;
@@ -70,4 +68,9 @@ public:
 public slots:
     void add( const QString &name, const QString &styleSheet, bool builtIn = true );
     void remove( const QString &name );
+    void shutdown() { qDeleteAll( this->list ); this->list.clear(); }
+
+private:
+    Themes( QObject *parent = nullptr );
+    static Themes *createInstance() { return new Themes(); }
 };

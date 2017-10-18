@@ -26,7 +26,6 @@ SOURCES += main.cpp\
     folderview.cpp \
     folderdelegate.cpp \
     widgetmodel.cpp \
-    traywidget.cpp \
     filestream.cpp \
     iconindex.cpp \
     iconcache.cpp \
@@ -39,13 +38,15 @@ SOURCES += main.cpp\
     proxymodel.cpp \
     themeeditor.cpp \
     themes.cpp \
-    listview.cpp
+    listview.cpp \
+    foldermanager.cpp \
+    widgetlist.cpp \
+    trayicon.cpp
 
 HEADERS  += \
     folderview.h \
     folderdelegate.h \
     widgetmodel.h \
-    traywidget.h \
     iconcache.h \
     filestream.h \
     iconindex.h \
@@ -63,17 +64,21 @@ HEADERS  += \
     backgroundframe.h \
     proxymodel.h \
     themes.h \
-    listview.h
+    listview.h \
+    foldermanager.h \
+    main.h \
+    widgetlist.h \
+    trayicon.h
 
-win32:HEADERS +=
+win32:HEADERS += desktopwidget.h
 
 FORMS    += \
     folderview.ui \
-    traywidget.ui \
     screenmapper.ui \
     settings.ui \
     about.ui \
-    themeeditor.ui
+    themeeditor.ui \
+    widgetlist.ui
 
 RESOURCES += \
     resources.qrc

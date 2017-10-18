@@ -41,20 +41,23 @@ class IconIndex : public QObject {
     Q_OBJECT
 
 public:
-    explicit IconIndex( QObject *parent = 0 );
-    static IconIndex *createInstance() { return new IconIndex(); }
     static IconIndex *instance() { return Singleton<IconIndex>::instance( IconIndex::createInstance ); }
+    ~IconIndex() {}
     QString path() const { return m_path; }
     QString defaultTheme() const { return m_defaultTheme; }
     bool build( const QString &themeName = QString::null );
     QSet<QString> iconIndex( const QString &iconName, const QString &theme = QString::null ) const;
     void setDefaultTheme( const QString &theme ) { this->m_defaultTheme = theme; }
 
+public slots:
+    void shutdown() { this->index.clear(); this->m_path.clear(); this->m_defaultTheme.clear(); }
+
 private slots:
     void setPath( const QString &path ) { this->m_path = path; }
 
 private:
-    static IconIndex *m_instance;
+    IconIndex( QObject *parent = nullptr );
+    static IconIndex *createInstance() { return new IconIndex(); }
     QString m_path;
     QString m_defaultTheme;
     QMap<QString, QSet<QString> > index;

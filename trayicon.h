@@ -21,37 +21,15 @@
 //
 // includes
 //
-#include "singleton.h"
+#include <QSystemTrayIcon>
 
-/**
- * @brief The XMLFiles namespace
- */
-namespace XMLFiles {
-const static QString Variables( "configuration.xml" );
-const static QString Widgets( "widgets.xml" );
-const static QString Themes( "themes.xml" );
-}
-
-/**
- * @brief The XMLTools class
- */
-class XMLTools : public QObject {
+class TrayIcon : public QSystemTrayIcon {
     Q_OBJECT
-    Q_ENUMS( Modes )
 
 public:
-    ~XMLTools() {}
-    static XMLTools *instance() { return Singleton<XMLTools>::instance( XMLTools::createInstance ); }
-    enum Modes {
-        NoMode = -1,
-        Variables,
-        Widgets,
-        Themes
-    };
-    void write( Modes mode );
-    void read( Modes mode );
+    TrayIcon( QObject *parent = nullptr );
+    ~TrayIcon();
 
-private:
-    XMLTools( QObject *parent = 0 );
-    static XMLTools *createInstance() { return new XMLTools(); }
+private slots:
+    void iconActivated(QSystemTrayIcon::ActivationReason reason);
 };

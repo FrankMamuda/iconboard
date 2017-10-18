@@ -23,35 +23,34 @@
 //
 #include "singleton.h"
 
-/**
- * @brief The XMLFiles namespace
- */
-namespace XMLFiles {
-const static QString Variables( "configuration.xml" );
-const static QString Widgets( "widgets.xml" );
-const static QString Themes( "themes.xml" );
-}
+//
+// classes
+//
+class FolderView;
+class DesktopWidget;
 
 /**
- * @brief The XMLTools class
+ * @brief The FolderManager class
  */
-class XMLTools : public QObject {
+class FolderManager : public QObject {
     Q_OBJECT
-    Q_ENUMS( Modes )
 
 public:
-    ~XMLTools() {}
-    static XMLTools *instance() { return Singleton<XMLTools>::instance( XMLTools::createInstance ); }
-    enum Modes {
-        NoMode = -1,
-        Variables,
-        Widgets,
-        Themes
-    };
-    void write( Modes mode );
-    void read( Modes mode );
+    ~FolderManager();
+    static FolderManager *instance() { return Singleton<FolderManager>::instance( FolderManager::createInstance ); }
+    int count() const;
+    FolderView *at( int index ) const;
+#ifdef Q_OS_WIN
+    DesktopWidget *desktop;
+#endif
+
+public slots:
+    void add( FolderView *folderView );
+    void remove( FolderView *folderView );
+    void shutdown();
 
 private:
-    XMLTools( QObject *parent = 0 );
-    static XMLTools *createInstance() { return new XMLTools(); }
+    FolderManager( QObject *parent = nullptr );
+    static FolderManager *createInstance() { return new FolderManager(); }
+    QList<FolderView*> list;
 };

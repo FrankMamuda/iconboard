@@ -53,14 +53,8 @@
        <height>32</height>
       </size>
      </property>
-     <property name="textElideMode">
-      <enum>Qt::ElideNone</enum>
-     </property>
      <property name="verticalScrollMode">
       <enum>QAbstractItemView::ScrollPerPixel</enum>
-     </property>
-     <property name="movement">
-      <enum>QListView::Free</enum>
      </property>
      <property name="resizeMode">
       <enum>QListView::Adjust</enum>
@@ -68,14 +62,8 @@
      <property name="layoutMode">
       <enum>QListView::Batched</enum>
      </property>
-     <property name="uniformItemSizes">
-      <bool>false</bool>
-     </property>
      <property name="batchSize">
-      <number>16</number>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
+      <number>14</number>
      </property>
     </widget>
    </item>

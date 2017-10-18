@@ -43,7 +43,7 @@ ProxyModel::ProxyModel( QObject *parent ) : QSortFilterProxyModel( parent ), m_s
  */
 ProxyModel::~ProxyModel() {
     this->waitForThreads();
-    this->threadPool->deleteLater();
+    delete this->threadPool;
 
 #ifdef ALT_PROXY_MODE
     this->disconnect( this, SIGNAL( iconFound( QString, QIcon )));

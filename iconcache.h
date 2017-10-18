@@ -31,10 +31,8 @@ class IconCache : public QObject {
     Q_OBJECT
 
 public:
-    IconCache( QObject *parent = 0 );
-    ~IconCache() { this->clear(); }
-    static IconCache *createInstance() { return new IconCache(); }
     static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
+    ~IconCache() {}
     QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
     QIcon thumbnail( const QString &path, int scale );
     QIcon addSymlinkLabel( const QIcon &icon, int originalSize );
@@ -45,12 +43,13 @@ public:
 #endif
 
 private slots:
-    void add( const QString &fileName, const QIcon &icon ) { QMutexLocker( &this->m_mutex ); this->cache[fileName] = icon; }
+    void add( const QString &fileName, const QIcon &icon ) { this->cache[fileName] = icon; }
 
 public slots:
-    void clear() { QMutexLocker( &this->m_mutex ); this->cache.clear(); }
+    void shutdown() { this->cache.clear(); }
 
 private:
-    mutable QMutex m_mutex;
+    IconCache( QObject *parent = nullptr ) : QObject( parent ) {}
+    static IconCache *createInstance() { return new IconCache(); }
     QHash<QString, QIcon> cache;
 };

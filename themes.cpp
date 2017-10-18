@@ -25,7 +25,7 @@
 /**
  * @brief Themes::Themes
  */
-Themes::Themes() {
+Themes::Themes( QObject *parent ) : QObject( parent ) {
     // add blank styleSheet
     this->add( "system", "", true );
 
@@ -39,14 +39,6 @@ Themes::Themes() {
             styleSheet.close();
         }
     }
-}
-
-/**
- * @brief Themes::~Themes
- */
-Themes::~Themes() {
-    qDeleteAll( this->list );
-    this->list.clear();
 }
 
 /**
@@ -64,9 +56,9 @@ bool Themes::contains( const QString &name ) const {
  * @return
  */
 Theme *Themes::find( const QString &name ) const {
-    foreach ( Theme *entry, this->list ) {
-        if ( !QString::compare( name, entry->name()))
-            return entry;
+    foreach ( Theme *theme, this->list ) {
+        if ( !QString::compare( name, theme->name()))
+            return theme;
     }
     return nullptr;
 }

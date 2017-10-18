@@ -56,11 +56,18 @@ Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings 
 
     // first bind vars and set initial values
     this->bind( "ui_displaySymlinkIcon", this->ui->displaySymlinkIcon );
-    this->bind( "app_runOnStartup", this->ui->runOnStartup );
     this->bind( "ui_iconTheme", this->ui->iconTheme );
+
+#ifdef Q_OS_WIN
+    this->bind( "app_runOnStartup", this->ui->runOnStartup );
 
     // bind runOnStarup variable, to write out settings value
     Variable::instance()->bind( "app_runOnStartup", this, SLOT( runOnStartupValueChanged( QVariant )));
+#else
+    // hide runOnStartup option on non-win32 systems
+    this->ui->runOnStartup->hide();
+    this->resize( this->width(), 0 );
+#endif
 }
 
 /**

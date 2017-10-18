@@ -36,13 +36,6 @@
 #endif
 
 /**
- * @brief IconCache::IconCache
- * @param parent
- */
-IconCache::IconCache( QObject *parent ) : QObject( parent ) {
-}
-
-/**
  * @brief IconCache::icon
  * @param name
  * @param scale

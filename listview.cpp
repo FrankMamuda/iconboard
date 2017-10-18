@@ -20,14 +20,16 @@
 // includes
 //
 #include <QDebug>
+#include "iconcache.h"
 #include "listview.h"
+#include <QMenu>
 #include <QMimeData>
 
 /**
  * @brief ListView::ListView
  */
 ListView::ListView( QWidget *parent ) : QListView( parent ) {
-    this->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    this->setSelectionMode( QAbstractItemView::ExtendedSelection );
 }
 
 /**
@@ -44,7 +46,7 @@ void ListView::setReadOnly( bool enable ) {
     this->setDropIndicatorShown( enable );
     this->setDragDropMode( enable ? QAbstractItemView::DragDrop : QAbstractItemView::NoDragDrop );
     this->setAcceptDrops( enable );
-    this->setDefaultDropAction( enable ? Qt::MoveAction : Qt::IgnoreAction );
+    this->setDefaultDropAction( Qt::IgnoreAction );
 }
 
 /**
@@ -52,6 +54,19 @@ void ListView::setReadOnly( bool enable ) {
  * @param event
  */
 void ListView::dropEvent( QDropEvent *event ) {
-    qDebug() << "drop" << event->mimeData()->text();
-    QListView::dropEvent( event );
+
+       QModelIndex index = this->indexAt( event->pos());
+
+    if ( index.isValid())
+        qDebug() << "  on stmh";
+    else
+        qDebug() << "  on nothing";
+
+
+    QMenu menu;
+
+    menu.addAction( IconCache::instance()->icon( "edit-copy", 16 ), this->tr( "Copy" ));
+    menu.addAction( this->tr( "Move" ));
+    menu.addAction( IconCache::instance()->icon( "insert-link", 16 ), this->tr( "Link" ));
+    menu.exec( QCursor::pos());
 }

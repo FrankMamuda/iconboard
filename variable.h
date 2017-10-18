@@ -51,8 +51,7 @@ class Variable : public QObject {
     Q_OBJECT
 
 public:
-    Variable() {}
-    static Variable *createInstance() { return new Variable(); }
+    ~Variable() {}
     static Variable *instance() { return Singleton<Variable>::instance( Variable::createInstance ); }
     bool contains( const QString &key ) const { return this->list.contains( key ); }
 
@@ -109,4 +108,8 @@ public:
 
 signals:
     void valueChanged( const QString &key );
+
+private:
+    Variable() {}
+    static Variable *createInstance() { return new Variable(); }
 };

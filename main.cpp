@@ -19,7 +19,7 @@
 //
 // includes
 //
-#include "traywidget.h"
+#include "widgetlist.h"
 #include "iconindex.h"
 #include "iconcache.h"
 #include "indexcache.h"
@@ -28,6 +28,7 @@
 #include "application.h"
 #include "xmltools.h"
 #include "themes.h"
+#include "widgetlist.h"
 
 /*
  * TODO/FIXME list:
@@ -39,12 +40,14 @@
  *    i18n
  *    cleanup
  *    GitHub page
- *    show TrayWidget if no widgets added (ex. first run)
+ *    release beta
+ *    show WidgetList if no widgets added (ex. first run)
  *    linux segfault on icon theme change
  *      might be Qt version related, not sure
  *      possible solution would be requiring a restart, though this needs a new
  *        flag in Variable class
- *
+ *    runOnStartup sometimes fails to find icondir (different start path)
+
  *  [NOT URGENT]
  *  [to be implemented in future versions]
  *    lock to specific resolution
@@ -69,7 +72,10 @@
  *    first run dialog
  *    option to download icon packs
  *    option not to upscale small icons
- *    proper shutdown - catch close, deinit all subsystems
+ *    custom icon dir (set in settings)
+ *    minor issues with z-order (windows)
+ *    handle shortcut/folder drops on tray icon or widget list to add widget
+ *    filesystemmodel does not update when file is moved (dragged outside folderview)
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -85,6 +91,55 @@
  *    application bundle icon
  */
 
+#include "foldermanager.h"
+#include "main.h"
+#include "trayicon.h"
+
+/**
+ * @brief messageFilter
+ * @param type
+ * @param context
+ * @param msg
+ */
+void messageFilter( QtMsgType type, const QMessageLogContext &, const QString &msg ) {
+    QFile logFile;
+    QString output( msg );
+
+    switch ( type ) {
+    case QtDebugMsg:
+        output.prepend( QObject::tr( "Debug: " ));
+        break;
+
+    case QtWarningMsg:
+        output.prepend( QObject::tr( "Warning: " ));
+        break;
+
+    case QtCriticalMsg:
+        output.prepend( QObject::tr( "Critical: " ));
+        break;
+
+    case QtFatalMsg:
+        output.prepend( QObject::tr( "Fatal: " ));
+        break;
+
+    case QtInfoMsg:
+        output.prepend( QObject::tr( "Info: " ));
+        break;
+    };
+
+    // open log file and write out
+    logFile.setFileName( QDir::currentPath() + "/" + "log" );
+
+    if ( logFile.size() > 1024 * 1024 )
+        logFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
+    else
+        logFile.open( QIODevice::WriteOnly | QIODevice::Append );
+
+    QTextStream steam( &logFile );
+    steam << output << endl;
+    logFile.close();
+}
+
 /**
  * @brief qMain
  * @param argc
@@ -93,10 +148,16 @@
  */
 int main( int argc, char *argv[] ) {
     QString themeName;
-    Application app( argc, argv );
 
     // set console output pattern
     qSetMessagePattern( "%{if-category}%{category}: %{endif}%{function}: %{message}" );
+
+    // log to file in non-qtcreator environment
+    if ( qgetenv( "QTDIR" ).isEmpty())
+        qInstallMessageHandler( messageFilter );
+
+    // app
+    Application app( argc, argv );
 
     // fixes auto close behaviour on linux
     QApplication::setQuitOnLastWindowClosed( false );
@@ -124,8 +185,8 @@ int main( int argc, char *argv[] ) {
     Variable::instance()->add( "ui_displaySymlinkIcon", true );
     Variable::instance()->add( "app_runOnStartup", false );
     Variable::instance()->add( "ui_iconTheme", "system" );
-    XMLTools::instance()->readConfiguration( XMLTools::Variables );
-    XMLTools::instance()->readConfiguration( XMLTools::Themes );
+    XMLTools::instance()->read( XMLTools::Variables );
+    XMLTools::instance()->read( XMLTools::Themes );
 
     // request a trivial icon early to avoid QObject::moveToThread bug
 #ifdef Q_OS_LINUX
@@ -148,8 +209,94 @@ int main( int argc, char *argv[] ) {
         IconCache::instance()->preLoadWindowsIcons();
     }
 #endif
-    // display tray widget
-    TrayWidget::instance()->initialize();
+
+    // read config
+    Main::instance()->readConfiguration();
 
     return app.exec();
+}
+
+/**
+ * @brief Main::readConfiguration
+ */
+Main::Main( QObject *parent ) : QObject( parent ), m_initialized( false ) {
+    // save settings every 60 seconds
+    this->startTimer( 60 * 1000 );
+
+    // set initialized
+    this->setInitialized();
+
+    this->widgetList = new WidgetList;
+    this->tray = new TrayIcon( this->widgetList );
+}
+
+void Main::readConfiguration() {
+    XMLTools::instance()->read( XMLTools::Widgets );
+    this->widgetList->reset();
+
+    // all done
+    if ( !FolderManager::instance()->count())
+        this->widgetList->show();
+}
+
+/**
+ * @brief Main::writeConfiguration
+ */
+void Main::writeConfiguration() {
+    if ( !this->hasInitialized())
+        return;
+
+    XMLTools::instance()->write( XMLTools::Widgets );
+    XMLTools::instance()->write( XMLTools::Variables );
+    XMLTools::instance()->write( XMLTools::Themes );
+}
+
+/**
+ * @brief Main::reload
+ */
+void Main::reload() {
+    // announce
+    qInfo() << "reloading configuration";
+
+    // save existing widget list
+    this->writeConfiguration();
+
+    // close all widgets
+    FolderManager::instance()->shutdown();
+
+    // clear icon cache
+    IconCache::instance()->shutdown();
+
+    // reload widget list
+    this->readConfiguration();
+}
+
+/**
+ * @brief Main::shutdown
+ */
+void Main::shutdown() {
+    // abort doing shutdown routine twice
+    if ( !this->hasInitialized())
+        return;
+
+    // announce
+    qInfo() << "exit call received";
+
+    // write out config
+    this->writeConfiguration();
+
+    // set not initialized
+    this->setInitialized( false );
+
+    // close all subsystems
+    IndexCache::instance()->shutdown();
+    IconCache::instance()->shutdown();
+    IconIndex::instance()->shutdown();
+    Themes::instance()->shutdown();
+    FolderManager::instance()->shutdown();
+    delete this->widgetList;
+
+    // close all windows
+    qApp->closeAllWindows();
+    qApp->quit();
 }

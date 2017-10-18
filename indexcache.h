@@ -65,16 +65,14 @@ namespace IndexCacheNamespace {
 }
 
 /**
- * @brief The IndexCacheNamespace class
+ * @brief The IndexCache class
  */
 class IndexCache : public QObject {
     Q_OBJECT
 
 public:
-    IndexCache( QObject *parent = 0 );
-    ~IndexCache() { this->shutdown(); }
-    static IndexCache *createInstance() { return new IndexCache(); }
     static IndexCache *instance() { return Singleton<IndexCache>::instance( IndexCache::createInstance ); }
+    ~IndexCache() {}
     QIcon icon( const QString &iconName, int scale, const QString &theme );
 
     // should be thread safe
@@ -82,12 +80,16 @@ public:
 
     int badEntries() const { return this->m_badEntries; }
 
+public slots:
+    void shutdown();
+
 private slots:
     void setPath( const QString &path ) { QMutexLocker( &this->m_mutex ); this->m_path = path; }
-    void shutdown();
     void setValid( bool valid ) { QMutexLocker( &this->m_mutex ); this->m_valid = valid; }
 
 private:
+    IndexCache( QObject *parent = nullptr );
+    static IndexCache *createInstance() { return new IndexCache(); }
     FileStream indexFile;
     QHash<QString, Entry> index;
     QString m_path;

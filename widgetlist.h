@@ -22,15 +22,10 @@
 // includes
 //
 #include <QMainWindow>
-#include <QSystemTrayIcon>
-#include <QDesktopWidget>
 #include <QMenu>
-#include <QTimerEvent>
-#include <QTimer>
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
-#include "singleton.h"
 
 //
 // classes
@@ -43,73 +38,36 @@ class IconCache;
  * @brief The Ui namespace
  */
 namespace Ui {
-class TrayWidget;
+class WidgetList;
 }
 
 /**
- * @brief The DesktopWidget class
+ * @brief The WidgetList class
  */
-#ifdef Q_OS_WIN
-class DesktopWidget : public QWidget {
-    Q_OBJECT
-    Q_CLASSINFO( "description", "FolderView parent widget that manages proper z-order" )
-
-public:
-    DesktopWidget( QWidget *parent = nullptr );
-
-public slots:
-    void lowerWindow();
-
-protected:
-    bool nativeEvent( const QByteArray &eventType, void *message, long *result );
-
-private:
-    bool nativeEventIgnored;
-};
-#endif
-
-/**
- * @brief The TrayWidget class
- */
-class TrayWidget : public QMainWindow {
+class WidgetList : public QMainWindow {
     Q_OBJECT
     Q_CLASSINFO( "description", "System tray activated folder widget manager" )
 
 public:
-    explicit TrayWidget( QWidget *parent = 0 );
-    ~TrayWidget();
-    static TrayWidget *createInstance() { return new TrayWidget(); }
-    static TrayWidget *instance() { return Singleton<TrayWidget>::instance( TrayWidget::createInstance ); }
-    QList<FolderView*> widgetList;
-#ifdef Q_OS_WIN
-    DesktopWidget *desktop;
-#endif
+    explicit WidgetList( QWidget *parent = 0 );
+    ~WidgetList();
 
 public slots:
-    void initialize();
+    void reset();
 
 private slots:
-    void trayIconActivated( QSystemTrayIcon::ActivationReason reason );
-    void readConfiguration();
-    void writeConfiguration();
     void on_widgetList_doubleClicked( const QModelIndex &index );
     void on_actionAdd_triggered();
     void on_actionRemove_triggered();
     void on_actionShow_triggered();
     void on_actionMap_triggered();
     void on_buttonClose_clicked();
-    void reload();
     void iconThemeChanged( QVariant value );
 
-protected:
-    void timerEvent( QTimerEvent *event );
-
 private:
-    Ui::TrayWidget *ui;
-    QSystemTrayIcon *tray;
+    Ui::WidgetList *ui;
     WidgetModel *model;
     QMenu *menu;
-    QTimer timer;
 #ifdef Q_OS_WIN
     HWINEVENTHOOK hook;
 #endif

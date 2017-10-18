@@ -26,7 +26,7 @@
 //
 // clases
 //
-class TrayWidget;
+class WidgetList;
 
 /**
  * @brief The WidgetModel class
@@ -35,10 +35,10 @@ class WidgetModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
-    WidgetModel( QObject *parent, TrayWidget *widget ) : QAbstractListModel( parent ), parentWidget( widget ) {}
+    WidgetModel( QObject *parent, WidgetList *widget ) : QAbstractListModel( parent ), parentWidget( widget ) {}
     int rowCount( const QModelIndex & = QModelIndex()) const override;
     QVariant data( const QModelIndex &index, int role ) const;
 
 private:
-    TrayWidget *parentWidget;
+    WidgetList *parentWidget;
 };

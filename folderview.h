@@ -158,7 +158,6 @@ protected:
     void paintEvent( QPaintEvent *event );
     bool eventFilter( QObject *object, QEvent *event );
     void showEvent( QShowEvent *event );
-    void dropEvent( QDropEvent *event );
 
 private slots:
     void setupFrame();

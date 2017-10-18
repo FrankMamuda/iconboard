@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TrayWidget</class>
- <widget class="QMainWindow" name="TrayWidget">
+ <class>WidgetList</class>
+ <widget class="QMainWindow" name="WidgetList">
   <property name="geometry">
    <rect>
     <x>0</x>

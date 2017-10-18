@@ -76,9 +76,7 @@ void Singleton<T>::init() {
  * @brief Singleton<T>::Singleton
  */
 template <class T>
-Singleton<T>::Singleton() {
-    this->hasInitialized = true;
-}
+Singleton<T>::Singleton() : hasInitialized( true ) {}
 
 /**
  * @brief Singleton<T>::~Singleton
@@ -87,16 +85,14 @@ template <class T>
 Singleton<T>::~Singleton() {
     T* createdPtr;
 
-    createdPtr = (T*)Singleton<T>::singletonPtr.fetchAndStoreOrdered( nullptr );
+    if ( !this->hasInitialized )
+        return;
 
+    createdPtr = (T*)Singleton<T>::singletonPtr.fetchAndStoreOrdered( nullptr );
     if ( createdPtr != nullptr ) {
-        // perform delayed deletion of qobjects (safer)
-        // avoiding segfaults on linux in ~QHash
-        QObject *object = qobject_cast<QObject*>( createdPtr );
-        if ( object == nullptr )
-            delete createdPtr;
-        else
-            object->deleteLater();
+        this->hasInitialized = false;
+        delete createdPtr;
+        createdPtr = nullptr;
     }
 
     Singleton<T>::create.store( nullptr );
@@ -106,3 +102,4 @@ Singleton<T>::~Singleton() {
 template<class T> QBasicAtomicPointer<void> Singleton<T>::create = Q_BASIC_ATOMIC_INITIALIZER( nullptr );
 template<class T> QBasicAtomicInt Singleton<T>::flag = Q_BASIC_ATOMIC_INITIALIZER( Call::Request );
 template<class T> QBasicAtomicPointer<void> Singleton<T>::singletonPtr = Q_BASIC_ATOMIC_INITIALIZER( nullptr );
+

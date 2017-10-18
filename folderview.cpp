@@ -33,6 +33,10 @@
 #include "iconcache.h"
 #include "themes.h"
 #include "variable.h"
+#include "main.h"
+
+#include <QDebug>
+
 #ifdef Q_OS_WIN
 #include <shlobj.h>
 #endif
@@ -55,7 +59,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( pa
     this->proxyModel->setSourceModel( this->model );
     this->ui->view->setModel( this->proxyModel );
     this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( rootPath )));
-    this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
+    //->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
 
     // set up view delegate
     this->delegate = new FolderDelegate( this->ui->view );
@@ -94,8 +98,6 @@ void FolderView::displaySymlinkLabelsChanged() {
  * @brief FolderView::~FolderView
  */
 FolderView::~FolderView() {
-    //delete this->menu;
-    this->proxyModel->waitForThreads();
     delete this->proxyModel;
     delete this->delegate;
     delete this->model;
@@ -198,7 +200,7 @@ void FolderView::displayContextMenu( const QPoint &point ) {
             } );
 
             // add builtin/predefined theme chooser
-            foreach ( Theme *theme, Themes::instance()->list ) {
+            foreach ( const Theme *theme, Themes::instance()->list ) {
                 // connect via lambda
                 this->connect( themeMenu->addAction( theme->name()), &QAction::triggered, [this, theme]() {
                     this->setCustomStyleSheet( theme->styleSheet(), true );
@@ -273,6 +275,14 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         qDebug() << "set" << !this->isReadOnly();
         this->setReadOnly( !this->isReadOnly());
     } );
+
+#ifdef QT_DEBUG
+    // add separator
+    menu.addSeparator();
+    this->connect( menu.addAction( this->tr( "Exit" )), &QAction::triggered, [this]() {
+        Main::instance()->shutdown();
+    } );
+#endif
 
     // show menu
     menu.exec( this->mapToGlobal( point ));
@@ -454,13 +464,18 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                     break;
                 }
             }
+
+
         }
 
         // ignore listView mouse events when cursor is on the edges
-        if ( this->currentGrabArea == NoArea )
-            this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, false );
-        else
-            this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
+        if ( this->currentGrabArea == NoArea ) {
+            if ( this->ui->view->testAttribute( Qt::WA_TransparentForMouseEvents ))
+                this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, false );
+        } else {
+            if ( !this->ui->view->testAttribute( Qt::WA_TransparentForMouseEvents ))
+                this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
+        }
 
         // change cursor shape if needed
         if ( this->gesture == NoGesture ) {
@@ -536,6 +551,10 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
         case QEvent::Leave:
             this->gesture = NoGesture;
+            this->currentGrabArea = NoArea;
+
+            if ( this->ui->view->testAttribute( Qt::WA_TransparentForMouseEvents ))
+                this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, false );
             break;
 
         case QEvent::MouseMove:
@@ -753,7 +772,7 @@ Qt::ItemFlags FileSystemModel::flags( const QModelIndex &index ) const {
  * @return
  */
 Qt::DropActions FileSystemModel::supportedDropActions() const {
-    return Qt::CopyAction | Qt::MoveAction;
+    return Qt::CopyAction;
 }
 
 /**
@@ -763,15 +782,7 @@ Qt::DropActions FileSystemModel::supportedDropActions() const {
 void FolderView::showEvent( QShowEvent *event ) {
     QWidget::showEvent( event );
 
-    // TODO: set stylesheet here
+    // set stylesheet here
     this->setCustomStyleSheet( this->currentStyleSheet());
 }
 
-/**
- * @brief FolderView::dropEvent
- * @param event
- */
-void FolderView::dropEvent( QDropEvent *event ) {
-    qDebug() << "drop event";
-    QWidget::dropEvent( event );
-}

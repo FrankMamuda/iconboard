@@ -20,15 +20,16 @@
 // includes
 //
 #include "widgetmodel.h"
-#include "traywidget.h"
+#include "widgetlist.h"
 #include "folderview.h"
+#include "foldermanager.h"
 
 /**
  * @brief WidgetModel::rowCount
  * @return
  */
 int WidgetModel::rowCount( const QModelIndex & ) const {
-    return this->parentWidget->widgetList.count();
+    return FolderManager::instance()->count();
 }
 
 /**
@@ -42,18 +43,19 @@ QVariant WidgetModel::data( const QModelIndex &index, int role ) const {
         return QVariant();
 
     switch ( role ) {
-    // TODO: USE ASPECT RATIO OF SCREEN
     case Qt::DecorationRole:
     {
         QPixmap pixmap;
-        pixmap = this->parentWidget->widgetList.at( index.row())->grab();
+        pixmap = FolderManager::instance()->at( index.row())->grab();
 
+        // TODO: USE ASPECT RATIO OF SCREEN
+        // and QtConcurrent
         if ( !pixmap.isNull())
             return pixmap.scaled( 40, 30 );
     }
 
     case Qt::DisplayRole:
-        return this->parentWidget->widgetList.at( index.row())->title();
+        return FolderManager::instance()->at( index.row())->title();
 
     default:
         return QVariant();

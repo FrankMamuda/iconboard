@@ -22,9 +22,10 @@
 #include <QDebug>
 #include "xmltools.h"
 #include "variable.h"
-#include "traywidget.h"
+#include "widgetlist.h"
 #include "folderview.h"
 #include "themes.h"
+#include "foldermanager.h"
 #include <QBuffer>
 #include <QDir>
 #include <QDomDocument>
@@ -40,10 +41,10 @@ XMLTools::XMLTools( QObject *parent ) : QObject( parent ) {
 }
 
 /**
- * @brief XMLTools::writeConfiguration
+ * @brief XMLTools::write
  * @param mode
  */
-void XMLTools::writeConfiguration( Modes mode ) {
+void XMLTools::write( Modes mode ) {
     QString path, savedData, newData;
 
 #ifdef QT_DEBUG
@@ -113,46 +114,53 @@ void XMLTools::writeConfiguration( Modes mode ) {
 
     case Widgets:
     {
-        foreach ( FolderView *widget, TrayWidget::instance()->widgetList ) {
+        int y;
+        for ( y = 0; y < FolderManager::instance()->count(); y++ ) {
+            FolderView *folderView;
+
+            folderView = FolderManager::instance()->at( y );
+            if ( folderView == nullptr )
+                continue;
+
             stream.writeStartElement( "widget" );
-            stream.writeAttribute( "rootPath", widget->rootPath());
+            stream.writeAttribute( "rootPath", folderView->rootPath());
 
             // styleSheet (for better readability store as attribute)
-            stream.writeAttribute( "styleSheet", widget->customStyleSheet().replace( "\r", "" ));
+            stream.writeAttribute( "styleSheet", folderView->customStyleSheet().replace( "\r", "" ));
 
             // geometry
             stream.writeEmptyElement( "geometry" );
-            stream.writeAttribute( "x", QString::number( widget->pos().x()));
-            stream.writeAttribute( "y", QString::number( widget->pos().y()));
-            stream.writeAttribute( "width", QString::number( widget->width()));
-            stream.writeAttribute( "height", QString::number( widget->height()));
+            stream.writeAttribute( "x", QString::number( folderView->pos().x()));
+            stream.writeAttribute( "y", QString::number( folderView->pos().y()));
+            stream.writeAttribute( "width", QString::number( folderView->width()));
+            stream.writeAttribute( "height", QString::number( folderView->height()));
 
             // title
-            if ( !widget->customTitle().isEmpty())
-                stream.writeTextElement( "title", widget->customTitle());
+            if ( !folderView->customTitle().isEmpty())
+                stream.writeTextElement( "title", folderView->customTitle());
 
             // visibility
-            if ( !widget->isVisible())
+            if ( !folderView->isVisible())
                 stream.writeTextElement( "visible", QString::number( 0 ));
 
             // viewMode
-            stream.writeTextElement( "viewMode", QString::number( static_cast<int>( widget->viewMode())));
+            stream.writeTextElement( "viewMode", QString::number( static_cast<int>( folderView->viewMode())));
 
             // sortOrder
-            stream.writeTextElement( "sortOrder", QString::number( static_cast<int>( widget->sortOrder())));
+            stream.writeTextElement( "sortOrder", QString::number( static_cast<int>( folderView->sortOrder())));
 
             // caseSensitive
-            stream.writeTextElement( "caseSensitive", QString::number( static_cast<int>( widget->isCaseSensitive())));
+            stream.writeTextElement( "caseSensitive", QString::number( static_cast<int>( folderView->isCaseSensitive())));
 
             // dirsFirst
-            stream.writeTextElement( "dirsFirst", QString::number( static_cast<int>( widget->directoriesFirst())));
+            stream.writeTextElement( "dirsFirst", QString::number( static_cast<int>( folderView->directoriesFirst())));
 
             // access mode
-            if ( !widget->isReadOnly())
+            if ( !folderView->isReadOnly())
                 stream.writeTextElement( "readOnly", QString::number( 0 ));
 
             // icon size
-            stream.writeTextElement( "iconSize", QString::number( widget->iconSize()));
+            stream.writeTextElement( "iconSize", QString::number( folderView->iconSize()));
 
             // end widget element
             stream.writeEndElement();
@@ -224,11 +232,11 @@ void XMLTools::writeConfiguration( Modes mode ) {
 }
 
 /**
- * @brief XMLTools::readConfiguration
+ * @brief XMLTools::read
  * @param mode
  * @param object
  */
-void XMLTools::readConfiguration( Modes mode ) {
+void XMLTools::read( Modes mode ) {
     QString path;
     QDomDocument document;
     QDomNode node, childNode;
@@ -291,7 +299,7 @@ void XMLTools::readConfiguration( Modes mode ) {
 
                 childNode = element.firstChild();
 #ifdef Q_OS_WIN
-                widget = new FolderView( TrayWidget::instance()->desktop, element.attribute( "rootPath" ));
+                widget = new FolderView(( QWidget* )FolderManager::instance()->desktop, element.attribute( "rootPath" ));
 #else
                 widget = new FolderView( nullptr, element.attribute( "rootPath" ));
 #endif
@@ -349,7 +357,8 @@ void XMLTools::readConfiguration( Modes mode ) {
                 widget->setSortOrder( sortOrder );
                 widget->setCustomStyleSheet( styleSheet, false, true );
                 widget->sort();
-                TrayWidget::instance()->widgetList << widget;
+
+                FolderManager::instance()->add( widget );
             } else if ( !QString::compare( element.tagName(), "variable" ) && mode == Variables ) {
                 QString key;
                 QVariant value;
