@@ -22,7 +22,6 @@
 // includes
 //
 #include <QWidget>
-#include <QFileSystemModel>
 #include <QMouseEvent>
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -34,6 +33,7 @@
 //
 class FolderDelegate;
 class ProxyModel;
+class FileSystemModel;
 
 /**
  * @brief The Ui namespace
@@ -50,25 +50,6 @@ namespace Frame {
 static const int BorderWidth = 4;
 static const int MouseGrabAreas = 8;
 }
-
-/**
- * @brief The FileSystemModel class
- */
-class FileSystemModel : public QFileSystemModel {
-    Q_OBJECT
-
-public:
-    explicit FileSystemModel( QObject *parent = 0, const QString &path = QDir::currentPath()) : QFileSystemModel( parent ) {
-        this->setRootPath( path );
-        //..this->setReadOnly( true ); // TODO: add as menu (RO by default)
-    }
-    Qt::DropActions supportedDropActions() const;
-    Qt::ItemFlags flags( const QModelIndex &index ) const;
-
-public slots:
-    void softReset() { emit this->dataChanged( this->index( 0, 0 ), this->index( this->rowCount() - 1, this->columnCount() - 1 )); }
-    void reset() { this->beginResetModel(); this->resetInternalData(); this->endResetModel(); }
-};
 
 /**
  * @brief The FolderView class
@@ -96,7 +77,7 @@ public:
 
     // properties
     QString title() const { if ( !this->customTitle().isNull()) return this->customTitle(); return this->ui->title->text(); }
-    QString rootPath() const { return this->model->rootPath(); }
+    QString rootPath() const;
     QString currentStyleSheet() const;
     QString customTitle() const { return this->m_customTitle; }
     QString customStyleSheet() const { return this->m_customStyleSheet; }
@@ -140,7 +121,7 @@ public:
 public slots:
     // properties
     void setCustomTitle( const QString &title );
-    void setCustomStyleSheet( const QString &styleSheet, bool force = false, bool noUpdate = false );
+    void setCustomStyleSheet( const QString &styleSheet, bool force = false );
     void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }
     void setReadOnly( bool enable = true );
     void setSortOrder( Qt::SortOrder order = Qt::AscendingOrder );

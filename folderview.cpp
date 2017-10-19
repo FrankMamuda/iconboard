@@ -34,8 +34,8 @@
 #include "themes.h"
 #include "variable.h"
 #include "main.h"
-
 #include <QDebug>
+#include "filesystemmodel.h"
 
 #ifdef Q_OS_WIN
 #include <shlobj.h>
@@ -46,20 +46,22 @@
  * @param parent
  * @param rootPath
  */
-FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( parent ), ui( new Ui::FolderView ), model( new FileSystemModel()), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ) {
+FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( parent ), ui( new Ui::FolderView ), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ) {
     QDir dir( rootPath );
     QFile styleSheet;
 
     // set up UI
     this->ui->setupUi( this );
 
-    // set up listView and its model
+    // set icon mode by default
     this->ui->view->setViewMode( QListView::IconMode );
+
+    // set up listView and its model
+    this->model = new FileSystemModel( this, rootPath );
     this->proxyModel = new ProxyModel( this );
     this->proxyModel->setSourceModel( this->model );
     this->ui->view->setModel( this->proxyModel );
-    this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( rootPath )));
-    //->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, true );
+    this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( this->rootPath())));
 
     // set up view delegate
     this->delegate = new FolderDelegate( this->ui->view );
@@ -102,6 +104,14 @@ FolderView::~FolderView() {
     delete this->delegate;
     delete this->model;
     delete this->ui;
+}
+
+/**
+ * @brief FolderView::rootPath
+ * @return
+ */
+QString FolderView::rootPath() const {
+    return this->model->rootPath();
 }
 
 /**
@@ -187,7 +197,7 @@ void FolderView::displayContextMenu( const QPoint &point ) {
             QMenu *themeMenu;
 
             // add theme menu
-            themeMenu = appearanceMenu->addMenu( this->tr( "Theme" ));
+            themeMenu = appearanceMenu->addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme" ));
 
             // custom styleSheet lambda
             this->connect( themeMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" )), &QAction::triggered, [this]() {
@@ -267,19 +277,17 @@ void FolderView::displayContextMenu( const QPoint &point ) {
     menu.addSeparator();
 
     // read only lambda
-    actionReadOnly = menu.addAction( this->tr( "Read only" ));
+    actionReadOnly = menu.addAction( IconCache::instance()->icon( "folder-locked", 16 ), this->tr( "Read only" ));
     actionReadOnly->setCheckable( true );
     actionReadOnly->setChecked( this->isReadOnly());
-    qDebug() << "RO MENU" << this->isReadOnly();
     this->connect( actionReadOnly, &QAction::triggered, [this]() {
-        qDebug() << "set" << !this->isReadOnly();
         this->setReadOnly( !this->isReadOnly());
     } );
 
 #ifdef QT_DEBUG
     // add separator
     menu.addSeparator();
-    this->connect( menu.addAction( this->tr( "Exit" )), &QAction::triggered, [this]() {
+    this->connect( menu.addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, [this]() {
         Main::instance()->shutdown();
     } );
 #endif
@@ -304,21 +312,18 @@ void FolderView::setCustomTitle( const QString &title ) {
  * @brief FolderView::setCustomStyleSheet
  * @param styleSheet
  */
-void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force, bool noUpdate ) {
+void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force ) {
     this->m_customStyleSheet = styleSheet;
 
     if ( styleSheet.isEmpty() && !force )
         this->resetStyleSheet();
-    else {
+    else
         this->setStyleSheet( styleSheet );
 
-        // this has to be done to properly reset view
-        if ( !noUpdate ) {
-            this->delegate->clearCache();
-            this->ui->view->setItemDelegate( nullptr );
-            this->ui->view->setItemDelegate( this->delegate );
-        }
-    }
+    // this has to be done to properly reset view
+    this->delegate->clearCache();
+    this->ui->view->setItemDelegate( nullptr );
+    this->ui->view->setItemDelegate( this->delegate );
 }
 
 /**
@@ -340,16 +345,11 @@ void FolderView::setIconSize() {
     int size;
     bool ok;
 
-    size = QInputDialog::getInt( this->parentWidget(), this->tr( "Set icon size" ), this->tr( "Size:" ), this->iconSize(), 0, 256, 16, &ok );
+    size = QInputDialog::getInt( this->parentWidget(), this->tr( "Set icon size" ), this->tr( "Size:" ), this->iconSize(), 16, 256, 16, &ok );
     if ( ok ) {
         this->setIconSize( size );
-
-        // this has to be done to properly reset view
-        this->delegate->clearCache();
-        this->ui->view->setItemDelegate( nullptr );
-        this->ui->view->setItemDelegate( this->delegate );
-
         this->proxyModel->clearCache();
+        this->delegate->clearCache();
     }
 }
 
@@ -357,10 +357,8 @@ void FolderView::setIconSize() {
  * @brief FolderView::setReadOnly
  */
 void FolderView::setReadOnly( bool enable ) {
-    qDebug() << this->title() << "RO" << enable << this->model->isReadOnly();
     this->model->setReadOnly( enable );
     this->ui->view->setReadOnly( enable );
-    qDebug() << "  " << this->model->isReadOnly();
 }
 
 /**
@@ -377,17 +375,10 @@ void FolderView::setSortOrder( Qt::SortOrder order ) {
  */
 void FolderView::sort() {
     this->proxyModel->sort( 0 );
-
-    // FIXME: for some reason we have to reset model
     this->ui->view->setModel( nullptr );
     this->ui->view->setModel( this->proxyModel );
     this->proxyModel->setSourceModel( this->model );
     this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( this->rootPath())));
-
-    // this has to be done to properly reset view
-    this->delegate->clearCache();
-    this->ui->view->setItemDelegate( nullptr );
-    this->ui->view->setItemDelegate( this->delegate );
 }
 
 /**
@@ -753,26 +744,6 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
 #else
     // TODO: context menu in other environments
 #endif
-}
-
-/**
- * @brief FileSystemModel::flags
- * @param index
- * @return
- */
-Qt::ItemFlags FileSystemModel::flags( const QModelIndex &index ) const {
-    if ( !index.isValid())
-        return Qt::NoItemFlags;
-
-    return ( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDropEnabled  | Qt::ItemIsDragEnabled );
-}
-
-/**
- * @brief DragDropListModel::supportedDropActions
- * @return
- */
-Qt::DropActions FileSystemModel::supportedDropActions() const {
-    return Qt::CopyAction;
 }
 
 /**

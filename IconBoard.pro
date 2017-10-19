@@ -41,7 +41,8 @@ SOURCES += main.cpp\
     listview.cpp \
     foldermanager.cpp \
     widgetlist.cpp \
-    trayicon.cpp
+    trayicon.cpp \
+    filesystemmodel.cpp
 
 HEADERS  += \
     folderview.h \
@@ -68,7 +69,8 @@ HEADERS  += \
     foldermanager.h \
     main.h \
     widgetlist.h \
-    trayicon.h
+    trayicon.h \
+    filesystemmodel.h
 
 win32:HEADERS += desktopwidget.h
 

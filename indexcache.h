@@ -21,7 +21,6 @@
 //
 // includes
 //
-#include <QMutexLocker>
 #include <QHash>
 #include "singleton.h"
 #include "filestream.h"
@@ -84,8 +83,8 @@ public slots:
     void shutdown();
 
 private slots:
-    void setPath( const QString &path ) { QMutexLocker( &this->m_mutex ); this->m_path = path; }
-    void setValid( bool valid ) { QMutexLocker( &this->m_mutex ); this->m_valid = valid; }
+    void setPath( const QString &path ) { this->m_path = path; }
+    void setValid( bool valid ) { this->m_valid = valid; }
 
 private:
     IndexCache( QObject *parent = nullptr );
@@ -93,7 +92,6 @@ private:
     FileStream indexFile;
     QHash<QString, Entry> index;
     QString m_path;
-    mutable QMutex m_mutex;
     bool m_valid;
     bool read();
     bool write( const QString &iconName, int iconScale, const QString &theme, const QString &fileName );

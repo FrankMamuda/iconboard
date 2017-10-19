@@ -355,7 +355,7 @@ void XMLTools::read( Modes mode ) {
                 widget->setDirectoriesFirst( dirsFirst );
                 widget->setReadOnly( readOnly );
                 widget->setSortOrder( sortOrder );
-                widget->setCustomStyleSheet( styleSheet, false, true );
+                widget->setCustomStyleSheet( styleSheet, false );
                 widget->sort();
 
                 FolderManager::instance()->add( widget );

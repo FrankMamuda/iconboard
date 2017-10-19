@@ -26,6 +26,7 @@
 #include <QIcon>
 #include "indexcache.h"
 #include "iconindex.h"
+#include "main.h"
 
 /**
  * @brief IndexCache::IndexCache
@@ -49,7 +50,7 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
 
         // additional failsafe
         if ( !directory.exists()) {
-            this->shutdown();
+            qFatal( this->tr( "unable to create icon cache dir" ).toUtf8().constData());
             return;
         }
     }
@@ -57,8 +58,7 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
     // set up index file
     this->indexFile.setFilename( this->path() + "/" + IndexCacheNamespace::IndexFilename );
     if ( !this->indexFile.open()) {
-        qCritical() << this->tr( "index file non-writable" );
-        this->shutdown();
+        qFatal( this->tr( "index file non-writable" ).toUtf8().constData());
         return;
     } else {
         if ( !this->indexFile.size())
@@ -67,8 +67,7 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
 
     // read data
     if ( !this->read()) {
-        qCritical() << this->tr( "failed to read cache" );
-        this->shutdown();
+        qFatal( this->tr( "failed to read cache" ).toUtf8().constData());
         return;
     }
 
@@ -76,16 +75,12 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
 }
 
 /**
- * @brief IndexCache::read this should be accessed by a single thead, therefore we
- * use a mutex lock
+ * @brief IndexCache::read
  * @return
  */
 bool IndexCache::read() {
     quint8 version;
     Entry entry;
-
-    // lock thread
-    QMutexLocker( &this->m_mutex );
 
     // read index file version
     this->indexFile.toStart();
@@ -94,7 +89,6 @@ bool IndexCache::read() {
     // check version
     if ( version != IndexCacheNamespace::Version ) {
         qCritical() << this->tr( "version mismatch for index file" );
-        this->shutdown();
         return false;
     }
 
@@ -117,8 +111,7 @@ bool IndexCache::read() {
 }
 
 /**
- * @brief IndexCache::write this should be accessed by a single thead, therefore we
- * use a mutex lock
+ * @brief IndexCache::write
  * @param iconName
  * @param themeName
  * @param iconScale
@@ -127,9 +120,6 @@ bool IndexCache::read() {
  */
 bool IndexCache::write( const QString &iconName, int iconScale, const QString &theme, const QString &fileName ) {
     QString alias;
-
-    // lock thread
-    QMutexLocker( &this->m_mutex );
 
     // failsafe
     if ( !this->isValid())

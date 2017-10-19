@@ -21,6 +21,9 @@
 //
 // includes
 //
+#include "about.h"
+#include "settings.h"
+#include "themeeditor.h"
 #include <QMainWindow>
 #include <QMenu>
 #ifdef Q_OS_WIN
@@ -54,6 +57,9 @@ public:
 
 public slots:
     void reset();
+    void showSettingsDialog() { this->settingsDialog->exec(); }
+    void showThemeDialog() { this->themeDialog->exec(); }
+    void showAboutDialog() { this->aboutDialog->exec(); }
 
 private slots:
     void on_widgetList_doubleClicked( const QModelIndex &index );
@@ -68,6 +74,9 @@ private:
     Ui::WidgetList *ui;
     WidgetModel *model;
     QMenu *menu;
+    Settings *settingsDialog;
+    ThemeEditor *themeDialog;
+    About *aboutDialog;
 #ifdef Q_OS_WIN
     HWINEVENTHOOK hook;
 #endif

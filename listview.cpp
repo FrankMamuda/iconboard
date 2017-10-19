@@ -20,8 +20,10 @@
 // includes
 //
 #include <QDebug>
+#include "folderview.h"
 #include "iconcache.h"
 #include "listview.h"
+#include <QFileSystemModel>
 #include <QMenu>
 #include <QMimeData>
 
@@ -39,8 +41,6 @@ ListView::ListView( QWidget *parent ) : QListView( parent ) {
 void ListView::setReadOnly( bool enable ) {
     enable = !enable;
 
-    qDebug() << "  LW" << !enable;
-
     this->setDragEnabled( enable );
     this->viewport()->setAcceptDrops( enable );
     this->setDropIndicatorShown( enable );
@@ -54,19 +54,72 @@ void ListView::setReadOnly( bool enable ) {
  * @param event
  */
 void ListView::dropEvent( QDropEvent *event ) {
-
-       QModelIndex index = this->indexAt( event->pos());
-
-    if ( index.isValid())
-        qDebug() << "  on stmh";
-    else
-        qDebug() << "  on nothing";
-
-
     QMenu menu;
 
-    menu.addAction( IconCache::instance()->icon( "edit-copy", 16 ), this->tr( "Copy" ));
-    menu.addAction( this->tr( "Move" ));
-    menu.addAction( IconCache::instance()->icon( "insert-link", 16 ), this->tr( "Link" ));
+    // abort if same source
+    // TODO: allow dropping on internal folders
+    if ( event->source() == qobject_cast<QObject*>( this ))
+        return;
+
+    // ignore action by default
+    event->setDropAction( Qt::IgnoreAction );
+
+    // copy lambda
+    this->connect( menu.addAction( IconCache::instance()->icon( "edit-copy", 16 ), this->tr( "Copy" )), &QAction::triggered, [event]() {
+        event->setDropAction( Qt::CopyAction );
+    } );
+
+    // move lambda
+    this->connect( menu.addAction( this->tr( "Move" )), &QAction::triggered, [event]() {
+        event->setDropAction( Qt::MoveAction );
+    } );
+
+    // link lambda
+    this->connect( menu.addAction( IconCache::instance()->icon( "insert-link", 16 ), this->tr( "Link" )), &QAction::triggered, [this, event]() {
+        QString target;
+        FolderView *folderView;
+        QModelIndex index;
+
+        // get parent widget
+        folderView = qobject_cast<FolderView*>( this->parentWidget());
+        if ( folderView == nullptr ) {
+            qDebug() << "bad parent";
+            return;
+        }
+
+        // get parent widget root path
+        target = folderView->rootPath();
+
+        // get item under cursor
+        index = this->indexAt( event->pos());
+
+        // get drop target full path
+        if ( index.isValid())
+            target = index.data( QFileSystemModel::FilePathRole ).toString();
+        else
+            target = folderView->rootPath();
+
+        // check of dropped on file (not a directory!)
+        if ( !QDir( target ).exists())
+            return;
+
+        // go through dropEvent fileNames
+        if ( event->mimeData()->hasUrls()) {
+            foreach ( QUrl url, event->mimeData()->urls()) {
+                QString filePath( url.toLocalFile());
+                QString link( target + "/" + QFileInfo( filePath ).fileName());
+
+#ifdef Q_OS_WIN
+                if ( !link.endsWith( ".lnk" ))
+                    link.append( ".lnk" );
+
+#endif
+                QFile::link( filePath, link );
+            }
+        }
+    } );
     menu.exec( QCursor::pos());
+
+    // proceed with the intended action
+    QListView::dropEvent( event );
 }

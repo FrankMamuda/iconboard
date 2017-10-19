@@ -29,6 +29,9 @@
 #include "xmltools.h"
 #include "themes.h"
 #include "widgetlist.h"
+#include "foldermanager.h"
+#include "main.h"
+#include "trayicon.h"
 
 /*
  * TODO/FIXME list:
@@ -41,13 +44,11 @@
  *    cleanup
  *    GitHub page
  *    release beta
- *    show WidgetList if no widgets added (ex. first run)
  *    linux segfault on icon theme change
  *      might be Qt version related, not sure
  *      possible solution would be requiring a restart, though this needs a new
  *        flag in Variable class
- *    runOnStartup sometimes fails to find icondir (different start path)
-
+ *
  *  [NOT URGENT]
  *  [to be implemented in future versions]
  *    lock to specific resolution
@@ -75,7 +76,17 @@
  *    custom icon dir (set in settings)
  *    minor issues with z-order (windows)
  *    handle shortcut/folder drops on tray icon or widget list to add widget
- *    filesystemmodel does not update when file is moved (dragged outside folderview)
+ *    filesystemmodel does not update when file is moved/deleted (dragged outside folderview)
+ *    separate identity and sort models
+ *    move hook from Widgetlist to Desktopwidget
+ *    move iconThemeChanged to IconIndex
+ *    drop on tray icon action (add folder)
+ *    detect cases when ItemDelegate has to be updated, preferrably automatically
+ *      it seems that it has to be reset completelt (unset from model and set back)
+ *      after decoration/font size change. could it be sizeHint is not called after
+ *      scaling?
+ *    fix flickering with batched resize (currently listview set to singlepass)
+ *    remove ugly drop rect
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -91,17 +102,13 @@
  *    application bundle icon
  */
 
-#include "foldermanager.h"
-#include "main.h"
-#include "trayicon.h"
-
 /**
  * @brief messageFilter
  * @param type
  * @param context
  * @param msg
  */
-void messageFilter( QtMsgType type, const QMessageLogContext &, const QString &msg ) {
+void Main::messageFilter( QtMsgType type, const QMessageLogContext &, const QString &msg ) {
     QFile logFile;
     QString output( msg );
 
@@ -120,6 +127,7 @@ void messageFilter( QtMsgType type, const QMessageLogContext &, const QString &m
 
     case QtFatalMsg:
         output.prepend( QObject::tr( "Fatal: " ));
+        Main::instance()->shutdown();
         break;
 
     case QtInfoMsg:
@@ -154,10 +162,13 @@ int main( int argc, char *argv[] ) {
 
     // log to file in non-qtcreator environment
     if ( qgetenv( "QTDIR" ).isEmpty())
-        qInstallMessageHandler( messageFilter );
+        qInstallMessageHandler( Main::messageFilter );
 
     // app
     Application app( argc, argv );
+
+    // fix runOnStartup in wrong dir bug
+    QDir::setCurrent( qApp->applicationDirPath());
 
     // fixes auto close behaviour on linux
     QApplication::setQuitOnLastWindowClosed( false );

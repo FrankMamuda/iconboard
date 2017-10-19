@@ -66,5 +66,5 @@ protected:
 
 private:
     ListItem textItemForIndex( const QStyleOptionViewItem &option, const QModelIndex &index ) const;
-    mutable QHash<QModelIndex, ListItem> cache;
+    mutable QHash<QString, ListItem> cache;
 };

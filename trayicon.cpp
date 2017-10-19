@@ -35,33 +35,36 @@
  * @brief TrayIcon::TrayIcon
  * @param parent
  */
-TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent )/*, menu( new QMenu( this ))*/ {
+TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
+    WidgetList *parentWidget;
+    QAction *actionSettings, *actionAbout, *actionThemes;
+
     // setup context menu
     this->setContextMenu( new QMenu());
 
+    // get parent widget list
+    parentWidget = qobject_cast<WidgetList *>( this->parent());
+    if ( parentWidget == nullptr ) {
+        qCritical() << "invalid parent widget";
+        return;
+    }
 
-    WidgetList *parentWidget = qobject_cast<WidgetList *>( this->parent());
-
-
-    // FIXME:
+    // show widget list action
     this->contextMenu()->addAction( IconCache::instance()->icon( "view-list-icons", 16 ), this->tr( "Widget list" ), parentWidget, SLOT( show()));
 
+    // show settings dialog action
+    actionSettings = this->contextMenu()->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" ));
+    this->connect( actionSettings, SIGNAL( triggered( bool)), parentWidget, SLOT( showSettingsDialog()));
 
-    this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" )), &QAction::triggered, this, [ this ]() {
-        Settings settingsDialog;//( /*this*/ );
-        settingsDialog.exec();
-    });
-
-    this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme editor" )), &QAction::triggered, this, [ this ]() {
-        ThemeEditor themeDialog;//( /*this*/ );
-        themeDialog.exec();
-    });
+    // show theme editor dialog action
+    actionThemes = this->contextMenu()->addAction( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme editor" ));
+    this->connect( actionThemes, SIGNAL( triggered( bool)), parentWidget, SLOT( showThemeDialog()));
 
     this->contextMenu()->addSeparator();
-    this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "help-about", 16 ), this->tr( "About" )), &QAction::triggered, this, [ this ]() {
-        About aboutDialog;//( /*this*/ );
-        aboutDialog.exec();
-    });
+
+    // show about dialog action
+    actionAbout = this->contextMenu()->addAction( IconCache::instance()->icon( "help-about", 16 ), this->tr( "About" ));
+    this->connect( actionAbout, SIGNAL( triggered( bool)), parentWidget, SLOT( showAboutDialog()));
 
     // exit action
     this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, this, [ this ]() { Main::instance()->shutdown(); });
@@ -96,12 +99,17 @@ TrayIcon::~TrayIcon() {
  * @brief TrayIcon::iconActivated
  */
 void TrayIcon::iconActivated( QSystemTrayIcon::ActivationReason reason ) {
-    WidgetList *parentWidget = qobject_cast<WidgetList *>( this->parent());
+    WidgetList *parentWidget;
+
+    // get parent widget list
+    parentWidget = qobject_cast<WidgetList *>( this->parent());
+    if ( parentWidget == nullptr ) {
+        qCritical() << "invalid parent widget";
+        return;
+    }
 
     switch ( reason ) {
     case QSystemTrayIcon::Trigger:
-        // TODO/FIXME/URGENT:
-        //Widget
         if ( parentWidget->isHidden())
             parentWidget->show();
         else

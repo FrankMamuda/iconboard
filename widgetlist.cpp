@@ -20,25 +20,18 @@
 // includes
 //
 #include <QMessageBox>
-#include <QFileDialog>
 #include <QDir>
-#include <QScreen>
-#include <QDebug>
-#include "widgetlist.h"
-#include "ui_widgetlist.h"
-#include "widgetmodel.h"
+#include <QFileDialog>
 #include "folderview.h"
-#include "variable.h"
-#include "settings.h"
-#include "iconcache.h"
-#include "screenmapper.h"
-#include "xmltools.h"
-#include "iconindex.h"
-#include "about.h"
-#include "themeeditor.h"
-#include "indexcache.h"
 #include "foldermanager.h"
+#include "screenmapper.h"
+#include "widgetlist.h"
+#include "iconindex.h"
+#include "widgetmodel.h"
+#include "variable.h"
+#include "iconcache.h"
 #include "main.h"
+#include "ui_widgetlist.h"
 
 #ifdef Q_OS_WIN
 #ifndef QT_DEBUG
@@ -50,7 +43,10 @@ void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG,
  * @brief WidgetList::WidgetList
  * @param parent
  */
-WidgetList::WidgetList( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::WidgetList ), model( new WidgetModel( this, this )) {
+WidgetList::WidgetList( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::WidgetList ), model( new WidgetModel( this, this )),
+    settingsDialog( new Settings( this )),
+    themeDialog( new ThemeEditor( this )),
+    aboutDialog( new About( this )) {
     // init ui
     this->ui->setupUi( this );
 
@@ -102,6 +98,11 @@ WidgetList::~WidgetList() {
         this->hook = nullptr;
     }
 #endif
+
+    // delete dialogs
+    delete this->settingsDialog;
+    delete this->aboutDialog;
+    delete this->themeDialog;
 
     // delete model and the ui
     delete this->model;

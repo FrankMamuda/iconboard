@@ -22,6 +22,7 @@
 #include <QApplication>
 #include <QPainter>
 #include "folderdelegate.h"
+#include <QDebug>
 
 /**
  * @brief FolderDelegate::FolderDelegate
@@ -43,6 +44,7 @@ QSize FolderDelegate::sizeHint( const QStyleOptionViewItem &option, const QModel
     QListView *view;
     QSize size;
     QStyleOptionViewItem customOption;
+    QString text;
 
     // get parent listView
     view = qobject_cast<QListView*>( this->parent());
@@ -52,16 +54,19 @@ QSize FolderDelegate::sizeHint( const QStyleOptionViewItem &option, const QModel
     // calculate proper size for multi-line text
     size = QStyledItemDelegate::sizeHint( option, index );
 
+    // get display text
+    text = view->model()->data( index, Qt::DisplayRole ).toString();
+
     // only icon mode has custom placement
     if ( view->viewMode() == QListView::IconMode ) {
         customOption = option;
         customOption.rect.setWidth( option.decorationSize.width() + FolderDelegateNamespace::MarginSide * 2 );
 
-        if ( this->cache.contains( index )) {
-            item = this->cache[index];
+        if ( this->cache.contains( text )) {
+            item = this->cache[text];
         } else {
             item = this->textItemForIndex( customOption, index );
-            this->cache[index] = item;
+            this->cache[text] = item;
         }
 
         size.setWidth( customOption.rect.width());
@@ -129,6 +134,7 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
     int width, height, offset;
     QListView *view;
     QBrush hilightBrush;
+    QString text;
 
     // get parent listView
     view = qobject_cast<QListView*>( this->parent());
@@ -146,6 +152,9 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
         painter->fillRect( option.rect, hilightBrush );
     }
 
+    // get display text
+    text = view->model()->data( index, Qt::DisplayRole ).toString();
+
     // restore painter state
     painter->restore();
 
@@ -158,7 +167,7 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
         QTextOption to;
 
         // get pixmap and its dimensions
-        icon = qvariant_cast<QIcon>( index.data( Qt::DecorationRole ));
+        icon = qvariant_cast<QIcon>( view->model()->data( index, Qt::DecorationRole ));
         rect = option.rect;
         rect.setY( rect.y() + FolderDelegateNamespace::MarginTop );
         width = option.decorationSize.width();
@@ -176,11 +185,11 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
         painter->drawPixmap( rect, icon.pixmap( rect.size()));
 
         // split text into multiple lines
-        if ( cache.contains( index )) {
-            item = cache[index];
+        if ( cache.contains( text )) {
+            item = cache[text];
         } else {
             item = this->textItemForIndex( option, index );
-            cache[index] = item;
+            cache[text] = item;
         }
 
         //item = this->textItemForIndex( option, index );

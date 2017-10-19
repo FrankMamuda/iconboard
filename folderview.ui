@@ -60,10 +60,7 @@
       <enum>QListView::Adjust</enum>
      </property>
      <property name="layoutMode">
-      <enum>QListView::Batched</enum>
-     </property>
-     <property name="batchSize">
-      <number>14</number>
+      <enum>QListView::SinglePass</enum>
      </property>
     </widget>
    </item>

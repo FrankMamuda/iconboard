@@ -24,6 +24,7 @@
 #include "folderview.h"
 #include "proxymodel.h"
 #include "iconcache.h"
+#include "filesystemmodel.h"
 
 /**
  * @brief ProxyModel::ProxyModel

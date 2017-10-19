@@ -40,6 +40,7 @@ public:
     ~Main() {}
     static Main *instance() { return Singleton<Main>::instance( Main::createInstance ); }
     bool hasInitialized() const { return this->m_initialized; }
+    static void messageFilter( QtMsgType type, const QMessageLogContext &, const QString &msg );
 
 protected:
     void timerEvent( QTimerEvent * ) { this->writeConfiguration(); }
