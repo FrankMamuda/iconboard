@@ -27,7 +27,7 @@ class TrayIcon : public QSystemTrayIcon {
     Q_OBJECT
 
 public:
-    TrayIcon( QObject *parent = nullptr );
+    explicit TrayIcon( QObject *parent = nullptr );
     ~TrayIcon();
 
 private slots:

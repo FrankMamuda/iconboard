@@ -36,6 +36,17 @@
 #endif
 
 /**
+ * @brief IconCache::IconCache
+ * @param parent
+ */
+IconCache::IconCache( QObject *parent) : QObject( parent ) {
+    // announce
+#ifdef QT_DEBUG
+    qInfo() << "initializing";
+#endif
+}
+
+/**
  * @brief IconCache::icon
  * @param name
  * @param scale
@@ -150,7 +161,13 @@ QPixmap IconCache::extractPixmap( const QString &fileName ) {
 
     const HRESULT hrFileInfo = SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( fileName ).utf16()), 0, &fileInfo, sizeof( SHFILEINFO ), flags );
 
-    if ( SUCCEEDED( hrFileInfo )) {
+    // for some reason this always fails on msvc
+#ifndef Q_CC_MSVC
+    if ( SUCCEEDED( hrFileInfo ))
+#else
+    Q_UNUSED( hrFileInfo )
+#endif
+    {
         if ( QSysInfo::windowsVersion() >= QSysInfo::WV_VISTA && fileInfo.hIcon ) {
             auto pixmapFromImageList = [ fileInfo ]( int index, QPixmap &pixmap ) {
                 IImageList *imageList = nullptr;

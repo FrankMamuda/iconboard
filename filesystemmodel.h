@@ -37,7 +37,7 @@ class FileSystemModel : public QFileSystemModel {
     Q_OBJECT
 
 public:
-    explicit FileSystemModel( QObject *parent = 0, const QString &path = QDir::currentPath());
+    explicit FileSystemModel( QObject *parent = nullptr, const QString &path = QDir::currentPath());
     ~FileSystemModel() {}
     Qt::DropActions supportedDropActions() const;
     Qt::ItemFlags flags( const QModelIndex &index ) const;

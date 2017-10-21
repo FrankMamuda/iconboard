@@ -34,7 +34,12 @@ FolderManager::FolderManager( QObject *parent ) : QObject( parent )
 #ifdef Q_OS_WIN
   , desktop( new DesktopWidget )
 #endif
-{ }
+{
+    // announce
+#ifdef QT_DEBUG
+    qInfo() << "initializing";
+#endif
+}
 
 /**
  * @brief FolderManager::~FolderManager

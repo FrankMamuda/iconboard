@@ -24,6 +24,19 @@
 #include <QListView>
 #include <QWidget>
 #include <QDropEvent>
+#include <QProxyStyle>
+
+/**
+ * @brief The ProxyStyle class
+ */
+class ProxyStyle : public QProxyStyle {
+public:
+    ProxyStyle( QStyle *style = nullptr ) : QProxyStyle( style ) {}
+    void drawPrimitive( PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget ) const {
+        if ( element != QStyle::PE_IndicatorItemViewItemDrop )
+            QProxyStyle::drawPrimitive( element, option, painter, widget );
+    }
+};
 
 /**
  * @brief The ListView class
@@ -32,12 +45,15 @@ class ListView : public QListView {
     Q_OBJECT
 
 public:
-    ListView( QWidget *parent = nullptr );
-    ~ListView() {}
+    explicit ListView( QWidget *parent = nullptr );
+    ~ListView();
 
 public slots:
     void setReadOnly( bool enable );
 
 protected:
     void dropEvent( QDropEvent *event );
+
+private:
+    ProxyStyle *proxyStyle;
 };

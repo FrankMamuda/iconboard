@@ -38,7 +38,6 @@
  *
  *  [URGENT]
  *  [checklist for first public release]
- *    non-read only folders with drag & drop
  *    fix random segfaults on open
  *    i18n
  *    cleanup
@@ -51,16 +50,12 @@
  *
  *  [NOT URGENT]
  *  [to be implemented in future versions]
- *    lock to specific resolution
- *    lock to desktop screen
  *    root folder ('My Computer') folder support
- *    pseudo-folders (with drag-drop support)
  *    custom alignment
  *    free placement, free scaling
  *    whole desktop replacement option
  *    multi column list
  *    custom per-item icons
- *    extract shell icons from dirs on symlinks
  *    disk-caching of extracted icons and thumbnails
  *    drive names (from shortcuts)
  *    thumbnail loading as an option
@@ -69,24 +64,15 @@
  *    sorting issues on network folders (dirsFirst not working)
  *    complete documentation
  *    QWindow::requestActivate: requestActivate() FolderViewWindow
- *    QWindowsContext::windowsProc: External WM_DESTROY received (might be fixed)
  *    first run dialog
  *    option to download icon packs
  *    option not to upscale small icons
  *    custom icon dir (set in settings)
  *    minor issues with z-order (windows)
  *    handle shortcut/folder drops on tray icon or widget list to add widget
- *    filesystemmodel does not update when file is moved/deleted (dragged outside folderview)
- *    separate identity and sort models
  *    move hook from Widgetlist to Desktopwidget
  *    move iconThemeChanged to IconIndex
- *    drop on tray icon action (add folder)
- *    detect cases when ItemDelegate has to be updated, preferrably automatically
- *      it seems that it has to be reset completelt (unset from model and set back)
- *      after decoration/font size change. could it be sizeHint is not called after
- *      scaling?
  *    fix flickering with batched resize (currently listview set to singlepass)
- *    remove ugly drop rect
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -231,13 +217,18 @@ int main( int argc, char *argv[] ) {
  * @brief Main::readConfiguration
  */
 Main::Main( QObject *parent ) : QObject( parent ), m_initialized( false ) {
+    // announce
+#ifdef QT_DEBUG
+    qInfo() << "initializing";
+#endif
+
     // save settings every 60 seconds
     this->startTimer( 60 * 1000 );
 
     // set initialized
     this->setInitialized();
 
-    this->widgetList = new WidgetList;
+    this->widgetList = new WidgetList();
     this->tray = new TrayIcon( this->widgetList );
 }
 

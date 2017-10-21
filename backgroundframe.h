@@ -31,7 +31,7 @@ class BackgroundFrame : public QFrame {
     Q_OBJECT
 
 public:
-    BackgroundFrame( QWidget *parent ) : QFrame( parent ) {}
+    explicit BackgroundFrame( QWidget *parent = nullptr ) : QFrame( parent ) {}
 
 protected:
     void paintEvent( QPaintEvent *event ) {

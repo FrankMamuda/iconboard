@@ -54,7 +54,7 @@ class FolderDelegate : public QStyledItemDelegate {
     Q_DISABLE_COPY( FolderDelegate )
 
 public:
-    FolderDelegate( QListView *parent );
+    explicit FolderDelegate( QListView *parent = nullptr );
     ~FolderDelegate() {}
 
 public slots:

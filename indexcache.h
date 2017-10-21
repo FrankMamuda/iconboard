@@ -29,7 +29,7 @@
  * @brief The Entry struct
  */
 struct Entry {
-    Entry( const QString &a = QString::null, const QString &f = QString::null ) : alias( a ), fileName( f ) {}
+    explicit Entry( const QString &a = QString::null, const QString &f = QString::null ) : alias( a ), fileName( f ) {}
     QString alias;
     QString fileName;
 };
@@ -43,7 +43,7 @@ inline static QDataStream &operator>>( QDataStream &in, Entry &e ) { in >> e.ali
  * @brief The Match struct
  */
 struct Match {
-    Match( const QString &f = QString::null, int s = 0 ) : fileName( f ), scale( s ) {}
+    explicit Match( const QString &f = QString::null, int s = 0 ) : fileName( f ), scale( s ) {}
     QString fileName;
     int scale;
 };

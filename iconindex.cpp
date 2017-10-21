@@ -30,6 +30,11 @@
  * @param parent
  */
 IconIndex::IconIndex( QObject *parent ) : QObject( parent ) {
+    // announce
+#ifdef QT_DEBUG
+    qInfo() << "initializing";
+#endif
+
 #ifdef Q_OS_WIN
     this->setPath( QDir::currentPath() + "/" + "icons" );
 #else

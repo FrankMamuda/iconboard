@@ -35,6 +35,11 @@
 IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ), m_badEntries( 0 ) {
     QDir directory;
 
+    // announce
+#ifdef QT_DEBUG
+    qInfo() << "initializing";
+#endif
+
     // set default path
 #ifdef QT_DEBUG
     this->setPath( QDir::home().absolutePath() + "/.iconBoardDebug/cache" );

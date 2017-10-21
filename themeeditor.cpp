@@ -164,7 +164,7 @@ ThemeEditor::~ThemeEditor() {
     delete this->delegate;
     delete this->model;
     delete this->toolBar;
-    delete ui;
+    delete this->ui;
 }
 
 /**

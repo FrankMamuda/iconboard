@@ -72,7 +72,7 @@ class FolderView : public QWidget {
     Q_PROPERTY( QListView::ViewMode viewMode READ viewMode WRITE setViewMode )
 
 public:
-    explicit FolderView( QWidget *parent, const QString &rootPath );
+    explicit FolderView( QWidget *parent = nullptr, const QString &rootPath = QString::null );
     ~FolderView();
 
     // properties
@@ -124,7 +124,7 @@ public slots:
     void setCustomStyleSheet( const QString &styleSheet, bool force = false );
     void setIconSize( int size ) { this->ui->view->setIconSize( QSize( size, size )); }
     void setReadOnly( bool enable = true );
-    void setSortOrder( Qt::SortOrder order = Qt::AscendingOrder );
+    void setSortOrder( Qt::SortOrder order = Qt::AscendingOrder ) { this->m_sortOrder = order; }
     void setDirectoriesFirst( bool enable = true ) { this->m_dirsFirst = enable; }
     void setCaseSensitive( bool enable = false ) { this->m_caseSensitive = enable; }
     void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }

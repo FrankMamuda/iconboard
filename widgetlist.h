@@ -52,7 +52,7 @@ class WidgetList : public QMainWindow {
     Q_CLASSINFO( "description", "System tray activated folder widget manager" )
 
 public:
-    explicit WidgetList( QWidget *parent = 0 );
+    explicit WidgetList( QWidget *parent = nullptr );
     ~WidgetList();
 
 public slots:

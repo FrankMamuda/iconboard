@@ -63,7 +63,7 @@ public:
         Full,
         Custom
     };
-    explicit ThemeEditor( QWidget *parent = 0, Modes mode = Full, const QString &styleSheet = QString::null );
+    explicit ThemeEditor( QWidget *parent = nullptr, Modes mode = Full, const QString &styleSheet = QString::null );
     ~ThemeEditor();
     Modes mode() const { return this->m_mode; }
     QString currentStyleSheet() const { return this->ui->styleSheetEditor->toPlainText(); }
@@ -71,7 +71,7 @@ public:
 
 private slots:
     void on_tabWidget_currentChanged( int index ) { if ( index == 0 ) this->setWidgetStyleSheet(); }
-    void setWidgetStyleSheet() { this->ui->view->setStyleSheet( this->currentStyleSheet()); this->ui->title->setStyleSheet( this->currentStyleSheet()); this->delegate->clearCache(); this->ui->view->setItemDelegate( nullptr ); this->ui->view->setItemDelegate( this->delegate ); }
+    void setWidgetStyleSheet() { this->ui->view->setStyleSheet( this->currentStyleSheet()); this->ui->title->setStyleSheet( this->currentStyleSheet()); this->delegate->clearCache(); this->ui->view->setSpacing( this->ui->view->spacing()); }
     void setEditorStyleSheet( const QString &styleSheet ) { this->ui->styleSheetEditor->setPlainText( styleSheet ); this->setWidgetStyleSheet(); }
     void setBaseTheme( Theme *theme ) { this->m_baseTheme = theme; this->setEditorStyleSheet( this->baseTheme()->styleSheet()); }
     void save();

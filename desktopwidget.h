@@ -32,7 +32,7 @@ class DesktopWidget : public QWidget {
     Q_CLASSINFO( "description", "FolderView parent widget that manages proper z-order" )
 
 public:
-    DesktopWidget( QWidget *parent = nullptr ) : QWidget( parent ), nativeEventIgnored( false ) {
+    explicit DesktopWidget( QWidget *parent = nullptr ) : QWidget( parent ), nativeEventIgnored( false ) {
         SetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE, ( GetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE) | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | ~WS_EX_APPWINDOW ));
     }
 

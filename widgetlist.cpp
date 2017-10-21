@@ -34,6 +34,7 @@
 #include "ui_widgetlist.h"
 
 #ifdef Q_OS_WIN
+#include "desktopwidget.h"
 #ifndef QT_DEBUG
 void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG, DWORD, DWORD );
 #endif
@@ -243,12 +244,14 @@ void WidgetList::iconThemeChanged( QVariant value ) {
 #ifndef QT_DEBUG
 void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG, DWORD, DWORD ) {
     if ( event == EVENT_SYSTEM_FOREGROUND ) {
-        foreach ( FolderView *widget, WidgetList::instance()->widgetList ) {
+        int y;
+        for ( y = 0; y < FolderManager::instance()->count(); y++ ) {
+            FolderView *widget = FolderManager::instance()->at( y );
             if ( reinterpret_cast<HWND>( widget->winId()) == hwnd )
                 FolderManager::instance()->desktop->lower();
         }
 
-        if ( reinterpret_cast<HWND>( WidgetList::instance()->desktop->winId()))
+        if ( reinterpret_cast<HWND>( FolderManager::instance()->desktop->winId()))
             FolderManager::instance()->desktop->lower();
     }
 }

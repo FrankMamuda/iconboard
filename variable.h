@@ -110,6 +110,6 @@ signals:
     void valueChanged( const QString &key );
 
 private:
-    Variable() {}
+    explicit Variable() {}
     static Variable *createInstance() { return new Variable(); }
 };

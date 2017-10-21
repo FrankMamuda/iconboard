@@ -40,7 +40,7 @@ class Settings : public QDialog {
     Q_CLASSINFO( "description", "Settings dialog" )
 
 public:
-    explicit Settings( QWidget *parent = 0 );
+    explicit Settings( QWidget *parent = nullptr );
     ~Settings();
     void bind( const QString &key, QWidget *widget );
     void setValue( const QString &key, bool internal = false );

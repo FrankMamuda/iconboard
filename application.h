@@ -32,9 +32,9 @@ class Application : public QApplication {
 
 public:
 #ifdef QT_DEBUG
-    Application( int &argc, char **argv ) : QApplication( argc, argv ), memory( new QSharedMemory( "iconboardApp", this )) {}
-#else
     Application( int &argc, char **argv ) : QApplication( argc, argv ), memory( new QSharedMemory( "iconboardDebugApp", this )) {}
+#else
+    Application( int &argc, char **argv ) : QApplication( argc, argv ), memory( new QSharedMemory( "iconboardApp", this )) {}
 #endif
     ~Application() { if ( this->memory->isAttached()) this->memory->detach(); }
 

@@ -36,7 +36,7 @@ class MapperWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MapperWidget( QWidget *parent = 0  );
+    explicit MapperWidget( QWidget *parent = nullptr );
     ScreenMapper *screenMapper();
 
 protected:

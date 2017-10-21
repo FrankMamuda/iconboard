@@ -35,7 +35,7 @@ class WidgetModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
-    WidgetModel( QObject *parent, WidgetList *widget ) : QAbstractListModel( parent ), parentWidget( widget ) {}
+    explicit WidgetModel( QObject *parent, WidgetList *widget ) : QAbstractListModel( parent ), parentWidget( widget ) {}
     int rowCount( const QModelIndex & = QModelIndex()) const override;
     QVariant data( const QModelIndex &index, int role ) const;
 

@@ -147,7 +147,7 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
     painter->setPen( Qt::NoPen );
 
     // mouseOver/hover item
-    if ( option.state & QStyle::State_MouseOver && !( option.state & QStyle::State_Selected )) {
+    if ( option.state & QStyle::State_MouseOver || option.state & QStyle::State_Selected ) {
         hilightBrush.setColor( QColor::fromRgbF( hilightBrush.color().redF(), hilightBrush.color().greenF(), hilightBrush.color().blueF(), 0.25f ));
         painter->fillRect( option.rect, hilightBrush );
     }

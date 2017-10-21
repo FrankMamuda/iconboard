@@ -49,7 +49,7 @@ public slots:
     void shutdown() { this->cache.clear(); }
 
 private:
-    IconCache( QObject *parent = nullptr ) : QObject( parent ) {}
+    IconCache( QObject *parent = nullptr );
     static IconCache *createInstance() { return new IconCache(); }
     QHash<QString, QIcon> cache;
 };

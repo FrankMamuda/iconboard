@@ -21,11 +21,17 @@
 //
 #include "themes.h"
 #include <QFile>
+#include <QDebug>
 
 /**
  * @brief Themes::Themes
  */
 Themes::Themes( QObject *parent ) : QObject( parent ) {
+    // announce
+#ifdef QT_DEBUG
+    qInfo() << "initializing";
+#endif
+
     // add blank styleSheet
     this->add( "system", "", true );
 

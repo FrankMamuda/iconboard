@@ -31,7 +31,18 @@
  * @brief ListView::ListView
  */
 ListView::ListView( QWidget *parent ) : QListView( parent ) {
-    this->setSelectionMode( QAbstractItemView::ExtendedSelection );
+    this->setSelectionMode( QAbstractItemView::SingleSelection );
+    this->setSelectionRectVisible( false );
+    this->proxyStyle = new ProxyStyle( this->style());
+    this->setStyle( this->proxyStyle );
+}
+
+/**
+ * @brief ListView::~ListView
+ */
+ListView::~ListView() {
+    // FIXME: deletion causes a segfault
+    //delete this->proxyStyle;
 }
 
 /**

@@ -38,7 +38,7 @@ class ScreenMapper : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ScreenMapper( QWidget *parent = 0 );
+    explicit ScreenMapper( QWidget *parent = nullptr );
     ~ScreenMapper();
     void setWidgetRect( const QRect &rect ) { this->widgetRect = rect; }
     QRect widgetRect;

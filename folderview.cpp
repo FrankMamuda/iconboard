@@ -59,9 +59,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( pa
     // set up listView and its model
     this->model = new FileSystemModel( this, rootPath );
     this->proxyModel = new ProxyModel( this );
-    this->proxyModel->setSourceModel( this->model );
     this->ui->view->setModel( this->proxyModel );
-    this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( this->rootPath())));
 
     // set up view delegate
     this->delegate = new FolderDelegate( this->ui->view );
@@ -69,10 +67,7 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( pa
 
     // set title
     this->ui->title->setAutoFillBackground( true );
-    if ( dir.isRoot())
-        this->ui->title->setText( QStorageInfo( dir ).displayName());
-    else
-        this->ui->title->setText( dir.dirName());
+    dir.isRoot() ? this->ui->title->setText( QStorageInfo( dir ).displayName()) : this->ui->title->setText( dir.dirName());
 
     // set default styleSheet
     styleSheet.setFileName( ":/styleSheets/dark.qss" );
@@ -93,7 +88,6 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( pa
  */
 void FolderView::displaySymlinkLabelsChanged() {
     this->proxyModel->clearCache();
-    this->update();
 }
 
 /**
@@ -322,8 +316,7 @@ void FolderView::setCustomStyleSheet( const QString &styleSheet, bool force ) {
 
     // this has to be done to properly reset view
     this->delegate->clearCache();
-    this->ui->view->setItemDelegate( nullptr );
-    this->ui->view->setItemDelegate( this->delegate );
+    this->ui->view->setSpacing( this->ui->view->spacing());
 }
 
 /**
@@ -334,8 +327,7 @@ void FolderView::resetStyleSheet() {
 
     // this has to be done to properly reset view
     this->delegate->clearCache();
-    this->ui->view->setItemDelegate( nullptr );
-    this->ui->view->setItemDelegate( this->delegate );
+    this->ui->view->setSpacing( this->ui->view->spacing());
 }
 
 /**
@@ -350,6 +342,7 @@ void FolderView::setIconSize() {
         this->setIconSize( size );
         this->proxyModel->clearCache();
         this->delegate->clearCache();
+        this->ui->view->setSpacing( this->ui->view->spacing());
     }
 }
 
@@ -362,21 +355,13 @@ void FolderView::setReadOnly( bool enable ) {
 }
 
 /**
- * @brief FolderView::setSortOrder
- * @param order
- */
-void FolderView::setSortOrder( Qt::SortOrder order ) {
-    this->m_sortOrder = order;
-}
-
-/**
  * @brief FolderView::sort
  * @param order
  */
 void FolderView::sort() {
     this->proxyModel->sort( 0 );
-    this->ui->view->setModel( nullptr );
-    this->ui->view->setModel( this->proxyModel );
+
+    // reset model
     this->proxyModel->setSourceModel( this->model );
     this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( this->rootPath())));
 }
@@ -455,8 +440,6 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                     break;
                 }
             }
-
-
         }
 
         // ignore listView mouse events when cursor is on the edges

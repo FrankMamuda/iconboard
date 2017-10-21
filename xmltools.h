@@ -52,6 +52,6 @@ public:
     void read( Modes mode );
 
 private:
-    XMLTools( QObject *parent = 0 );
+    XMLTools( QObject *parent = nullptr );
     static XMLTools *createInstance() { return new XMLTools(); }
 };
