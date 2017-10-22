@@ -19,6 +19,7 @@
 //
 // includes
 //
+#include <QScreen>
 #include "widgetlist.h"
 #include "iconindex.h"
 #include "iconcache.h"
@@ -230,6 +231,9 @@ Main::Main( QObject *parent ) : QObject( parent ), m_initialized( false ) {
 
     this->widgetList = new WidgetList();
     this->tray = new TrayIcon( this->widgetList );
+
+    // reload on changed virtual geometry
+    this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
 }
 
 void Main::readConfiguration() {
