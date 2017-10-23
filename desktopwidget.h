@@ -23,6 +23,7 @@
 //
 #include <QWidget>
 #include <windows.h>
+#include "foldermanager.h"
 
 /**
  * @brief The DesktopWidget class
@@ -32,8 +33,12 @@ class DesktopWidget : public QWidget {
     Q_CLASSINFO( "description", "FolderView parent widget that manages proper z-order" )
 
 public:
-    explicit DesktopWidget( QWidget *parent = nullptr ) : QWidget( parent ), nativeEventIgnored( false ) {
-        SetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE, ( GetWindowLong( reinterpret_cast<HWND>( this->winId()), GWL_EXSTYLE) | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | ~WS_EX_APPWINDOW ));
+    explicit DesktopWidget( QWidget *parent = nullptr );
+    ~DesktopWidget() {
+        if ( this->hook != nullptr ) {
+            UnhookWinEvent( this->hook );
+            this->hook = nullptr;
+        }
     }
 
 public slots:
@@ -58,4 +63,8 @@ protected:
 
 private:
     bool nativeEventIgnored;
+#ifdef Q_OS_WIN
+    HWINEVENTHOOK hook;
+#endif
 };
+

@@ -71,9 +71,9 @@
  *    custom icon dir (set in settings)
  *    minor issues with z-order (windows)
  *    handle shortcut/folder drops on tray icon or widget list to add widget
- *    move hook from Widgetlist to Desktopwidget
- *    move iconThemeChanged to IconIndex
  *    fix flickering with batched resize (currently listview set to singlepass)
+ *    scheduled reload on screen geometry change (to avoid multiple sequential reloads)
+ *    folder previews in popups
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -234,8 +234,33 @@ Main::Main( QObject *parent ) : QObject( parent ), m_initialized( false ) {
 
     // reload on changed virtual geometry
     this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
+
+    // bind iconTheme variable, to index new themes
+    Variable::instance()->bind( "ui_iconTheme", this, SLOT( iconThemeChanged( QVariant )));
 }
 
+/**
+ * @brief Main::iconThemeChanged
+ * @param value
+ */
+void Main::iconThemeChanged( QVariant value ) {
+    QString themeName;
+
+    themeName = value.toString();
+    if ( themeName.isEmpty())
+        return;
+
+    if ( QString::compare( themeName, IconIndex::instance()->defaultTheme()) || QString::compare( themeName, "system" )) {
+        IconIndex::instance()->build( themeName );
+        IconIndex::instance()->setDefaultTheme( themeName );
+
+        Main::instance()->reload();
+    }
+}
+
+/**
+ * @brief Main::readConfiguration
+ */
 void Main::readConfiguration() {
     XMLTools::instance()->read( XMLTools::Widgets );
     this->widgetList->reset();

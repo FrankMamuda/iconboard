@@ -33,13 +33,6 @@
 #include "main.h"
 #include "ui_widgetlist.h"
 
-#ifdef Q_OS_WIN
-#include "desktopwidget.h"
-#ifndef QT_DEBUG
-void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG, DWORD, DWORD );
-#endif
-#endif
-
 /**
  * @brief WidgetList::WidgetList
  * @param parent
@@ -51,18 +44,6 @@ WidgetList::WidgetList( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::W
     // init ui
     this->ui->setupUi( this );
 
-    // set hook
-#ifdef Q_OS_WIN
-#ifdef QT_DEBUG
-    // no need for unnecessary hooks in testing environment
-    this->hook = nullptr;
-#else
-    this->hook = SetWinEventHook( EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, nullptr,
-                                  handleWinEvent,
-                                  0, 0, 0 );
-#endif
-#endif
-
     // init model
     this->ui->widgetList->setModel( this->model );
 
@@ -72,9 +53,6 @@ WidgetList::WidgetList( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::W
     this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid", 16 ));
     this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility", 16 ));
     this->ui->buttonClose->setIcon( IconCache::instance()->icon( "dialog-close", 16 ));
-
-    // bind iconTheme variable, to index new themes
-    Variable::instance()->bind( "ui_iconTheme", this, SLOT( iconThemeChanged( QVariant )));
 
 #ifndef QT_DEBUG
     // not available in release
@@ -93,13 +71,6 @@ void WidgetList::reset() {
  * @brief WidgetList::~WidgetList
  */
 WidgetList::~WidgetList() {
-#ifdef Q_OS_WIN
-    if ( this->hook != nullptr ) {
-        UnhookWinEvent( this->hook );
-        this->hook = nullptr;
-    }
-#endif
-
     // delete dialogs
     delete this->settingsDialog;
     delete this->aboutDialog;
@@ -216,44 +187,3 @@ void WidgetList::on_buttonClose_clicked() {
     this->hide();
 }
 
-/**
- * @brief WidgetList::iconThemeChanged
- * @param value
- */
-void WidgetList::iconThemeChanged( QVariant value ) {
-    QString themeName;
-
-    themeName = value.toString();
-    if ( themeName.isEmpty())
-        return;
-
-    if ( QString::compare( themeName, IconIndex::instance()->defaultTheme()) || QString::compare( themeName, "system" )) {
-        IconIndex::instance()->build( themeName );
-        IconIndex::instance()->setDefaultTheme( themeName );
-
-        Main::instance()->reload();
-    }
-}
-
-#ifdef Q_OS_WIN
-/**
- * @brief handleWinEvent this basically fixes the wrong z-order after using "Show Desktop" button
- * @param event
- * @param hwnd
- */
-#ifndef QT_DEBUG
-void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG, DWORD, DWORD ) {
-    if ( event == EVENT_SYSTEM_FOREGROUND ) {
-        int y;
-        for ( y = 0; y < FolderManager::instance()->count(); y++ ) {
-            FolderView *widget = FolderManager::instance()->at( y );
-            if ( reinterpret_cast<HWND>( widget->winId()) == hwnd )
-                FolderManager::instance()->desktop->lower();
-        }
-
-        if ( reinterpret_cast<HWND>( FolderManager::instance()->desktop->winId()))
-            FolderManager::instance()->desktop->lower();
-    }
-}
-#endif
-#endif

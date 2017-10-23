@@ -22,6 +22,7 @@
 // includes
 //
 #include "singleton.h"
+#include <QVariant>
 
 //
 // classes
@@ -53,6 +54,7 @@ public slots:
 
 private slots:
     void setInitialized( bool init = true ) { this->m_initialized = init; }
+    void iconThemeChanged( QVariant value );
 
 private:
     Main( QObject *parent = nullptr );

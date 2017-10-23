@@ -26,9 +26,7 @@
 #include "themeeditor.h"
 #include <QMainWindow>
 #include <QMenu>
-#ifdef Q_OS_WIN
-#include <windows.h>
-#endif
+
 
 //
 // classes
@@ -68,7 +66,6 @@ private slots:
     void on_actionShow_triggered();
     void on_actionMap_triggered();
     void on_buttonClose_clicked();
-    void iconThemeChanged( QVariant value );
 
 private:
     Ui::WidgetList *ui;
@@ -77,7 +74,4 @@ private:
     Settings *settingsDialog;
     ThemeEditor *themeDialog;
     About *aboutDialog;
-#ifdef Q_OS_WIN
-    HWINEVENTHOOK hook;
-#endif
 };

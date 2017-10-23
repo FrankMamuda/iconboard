@@ -44,6 +44,8 @@ SOURCES += main.cpp\
     trayicon.cpp \
     filesystemmodel.cpp
 
+win32:SOURCES += desktopwidget.cpp
+
 HEADERS  += \
     folderview.h \
     folderdelegate.h \

@@ -22,6 +22,7 @@
 // includes
 //
 #include "singleton.h"
+#include "folderview.h"
 
 //
 // classes
