@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>IconBoard</Name>
+    <Version>0.9.40</Version>
+    <Title>IconBoard Installer</Title>
+    <InstallerApplicationIcon>../../icon</InstallerApplicationIcon>
+    <InstallerWindowIcon>../../launcher_96</InstallerWindowIcon>
+    <Publisher>Factory #12</Publisher>
+    <StartMenuDir>IconBoard</StartMenuDir>
+    <TargetDir>@ApplicationsDir@/IconBoard</TargetDir>
+    <ControlScript>controlscript.qs</ControlScript>
+    <RunProgram>@TargetDir@/IconBoard</RunProgram>
+    <RunProgramDescription>Start IconBoard</RunProgramDescription>
+</Installer>

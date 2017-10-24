@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>IconBoard base installation</DisplayName>
+    <Description>Base files for IconBoard application.</Description>
+    <Version>0.9.40</Version>
+    <ReleaseDate>2017-10-24</ReleaseDate>
+    <Licenses>
+        <License name="GNU General Public License" file="license.txt" />
+    </Licenses>
+    <Default>script</Default>
+    <Script>installscript.qs</Script>
+</Package>

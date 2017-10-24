@@ -8,3 +8,6 @@ mapperwidget.cpp.O10960
 *.bak
 IconBoard.pro.user.9d455de
 IconBoard.pro.user.3a8ba0c
+installer/make*
+installer/iconboard*
+installer/packages/org.factory12.iconboard/data/*
