@@ -149,11 +149,6 @@ QPixmap IconCache::extractPixmap( const QString &fileName ) {
     int y, k;
     bool ok = false;
 
-    // initialize COM (needed for SHGetFileInfo in a threaded environment)
-    const HRESULT hrCoInit = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED );
-    if ( FAILED( hrCoInit ))
-        return pixmap;
-
     memset( &fileInfo, 0, sizeof( SHFILEINFO ));
 
     if ( !info.isDir())
@@ -209,9 +204,6 @@ QPixmap IconCache::extractPixmap( const QString &fileName ) {
         }
     }
 
-    // uninitialize COM
-    CoUninitialize();
-
     return pixmap;
 }
 #endif
@@ -259,6 +251,46 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize ) {
     return QIcon( result );
 }
 
+
+/**
+ * @brief ProxyModel::getDriveIconName
+ * @param info
+ * @return
+ */
+#ifdef Q_OS_WIN
+QString IconCache::getDriveIconName( const QString &path ) const {
+    UINT type;
+
+    type = GetDriveType(( wchar_t * )path.utf16());
+    switch ( type ) {
+    case DRIVE_REMOVABLE:
+        return "drive-removable-media";
+        break;
+
+    case DRIVE_REMOTE:
+        return "network-workgroup";
+        break;
+
+    case DRIVE_CDROM:
+        return "media-optical";
+        break;
+
+    case DRIVE_RAMDISK:
+        return "media-flash";
+        break;
+
+    case DRIVE_FIXED:
+        return "drive-harddisk";
+        break;
+
+    case DRIVE_UNKNOWN:
+    case DRIVE_NO_ROOT_DIR:
+    default:
+        return "drive-removable-media";
+    }
+}
+#endif
+
 /**
  * @brief IconCache::iconForFilename
  * @return
@@ -273,6 +305,16 @@ QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
 
     // get mimetype by matching content
     iconName = isDir ? "inode-directory" : db.mimeTypeForFile( absolutePath, QMimeDatabase::MatchContent ).iconName();
+
+#ifdef Q_OS_WIN
+    // initialize COM (needed for SHGetFileInfo in a threaded environment)
+    const HRESULT hrCoInit = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED );
+    if ( FAILED( hrCoInit ))
+        return icon;
+
+    if ( info.isRoot() || target.isRoot())
+        iconName = IconCache::instance()->getDriveIconName( absolutePath );
+#endif
 
     // generate thumbnail for images
     if ( !isDir ) {
@@ -309,6 +351,9 @@ QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
     // add symlink label if required
     if ( info.isSymLink() || fileName.endsWith( ".appref-ms" ))
         icon = this->addSymlinkLabel( icon, iconSize );
+
+    // uninitialize COM
+    CoUninitialize();
 #endif
 
     // return the icon

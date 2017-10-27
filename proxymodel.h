@@ -21,6 +21,7 @@
 //
 // includes
 //
+#include <QFileInfo>
 #include <QFutureWatcher>
 #include <QIcon>
 #include <QIdentityProxyModel>

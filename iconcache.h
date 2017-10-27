@@ -40,6 +40,7 @@ public:
 #ifdef Q_OS_WIN
     QPixmap extractPixmap( const QString &fileName );
     void preLoadWindowsIcons();
+    QString getDriveIconName( const QString &path ) const;
 #endif
 
 private slots:

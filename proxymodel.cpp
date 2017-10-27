@@ -171,6 +171,7 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
         } );
     } else if ( role == Qt::DisplayRole ) {
 #ifdef Q_OS_WIN
+        // TODO: make this a static function (duplicate in IconCache)
         QRegularExpression re( "^([A-Z]):\\/$" );
         QRegularExpressionMatch match;
 

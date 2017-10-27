@@ -72,6 +72,8 @@
  *    folder previews in popups
  *    fix no icons by default on linux (add some build in basic file and folder)
  *    alias (cutsom naming) of items
+ *    basic support for .desktop files (use for drag and drop instead of lnk)
+ *    semi-merger with filemanager project (enable build configuration to build either or)
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
