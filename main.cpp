@@ -44,10 +44,7 @@
  *    cleanup
  *    GitHub page
  *    release beta
- *    linux segfault on icon theme change
- *      might be Qt version related, not sure
- *      possible solution would be requiring a restart, though this needs a new
- *        flag in Variable class
+ *    linux segfault on icon theme change (older Qt versions)
  *
  *  [NOT URGENT]
  *  [to be implemented in future versions]
@@ -58,7 +55,6 @@
  *    multi column list
  *    custom per-item icons
  *    disk-caching of extracted icons and thumbnails
- *    drive names (from shortcuts)
  *    thumbnail loading as an option
  *    folderView spacing, other props
  *    macOS issues
@@ -74,6 +70,8 @@
  *    fix flickering with batched resize (currently listview set to singlepass)
  *    scheduled reload on screen geometry change (to avoid multiple sequential reloads)
  *    folder previews in popups
+ *    fix no icons by default on linux (add some build in basic file and folder)
+ *    alias (cutsom naming) of items
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
