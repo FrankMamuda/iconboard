@@ -22,6 +22,7 @@
 // includes
 //
 #include "singleton.h"
+#include <QTimer>
 #include <QVariant>
 
 //
@@ -42,6 +43,7 @@ public:
     static Main *instance() { return Singleton<Main>::instance( Main::createInstance ); }
     bool hasInitialized() const { return this->m_initialized; }
     static void messageFilter( QtMsgType type, const QMessageLogContext &, const QString &msg );
+    bool reloadScheduled() const { return this->m_reloadScheduled; }
 
 protected:
     void timerEvent( QTimerEvent * ) { this->writeConfiguration(); }
@@ -50,6 +52,7 @@ public slots:
     void readConfiguration();
     void writeConfiguration();
     void reload();
+    void scheduleReload();
     void shutdown();
 
 private slots:
@@ -62,4 +65,6 @@ private:
     bool m_initialized;
     WidgetList *widgetList;
     TrayIcon *tray;
+    bool m_reloadScheduled;
+    QTimer timer;
 };

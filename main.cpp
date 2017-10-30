@@ -40,14 +40,14 @@
  *  [URGENT]
  *  [checklist for first public release]
  *    fix random segfaults on open
+ *      very hard to reproduce, very rare bug (might be Qt related)
  *    i18n
  *    cleanup
  *    GitHub page
  *    release beta
- *    linux segfault on icon theme change (older Qt versions)
  *
  *  [NOT URGENT]
- *  [to be implemented in future versions]
+ *  [to be implemented/fixed in future versions]
  *    root folder ('My Computer') folder support
  *    custom alignment
  *    free placement, free scaling
@@ -68,12 +68,13 @@
  *    minor issues with z-order (windows)
  *    handle shortcut/folder drops on tray icon or widget list to add widget
  *    fix flickering with batched resize (currently listview set to singlepass)
- *    scheduled reload on screen geometry change (to avoid multiple sequential reloads)
  *    folder previews in popups
  *    fix no icons by default on linux (add some build in basic file and folder)
- *    alias (cutsom naming) of items
+ *    alias (custom naming) of items
  *    basic support for .desktop files (use for drag and drop instead of lnk)
  *    semi-merger with filemanager project (enable build configuration to build either or)
+ *    linux segfault on icon theme change (older Qt versions)
+ *    horizontal centering in QListView
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -217,10 +218,10 @@ int main( int argc, char *argv[] ) {
 /**
  * @brief Main::readConfiguration
  */
-Main::Main( QObject *parent ) : QObject( parent ), m_initialized( false ) {
+Main::Main( QObject *parent ) : QObject( parent ), m_initialized( false ), m_reloadScheduled( false ) {
     // announce
 #ifdef QT_DEBUG
-    qInfo() << "initializing";
+    qInfo() << this->tr( "initializing" );
 #endif
 
     // save settings every 60 seconds
@@ -233,7 +234,11 @@ Main::Main( QObject *parent ) : QObject( parent ), m_initialized( false ) {
     this->tray = new TrayIcon( this->widgetList );
 
     // reload on changed virtual geometry
-    this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( reload()));
+    this->connect( qApp->primaryScreen(), SIGNAL( virtualGeometryChanged( QRect )), this, SLOT( scheduleReload()));
+    this->connect( qApp, SIGNAL( screenAdded( QScreen* )), this, SLOT( scheduleReload()));
+    this->connect( qApp, SIGNAL( screenRemoved( QScreen* )), this, SLOT( scheduleReload()));
+    this->connect( &this->timer, SIGNAL( timeout()), this, SLOT( reload()));
+    this->timer.setInterval( 1000 );
 
     // bind iconTheme variable, to index new themes
     Variable::instance()->bind( "ui_iconTheme", this, SLOT( iconThemeChanged( QVariant )));
@@ -277,6 +282,9 @@ void Main::writeConfiguration() {
     if ( !this->hasInitialized())
         return;
 
+    if ( this->reloadScheduled())
+        return;
+
     XMLTools::instance()->write( XMLTools::Widgets );
     XMLTools::instance()->write( XMLTools::Variables );
     XMLTools::instance()->write( XMLTools::Themes );
@@ -286,6 +294,10 @@ void Main::writeConfiguration() {
  * @brief Main::reload
  */
 void Main::reload() {
+    // stop reload timer
+    this->m_reloadScheduled = false;
+    this->timer.stop();
+
     // announce
     qInfo() << "reloading configuration";
 
@@ -300,6 +312,15 @@ void Main::reload() {
 
     // reload widget list
     this->readConfiguration();
+}
+
+/**
+ * @brief Main::scheduleReload
+ */
+void Main::scheduleReload() {
+    this->m_reloadScheduled = true;
+    this->timer.stop();
+    this->timer.start();
 }
 
 /**

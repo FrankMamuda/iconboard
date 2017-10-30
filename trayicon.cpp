@@ -45,7 +45,7 @@ TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
     // get parent widget list
     parentWidget = qobject_cast<WidgetList *>( this->parent());
     if ( parentWidget == nullptr ) {
-        qCritical() << "invalid parent widget";
+        qCritical() << this->tr( "invalid parent widget" );
         return;
     }
 
@@ -54,17 +54,17 @@ TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
 
     // show settings dialog action
     actionSettings = this->contextMenu()->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" ));
-    this->connect( actionSettings, SIGNAL( triggered( bool)), parentWidget, SLOT( showSettingsDialog()));
+    this->connect( actionSettings, SIGNAL( triggered( bool )), parentWidget, SLOT( showSettingsDialog()));
 
     // show theme editor dialog action
     actionThemes = this->contextMenu()->addAction( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme editor" ));
-    this->connect( actionThemes, SIGNAL( triggered( bool)), parentWidget, SLOT( showThemeDialog()));
+    this->connect( actionThemes, SIGNAL( triggered( bool )), parentWidget, SLOT( showThemeDialog()));
 
     this->contextMenu()->addSeparator();
 
     // show about dialog action
     actionAbout = this->contextMenu()->addAction( IconCache::instance()->icon( "help-about", 16 ), this->tr( "About" ));
-    this->connect( actionAbout, SIGNAL( triggered( bool)), parentWidget, SLOT( showAboutDialog()));
+    this->connect( actionAbout, SIGNAL( triggered( bool )), parentWidget, SLOT( showAboutDialog()));
 
     // exit action
     this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, this, [ this ]() { Main::instance()->shutdown(); });
@@ -76,9 +76,8 @@ TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
     this->setIcon( QIcon( ":/icons/launcher_96" ));
 #endif
 
-    // connect tray icon
+    // connect and show tray icon
     this->connect( this, SIGNAL( activated( QSystemTrayIcon::ActivationReason )), this, SLOT( iconActivated( QSystemTrayIcon::ActivationReason )));
-
     this->show();
 }
 
@@ -104,7 +103,7 @@ void TrayIcon::iconActivated( QSystemTrayIcon::ActivationReason reason ) {
     // get parent widget list
     parentWidget = qobject_cast<WidgetList *>( this->parent());
     if ( parentWidget == nullptr ) {
-        qCritical() << "invalid parent widget";
+        qCritical() << this->tr( "invalid parent widget" );
         return;
     }
 

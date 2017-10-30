@@ -32,7 +32,7 @@
 IconIndex::IconIndex( QObject *parent ) : QObject( parent ) {
     // announce
 #ifdef QT_DEBUG
-    qInfo() << "initializing";
+    qInfo() << this->tr( "initializing" );
 #endif
 
 #ifdef Q_OS_WIN

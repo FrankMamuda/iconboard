@@ -279,10 +279,14 @@ void FolderView::displayContextMenu( const QPoint &point ) {
     } );
 
 #ifdef QT_DEBUG
-    // add separator
     menu.addSeparator();
     this->connect( menu.addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, [this]() {
         Main::instance()->shutdown();
+    } );
+    menu.addSeparator();
+    this->connect( menu.addAction( this->tr( "Schedule reload batch" )), &QAction::triggered, [this]() {
+        for ( int y = 0; y < 10; y++ )
+            Main::instance()->scheduleReload();
     } );
 #endif
 

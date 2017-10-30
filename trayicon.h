@@ -23,6 +23,9 @@
 //
 #include <QSystemTrayIcon>
 
+/**
+ * @brief The TrayIcon class
+ */
 class TrayIcon : public QSystemTrayIcon {
     Q_OBJECT
 

@@ -37,7 +37,7 @@ FolderManager::FolderManager( QObject *parent ) : QObject( parent )
 {
     // announce
 #ifdef QT_DEBUG
-    qInfo() << "initializing";
+    qInfo() << this->tr( "initializing" );
 #endif
 }
 

@@ -37,7 +37,7 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
 
     // announce
 #ifdef QT_DEBUG
-    qInfo() << "initializing";
+    qInfo() << this->tr( "initializing" );
 #endif
 
     // set default path
