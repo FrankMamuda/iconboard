@@ -41,5 +41,4 @@ public:
     ~FileSystemModel() {}
     Qt::DropActions supportedDropActions() const;
     Qt::ItemFlags flags( const QModelIndex &index ) const;
-
 };

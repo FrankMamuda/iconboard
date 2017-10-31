@@ -56,7 +56,6 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
         // additional failsafe
         if ( !directory.exists()) {
             qFatal( this->tr( "unable to create icon cache dir" ).toUtf8().constData());
-            return;
         }
     }
 
@@ -64,7 +63,6 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
     this->indexFile.setFilename( this->path() + "/" + IndexCacheNamespace::IndexFilename );
     if ( !this->indexFile.open()) {
         qFatal( this->tr( "index file non-writable" ).toUtf8().constData());
-        return;
     } else {
         if ( !this->indexFile.size())
             this->indexFile << IndexCacheNamespace::Version;
@@ -73,7 +71,6 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
     // read data
     if ( !this->read()) {
         qFatal( this->tr( "failed to read cache" ).toUtf8().constData());
-        return;
     }
 
     this->setValid( true );

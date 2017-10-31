@@ -72,7 +72,7 @@ void XMLTools::write( Modes mode ) {
 
     case NoMode:
     default:
-        qCritical() << "error - invalid mode";
+        qCritical() << this->tr( "error - invalid mode" );
         return;
     }
 
@@ -190,7 +190,7 @@ void XMLTools::write( Modes mode ) {
 
     case NoMode:
     default:
-        qCritical() << "error - invalid mode";
+        qCritical() << this->tr( "error - invalid mode" );
         return;
     }
 
@@ -267,7 +267,7 @@ void XMLTools::read( Modes mode ) {
 
     case NoMode:
     default:
-        qCritical() << "error - invalid mode";
+        qCritical() << this->tr( "error - invalid mode" );
         return;
     }
 

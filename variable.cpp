@@ -35,7 +35,7 @@ void Variable::bind( const QString &key, const QObject *receiver, const char *me
         return;
 
     // check if method is a slot
-    code = ((( int )( *method ) - '0' ) & 0x3 );
+    code = (( static_cast<int>( *method ) - '0' ) & 0x3 );
     if ( code != 1 )
         return;
 

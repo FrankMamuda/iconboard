@@ -32,7 +32,7 @@
 #include <commctrl.h>
 #include <commoncontrols.h>
 #include <shellapi.h>
-#include <Winuser.h>
+#include <winuser.h>
 #endif
 
 /**
@@ -123,7 +123,7 @@ QIcon IconCache::thumbnail( const QString &path, int scale ) {
         pixmap = pixmap.copy( rect );
 
         if ( pixmap.width() >= scale * 2.0f )
-            pixmap = pixmap.scaled( scale * 2.0f, scale * 2.0f, Qt::IgnoreAspectRatio, Qt::FastTransformation );
+            pixmap = pixmap.scaled( static_cast<int>( scale * 2.0f ), static_cast<int>( scale * 2.0f ), Qt::IgnoreAspectRatio, Qt::FastTransformation );
 
         pixmap = pixmap.scaled( scale, scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
     }
@@ -185,7 +185,7 @@ QPixmap IconCache::extractPixmap( const QString &fileName ) {
                 image = pixmap.toImage();
                 for ( y = 64; y < pixmap.width(); y++ ) {
                     for ( k = 64; k < pixmap.height(); k++ ) {
-                        if ( image.pixelColor( y, k ).alphaF() > 0.0f )
+                        if ( image.pixelColor( y, k ).alphaF() > 0.0 )
                             ok = true;
                     }
                 }
@@ -218,7 +218,7 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize ) {
     QPixmap base, overlay;
     QIcon overlayIcon( ":/icons/link" );
     const float factor = 4.0f;
-    float overlaySize = originalSize / factor;
+    int overlaySize = static_cast<int>( originalSize / factor );
     QSize actualSize;
 
     // abort if disabled
@@ -226,10 +226,10 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize ) {
         return icon;
 
     // limit shortcut arrow size
-    if ( overlaySize > 24.0f )
-        overlaySize = 24.0f;
-    else if ( overlaySize < 8.0f )
-        overlaySize = 8.0f;
+    if ( overlaySize > 24 )
+        overlaySize = 24;
+    else if ( overlaySize < 8 )
+        overlaySize = 8;
 
     // get base pixmap (the icon)
     base = icon.pixmap( originalSize, originalSize );
@@ -261,27 +261,22 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize ) {
 QString IconCache::getDriveIconName( const QString &path ) const {
     UINT type;
 
-    type = GetDriveType(( wchar_t * )path.utf16());
+    type = GetDriveType( reinterpret_cast<const wchar_t *>( path.utf16()));
     switch ( type ) {
     case DRIVE_REMOVABLE:
         return "drive-removable-media";
-        break;
 
     case DRIVE_REMOTE:
         return "network-workgroup";
-        break;
 
     case DRIVE_CDROM:
         return "media-optical";
-        break;
 
     case DRIVE_RAMDISK:
         return "media-flash";
-        break;
 
     case DRIVE_FIXED:
         return "drive-harddisk";
-        break;
 
     case DRIVE_UNKNOWN:
     case DRIVE_NO_ROOT_DIR:
