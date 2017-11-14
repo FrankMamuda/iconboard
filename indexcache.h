@@ -68,15 +68,13 @@ namespace IndexCacheNamespace {
  */
 class IndexCache : public QObject {
     Q_OBJECT
+    Q_PROPERTY( QString path READ path WRITE setPath )
 
 public:
     static IndexCache *instance() { return Singleton<IndexCache>::instance( IndexCache::createInstance ); }
     ~IndexCache() {}
     QIcon icon( const QString &iconName, int scale, const QString &theme );
-
-    // should be thread safe
-    QString path() const { return m_path; }
-
+    QString path() const { return this->m_path; }
     int badEntries() const { return this->m_badEntries; }
 
 public slots:

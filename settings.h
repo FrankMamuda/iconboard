@@ -50,6 +50,8 @@ private slots:
     void externalValueChanged( const QString &key ) { this->setValue( key, false ); }
     void on_closeButton_clicked();
     void runOnStartupValueChanged( QVariant value );
+    void lockToResolutionValueChanged( QVariant value );
+    void setResolutionToolTip();
 
 private:
     Ui::Settings *ui;

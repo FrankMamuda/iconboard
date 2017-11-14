@@ -75,6 +75,7 @@
  *    semi-merger with filemanager project (enable build configuration to build either or)
  *    linux segfault on icon theme change (older Qt versions)
  *    horizontal centering in QListView
+ *    lock to resolution
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -137,6 +138,28 @@ void Main::messageFilter( QtMsgType type, const QMessageLogContext &, const QStr
 }
 
 /**
+ * @brief Main::currentResolution
+ * @return
+ */
+QSize Main::currentResolution() {
+    return qApp->primaryScreen()->size();
+}
+
+/**
+ * @brief Main::targetResolution
+ * @return
+ */
+QSize Main::targetResolution() {
+    QSize targetResolution( Variable::instance()->value<QSize>( "app_targetResolution" ));
+
+    if ( targetResolution.isEmpty() || !targetResolution.isValid())
+        return Main::instance()->currentResolution();
+
+
+    return targetResolution;
+}
+
+/**
  * @brief qMain
  * @param argc
  * @param argv
@@ -184,6 +207,8 @@ int main( int argc, char *argv[] ) {
     Variable::instance()->add( "ui_displaySymlinkIcon", true );
     Variable::instance()->add( "app_runOnStartup", false );
     Variable::instance()->add( "ui_iconTheme", "system" );
+    Variable::instance()->add( "app_lockToResolution", false );
+    Variable::instance()->add( "app_targetResolution", "" );
     XMLTools::instance()->read( XMLTools::Variables );
     XMLTools::instance()->read( XMLTools::Themes );
 

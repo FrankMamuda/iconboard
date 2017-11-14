@@ -24,10 +24,12 @@
 #include <QSpinBox>
 #include <QComboBox>
 #include <QSettings>
+#include <QScreen>
 #include "settings.h"
 #include "ui_settings.h"
 #include "iconindex.h"
 #include "iconcache.h"
+#include "main.h"
 
 /**
  * @brief Settings::Settings
@@ -57,6 +59,9 @@ Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings 
     // first bind vars and set initial values
     this->bind( "ui_displaySymlinkIcon", this->ui->displaySymlinkIcon );
     this->bind( "ui_iconTheme", this->ui->iconTheme );
+    this->bind( "app_lockToResolution", this->ui->lockToResolution );
+    Variable::instance()->bind( "app_lockToResolution", this, SLOT( lockToResolutionValueChanged( QVariant )));
+    this->setResolutionToolTip();
 
 #ifdef Q_OS_WIN
     this->bind( "app_runOnStartup", this->ui->runOnStartup );
@@ -217,3 +222,21 @@ void Settings::runOnStartupValueChanged( QVariant value ) {
 #endif
 }
 
+/**
+ * @brief Settings::lockToResolutionValueChanged
+ * @param value
+ */
+void Settings::lockToResolutionValueChanged( QVariant value ) {
+    Variable::instance()->setValue<bool>( "app_lockToResolution", value.toBool());
+    Variable::instance()->setValue<QSize>( "app_targetResolution", Main::instance()->currentResolution());
+    this->setResolutionToolTip();
+}
+
+/**
+ * @brief Settings::setResolutionToolTip
+ */
+void Settings::setResolutionToolTip() {
+    bool enable = Variable::instance()->isEnabled( "app_lockToResolution" );
+    QSize resolution( Variable::instance()->value<QSize>( "app_targetResolution" ));
+    this->ui->lockToResolution->setToolTip( enable ? this->tr( "Currently locked to %1x%2" ).arg( resolution.width()).arg( resolution.height()) : this->tr( "Resolution lock not set\n" ));
+}

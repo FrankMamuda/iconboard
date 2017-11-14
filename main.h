@@ -44,6 +44,8 @@ public:
     bool hasInitialized() const { return this->m_initialized; }
     static void messageFilter( QtMsgType type, const QMessageLogContext &, const QString &msg );
     bool reloadScheduled() const { return this->m_reloadScheduled; }
+    static QSize currentResolution();
+    static QSize targetResolution();
 
 protected:
     void timerEvent( QTimerEvent * ) { this->writeConfiguration(); }
