@@ -221,17 +221,17 @@ void XMLTools::write( Modes mode ) {
         //qDebug() << "XMLTools::writeConfiguration: data identical, aboring save" << mode;
     } else {
         if ( Variable::instance()->isEnabled( "app_lockToResolution" )) {
-            if ( Main::instance()->targetResolution() != Main::instance()->currentResolution()) {
-                qWarning() << this->tr( "resolution mismatch, aboring save" );
+            if ( Main::instance()->targetResolution() != Main::instance()->currentResolution() && mode == Widgets ) {
+                qWarning() << this->tr( "resolution mismatch, aborting save" );
+            } else {
+                // write out as binary (not QIODevice::Text) to avoid CR line endings
+                if ( !xmlFile.open( QFile::WriteOnly | QFile::Truncate )) {
+                    qCritical() << "could not open configuration file" << path;
+                    return;
+                }
+                xmlFile.write( newData.toUtf8().replace( "\r", "" ));
             }
         }
-
-        // write out as binary (not QIODevice::Text) to avoid CR line endings
-        if ( !xmlFile.open( QFile::WriteOnly | QFile::Truncate )) {
-            qCritical() << "could not open configuration file" << path;
-            return;
-        }
-        xmlFile.write( newData.toUtf8().replace( "\r", "" ));
     }
 
     // close file
