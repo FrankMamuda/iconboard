@@ -141,154 +141,167 @@ void FolderView::displayContextMenu( const QPoint &point ) {
     QMenu menu;
     QAction *actionReadOnly;
 
-    // change directory lambda
-    this->connect( menu.addAction( IconCache::instance()->icon( "inode-directory", 16 ), this->tr( "Change directory" )), &QAction::triggered, [this]() {
-        QDir dir;
+    // lock
+    if ( Variable::instance()->isEnabled( "app_lock" )) {
+        this->connect( menu.addAction( IconCache::instance()->icon( "object-unlocked", 16 ), this->tr( "Unlock widgets" )), &QAction::triggered, [this]() {
+            Variable::instance()->disable( "app_lock" );
+        } );
+    } else {
+        this->connect( menu.addAction( IconCache::instance()->icon( "object-locked", 16 ), this->tr( "Lock widgets" )), &QAction::triggered, [this]() {
+            Variable::instance()->enable( "app_lock" );
+        } );
 
-        dir.setPath( QFileDialog::getExistingDirectory( this->parentWidget(), this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
+        menu.addSeparator();
 
-        if ( dir.exists()) {
-            this->proxyModel->waitForThreads();
-            this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( dir.absolutePath())));
-            this->ui->title->setText( dir.dirName());
-            this->sort();
-        }
-    } );
+        // change directory lambda
+        this->connect( menu.addAction( IconCache::instance()->icon( "inode-directory", 16 ), this->tr( "Change directory" )), &QAction::triggered, [this]() {
+            QDir dir;
 
-    // rename view lambda
-    this->connect( menu.addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename view" )), &QAction::triggered, [this]() {
-        QString title;
-        bool ok;
+            dir.setPath( QFileDialog::getExistingDirectory( this->parentWidget(), this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
 
-        title = QInputDialog::getText( this->parentWidget(), this->tr( "Rename view" ), this->tr( "Title:" ), QLineEdit::Normal, this->model->rootDirectory().dirName(), &ok );
-        if ( ok && !title.isEmpty())
-            this->setCustomTitle( title );
-    } );
+            if ( dir.exists()) {
+                this->proxyModel->waitForThreads();
+                this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( dir.absolutePath())));
+                this->ui->title->setText( dir.dirName());
+                this->sort();
+            }
+        } );
 
-    // close view
-    menu.addAction( IconCache::instance()->icon( "view-close", 16 ), this->tr( "Hide" ), this, SLOT( hide()));
+        // rename view lambda
+        this->connect( menu.addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename view" )), &QAction::triggered, [this]() {
+            QString title;
+            bool ok;
 
-    // add separator
-    menu.addSeparator();
+            title = QInputDialog::getText( this->parentWidget(), this->tr( "Rename view" ), this->tr( "Title:" ), QLineEdit::Normal, this->model->rootDirectory().dirName(), &ok );
+            if ( ok && !title.isEmpty())
+                this->setCustomTitle( title );
+        } );
 
-    //
-    // begin APPEARANCE menu
-    //
-    {
-        QMenu *appearanceMenu;
-        QAction *actionListMode;
+        // close view
+        menu.addAction( IconCache::instance()->icon( "view-close", 16 ), this->tr( "Hide" ), this, SLOT( hide()));
 
-        // create appearance menu
-        appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Appearance" ));
-
-        // icon size
-        appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
+        // add separator
+        menu.addSeparator();
 
         //
-        // begin THEME menu
+        // begin APPEARANCE menu
         //
         {
-            QMenu *themeMenu;
+            QMenu *appearanceMenu;
+            QAction *actionListMode;
 
-            // add theme menu
-            themeMenu = appearanceMenu->addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme" ));
+            // create appearance menu
+            appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Appearance" ));
 
-            // custom styleSheet lambda
-            this->connect( themeMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" )), &QAction::triggered, [this]() {
-                ThemeEditor dialog( this, ThemeEditor::Custom, this->currentStyleSheet());
-                int result;
+            // icon size
+            appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
 
-                result = dialog.exec();
-                if ( result == QDialog::Accepted )
-                    this->setCustomStyleSheet( dialog.currentStyleSheet());
+            //
+            // begin THEME menu
+            //
+            {
+                QMenu *themeMenu;
+
+                // add theme menu
+                themeMenu = appearanceMenu->addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme" ));
+
+                // custom styleSheet lambda
+                this->connect( themeMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" )), &QAction::triggered, [this]() {
+                    ThemeEditor dialog( this, ThemeEditor::Custom, this->currentStyleSheet());
+                    int result;
+
+                    result = dialog.exec();
+                    if ( result == QDialog::Accepted )
+                        this->setCustomStyleSheet( dialog.currentStyleSheet());
+                } );
+
+                // add builtin/predefined theme chooser
+                foreach ( const Theme *theme, Themes::instance()->list ) {
+                    // connect via lambda
+                    this->connect( themeMenu->addAction( theme->name()), &QAction::triggered, [this, theme]() {
+                        this->setCustomStyleSheet( theme->styleSheet(), true );
+                    } );
+                }
+            }
+
+            // end THEME menu
+
+            // view mode lambda
+            actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16 ), this->tr( "List mode" ));
+            actionListMode->setCheckable( true );
+            actionListMode->setChecked( this->viewMode() == QListView::ListMode );
+            this->connect( actionListMode, &QAction::triggered, [this]() {
+                this->setViewMode( this->viewMode() == QListView::IconMode ? QListView::ListMode : QListView::IconMode );
+            } );
+        }
+        // end APPEARANCE menu
+
+        // add separator
+        menu.addSeparator();
+
+        //
+        // begin SORT menu
+        //
+        {
+            QMenu *sortMenu;
+            QAction *actionSortOrder, *actionDirsFirst, *actionCaseSensitive;
+
+            // sort menu
+            sortMenu = menu.addMenu( IconCache::instance()->icon( "format-list-ordered", 16 ), this->tr( "Sort" ));
+
+            // sort order lambda
+            actionSortOrder = sortMenu->addAction( IconCache::instance()->icon( "view-sort-ascending", 16 ), this->tr( "Ascending order" ));
+            actionSortOrder->setCheckable( true );
+            actionSortOrder->setChecked( this->sortOrder() == Qt::AscendingOrder );
+            this->connect( actionSortOrder, &QAction::triggered, [this]() {
+                this->proxyModel->waitForThreads();
+                this->setSortOrder( this->sortOrder() == Qt::AscendingOrder ? Qt::DescendingOrder : Qt::AscendingOrder );
+                this->sort();
             } );
 
-            // add builtin/predefined theme chooser
-            foreach ( const Theme *theme, Themes::instance()->list ) {
-                // connect via lambda
-                this->connect( themeMenu->addAction( theme->name()), &QAction::triggered, [this, theme]() {
-                    this->setCustomStyleSheet( theme->styleSheet(), true );
-                } );
-            }
+            // directories first sort
+            actionDirsFirst = sortMenu->addAction( this->tr( "Directories first" ));
+            actionDirsFirst->setCheckable( true );
+            actionDirsFirst->setChecked( this->directoriesFirst());
+            this->connect( actionDirsFirst, &QAction::triggered, [this]() {
+                this->proxyModel->waitForThreads();
+                this->setDirectoriesFirst( !this->directoriesFirst());
+                this->sort();
+            } );
+
+            // case sensitive sort
+            actionCaseSensitive = sortMenu->addAction( this->tr( "Case sensitive" ));
+            actionCaseSensitive->setCheckable( true );
+            this->connect( actionCaseSensitive, &QAction::triggered, [this]() {
+                this->proxyModel->waitForThreads();
+                this->setCaseSensitive( !this->isCaseSensitive());
+                this->sort();
+            } );
         }
 
-        // end THEME menu
+        // add separator
+        menu.addSeparator();
 
-        // view mode lambda
-        actionListMode = appearanceMenu->addAction( IconCache::instance()->icon( "view-list-details", 16 ), this->tr( "List mode" ));
-        actionListMode->setCheckable( true );
-        actionListMode->setChecked( this->viewMode() == QListView::ListMode );
-        this->connect( actionListMode, &QAction::triggered, [this]() {
-            this->setViewMode( this->viewMode() == QListView::IconMode ? QListView::ListMode : QListView::IconMode );
+        // read only lambda
+        actionReadOnly = menu.addAction( IconCache::instance()->icon( "folder-locked", 16 ), this->tr( "Read only" ));
+        actionReadOnly->setCheckable( true );
+        actionReadOnly->setChecked( this->isReadOnly());
+        this->connect( actionReadOnly, &QAction::triggered, [this]() {
+            this->setReadOnly( !this->isReadOnly());
         } );
-    }
-    // end APPEARANCE menu
-
-    // add separator
-    menu.addSeparator();
-
-    //
-    // begin SORT menu
-    //
-    {
-        QMenu *sortMenu;
-        QAction *actionSortOrder, *actionDirsFirst, *actionCaseSensitive;
-
-        // sort menu
-        sortMenu = menu.addMenu( IconCache::instance()->icon( "format-list-ordered", 16 ), this->tr( "Sort" ));
-
-        // sort order lambda
-        actionSortOrder = sortMenu->addAction( IconCache::instance()->icon( "view-sort-ascending", 16 ), this->tr( "Ascending order" ));
-        actionSortOrder->setCheckable( true );
-        actionSortOrder->setChecked( this->sortOrder() == Qt::AscendingOrder );
-        this->connect( actionSortOrder, &QAction::triggered, [this]() {
-            this->proxyModel->waitForThreads();
-            this->setSortOrder( this->sortOrder() == Qt::AscendingOrder ? Qt::DescendingOrder : Qt::AscendingOrder );
-            this->sort();
-        } );
-
-        // directories first sort
-        actionDirsFirst = sortMenu->addAction( this->tr( "Directories first" ));
-        actionDirsFirst->setCheckable( true );
-        actionDirsFirst->setChecked( this->directoriesFirst());
-        this->connect( actionDirsFirst, &QAction::triggered, [this]() {
-            this->proxyModel->waitForThreads();
-            this->setDirectoriesFirst( !this->directoriesFirst());
-            this->sort();
-        } );
-
-        // case sensitive sort
-        actionCaseSensitive = sortMenu->addAction( this->tr( "Case sensitive" ));
-        actionCaseSensitive->setCheckable( true );
-        this->connect( actionCaseSensitive, &QAction::triggered, [this]() {
-            this->proxyModel->waitForThreads();
-            this->setCaseSensitive( !this->isCaseSensitive());
-            this->sort();
-        } );
-    }
-
-    // add separator
-    menu.addSeparator();
-
-    // read only lambda
-    actionReadOnly = menu.addAction( IconCache::instance()->icon( "folder-locked", 16 ), this->tr( "Read only" ));
-    actionReadOnly->setCheckable( true );
-    actionReadOnly->setChecked( this->isReadOnly());
-    this->connect( actionReadOnly, &QAction::triggered, [this]() {
-        this->setReadOnly( !this->isReadOnly());
-    } );
 
 #ifdef QT_DEBUG
-    menu.addSeparator();
-    this->connect( menu.addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, [this]() {
-        Main::instance()->shutdown();
-    } );
-    menu.addSeparator();
-    this->connect( menu.addAction( this->tr( "Schedule reload batch" )), &QAction::triggered, [this]() {
-        for ( int y = 0; y < 10; y++ )
-            Main::instance()->scheduleReload();
-    } );
+        menu.addSeparator();
+        this->connect( menu.addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, [this]() {
+            Main::instance()->shutdown();
+        } );
+        menu.addSeparator();
+        this->connect( menu.addAction( this->tr( "Schedule reload batch" )), &QAction::triggered, [this]() {
+            for ( int y = 0; y < 10; y++ )
+                Main::instance()->scheduleReload();
+        } );
 #endif
+    }
 
     // show menu
     menu.exec( this->mapToGlobal( point ));
@@ -435,13 +448,19 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
         // get mouse event
         mouseEvent = static_cast<QMouseEvent*>( event );
 
-        // test mouse origin if needed
-        if ( this->gesture == NoGesture && !this->isMaximized()) {
+        // lock resize and move events
+        if ( Variable::instance()->isEnabled( "app_lock" )) {
+            this->gesture = NoGesture;
             this->currentGrabArea = NoArea;
-            for ( y = 0; y < Frame::MouseGrabAreas; y++ ) {
-                if ( this->grabAreas[y].contains( mouseEvent->pos())) {
-                    this->currentGrabArea = static_cast<Areas>( y );
-                    break;
+        } else {
+            // test mouse origin if needed
+            if ( this->gesture == NoGesture && !this->isMaximized()) {
+                this->currentGrabArea = NoArea;
+                for ( y = 0; y < Frame::MouseGrabAreas; y++ ) {
+                    if ( this->grabAreas[y].contains( mouseEvent->pos())) {
+                        this->currentGrabArea = static_cast<Areas>( y );
+                        break;
+                    }
                 }
             }
         }
@@ -505,7 +524,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
         case QEvent::Enter:
             this->raise();
-        break;
+            break;
 
         case QEvent::Leave:
             this->gesture = NoGesture;

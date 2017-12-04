@@ -51,7 +51,11 @@ public:
     void write( Modes mode );
     void read( Modes mode );
 
+public slots:
+    void saveOnLock( const QVariant &value );
+
 private:
     XMLTools( QObject *parent = nullptr );
     static XMLTools *createInstance() { return new XMLTools(); }
+    bool singleSave;
 };

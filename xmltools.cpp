@@ -38,7 +38,14 @@
  * @brief XMLTools::XMLTools
  * @param parent
  */
-XMLTools::XMLTools( QObject *parent ) : QObject( parent ) {
+XMLTools::XMLTools( QObject *parent ) : QObject( parent ), singleSave( false ) {
+}
+
+/**
+ * @brief XMLTools::saveOnLock
+ */
+void XMLTools::saveOnLock( const QVariant &value ) {
+    value.toBool() ? singleSave = true : singleSave = false;
 }
 
 /**
@@ -218,12 +225,19 @@ void XMLTools::write( Modes mode ) {
 
     // compare data
     if ( !QString::compare( savedData, newData )) {
-        //qDebug() << "XMLTools::writeConfiguration: data identical, aboring save" << mode;
+        //qDebug() << "XMLTools::writeConfiguration: data identical, aborting save" << mode;
     } else {
         if ( Variable::instance()->isEnabled( "app_lockToResolution" )) {
             if ( Main::instance()->targetResolution() != Main::instance()->currentResolution() && mode == Widgets ) {
                 qWarning() << this->tr( "resolution mismatch, aborting save" );
+            } else if ( Variable::instance()->isEnabled( "app_lock" ) && !singleSave ) {
+                qInfo() << this->tr( "widgets are locked, aborting save" );
             } else {
+                if ( singleSave ) {
+                    qInfo() << this->tr( "allowing single save after widget lock" );
+                    singleSave = false;
+                }
+
                 // write out as binary (not QIODevice::Text) to avoid CR line endings
                 if ( !xmlFile.open( QFile::WriteOnly | QFile::Truncate )) {
                     qCritical() << "could not open configuration file" << path;

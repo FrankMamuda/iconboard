@@ -37,7 +37,6 @@
  */
 TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
     WidgetList *parentWidget;
-    QAction *actionSettings, *actionAbout, *actionThemes;
 
     // setup context menu
     this->setContextMenu( new QMenu());
@@ -50,21 +49,29 @@ TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
     }
 
     // show widget list action
-    this->contextMenu()->addAction( IconCache::instance()->icon( "view-list-icons", 16 ), this->tr( "Widget list" ), parentWidget, SLOT( show()));
+    this->actionMap[Widgets] = this->contextMenu()->addAction( IconCache::instance()->icon( "view-list-icons", 16 ), this->tr( "Widget list" ), parentWidget, SLOT( show()));
 
     // show settings dialog action
-    actionSettings = this->contextMenu()->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" ));
-    this->connect( actionSettings, SIGNAL( triggered( bool )), parentWidget, SLOT( showSettingsDialog()));
+    this->actionMap[Settings] = this->contextMenu()->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" ));
+    this->connect( this->actionMap[Settings], SIGNAL( triggered( bool )), parentWidget, SLOT( showSettingsDialog()));
 
     // show theme editor dialog action
-    actionThemes = this->contextMenu()->addAction( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme editor" ));
-    this->connect( actionThemes, SIGNAL( triggered( bool )), parentWidget, SLOT( showThemeDialog()));
+    this->actionMap[Themes] = this->contextMenu()->addAction( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme editor" ));
+    this->connect( this->actionMap[Themes], SIGNAL( triggered( bool )), parentWidget, SLOT( showThemeDialog()));
+
+    this->contextMenu()->addSeparator();
+
+    // lock widgets
+    this->actionMap[Lock] = this->contextMenu()->addAction( "" );
+    this->connect( this->actionMap[Lock], &QAction::triggered, []() {
+        Variable::instance()->setValue<bool>( "app_lock", !Variable::instance()->isEnabled( "app_lock" ));
+    } );
 
     this->contextMenu()->addSeparator();
 
     // show about dialog action
-    actionAbout = this->contextMenu()->addAction( IconCache::instance()->icon( "help-about", 16 ), this->tr( "About" ));
-    this->connect( actionAbout, SIGNAL( triggered( bool )), parentWidget, SLOT( showAboutDialog()));
+    this->actionMap[About] = this->contextMenu()->addAction( IconCache::instance()->icon( "help-about", 16 ), this->tr( "About" ));
+    this->connect( this->actionMap[About], SIGNAL( triggered( bool )), parentWidget, SLOT( showAboutDialog()));
 
     // exit action
     this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, this, [ this ]() { Main::instance()->shutdown(); });
@@ -116,6 +123,18 @@ void TrayIcon::iconActivated( QSystemTrayIcon::ActivationReason reason ) {
         break;
 
     case QSystemTrayIcon::Context:
+        this->actionMap[Widgets]->setEnabled( Variable::instance()->isDisabled( "app_lock" ));
+        this->actionMap[Settings]->setEnabled( Variable::instance()->isDisabled( "app_lock" ));
+        this->actionMap[Themes]->setEnabled( Variable::instance()->isDisabled( "app_lock" ));
+
+        if ( Variable::instance()->isEnabled( "app_lock" )) {
+            this->actionMap[Lock]->setIcon( IconCache::instance()->icon( "object-unlocked", 16 ));
+            this->actionMap[Lock]->setText( this->tr( "Unlock widgets" ));
+        } else {
+            this->actionMap[Lock]->setIcon( IconCache::instance()->icon( "object-locked", 16 ));
+            this->actionMap[Lock]->setText( this->tr( "Lock widgets" ));
+        }
+
         this->contextMenu()->exec( QCursor::pos());
         break;
 

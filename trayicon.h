@@ -21,6 +21,7 @@
 //
 // includes
 //
+#include <QAction>
 #include <QSystemTrayIcon>
 
 /**
@@ -30,9 +31,20 @@ class TrayIcon : public QSystemTrayIcon {
     Q_OBJECT
 
 public:
+    enum Actions {
+        Widgets = 0,
+        Settings,
+        About,
+        Themes,
+        Lock
+    };
+
     explicit TrayIcon( QObject *parent = nullptr );
     ~TrayIcon();
 
 private slots:
-    void iconActivated(QSystemTrayIcon::ActivationReason reason);
+    void iconActivated( QSystemTrayIcon::ActivationReason reason );
+
+private:
+    QMap<Actions, QAction*> actionMap;
 };

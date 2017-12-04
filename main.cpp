@@ -45,6 +45,7 @@
  *    cleanup
  *    GitHub page
  *    release beta
+ *    mouse scroll does not work
  *
  *  [NOT URGENT]
  *  [to be implemented/fixed in future versions]
@@ -55,6 +56,10 @@
  *    multi column list
  *    custom per-item icons
  *    disk-caching of extracted icons and thumbnails
+ *      use plain files (collection of sizes 16-512)
+ *      thumbnail creator creates previews (if source < thumbnail level, skip)
+ *      if iconSize is different from the cached version, upscale/downscale from the closest match
+ *      use modified murmur hash and file size check
  *    thumbnail loading as an option
  *    folderView spacing, other props
  *    macOS issues
@@ -76,6 +81,7 @@
  *    linux segfault on icon theme change (older Qt versions)
  *    horizontal centering in QListView
  *    lock to resolution
+ *    allow QIcon::fromTheme on unix (instead of manual loading)
  *
  *  [CLEANUP]
  *    proper Q_PROPERTY implementation in classes
@@ -209,8 +215,10 @@ int main( int argc, char *argv[] ) {
     Variable::instance()->add( "ui_iconTheme", "system" );
     Variable::instance()->add( "app_lockToResolution", false );
     Variable::instance()->add( "app_targetResolution", "" );
+    Variable::instance()->add( "app_lock", false );
     XMLTools::instance()->read( XMLTools::Variables );
     XMLTools::instance()->read( XMLTools::Themes );
+    Variable::instance()->bind( "app_lock", XMLTools::instance(), SLOT( saveOnLock( QVariant )));
 
     // request a trivial icon early to avoid QObject::moveToThread bug
 #ifdef Q_OS_LINUX
