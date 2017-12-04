@@ -140,6 +140,47 @@ QIcon IconCache::thumbnail( const QString &path, int scale ) {
  * @return
  */
 #ifdef Q_OS_WIN
+
+/**
+ * @brief checksum
+ * @param data
+ * @param len
+ * @return
+ */
+quint32 IconCache::checksum( const char* data, size_t len ) const {
+    const quint32 m = 0x5bd1e995, r = 24;
+    quint32 h = 0, w;
+    const char *l = data + len;
+
+    while ( data + 4 <= l ) {
+        w = *( reinterpret_cast<const quint32*>( data ));
+        data += 4;
+        h += w;
+        h *= m;
+        h ^= ( h >> 16 );
+    }
+
+    switch ( l - data ) {
+    case 3:
+        h += static_cast<quint32>( data[2] << 16 );
+
+    case 2:
+        h += static_cast<quint32>( data[1] << 8 );
+
+    case 1:
+        h += static_cast<quint32>( data[0] );
+        h *= m;
+        h ^= ( h >> r );
+        break;
+    }
+    return h;
+}
+
+/**
+ * @brief IconCache::extractPixmap
+ * @param fileName
+ * @return
+ */
 QPixmap IconCache::extractPixmap( const QString &fileName ) {
     SHFILEINFO fileInfo;
     QPixmap pixmap;
@@ -148,11 +189,38 @@ QPixmap IconCache::extractPixmap( const QString &fileName ) {
     int flags = SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_LARGEICON;
     int y, k;
     bool ok = false;
+    QString cachedFileName;
+    quint32 hash = 0;
 
     memset( &fileInfo, 0, sizeof( SHFILEINFO ));
 
     if ( !info.isDir())
         flags |= SHGFI_USEFILEATTRIBUTES;
+
+
+    // win32 icon cache
+    // TODO: extend this to thumbnails
+    {
+        QFile file( fileName );
+        const qint64 maxFileSize = 10485760;
+        QPixmap cache;
+
+        if ( file.open( QFile::ReadOnly )) {
+            // read the first 10MB and assume files are identical
+            if ( file.size() >= maxFileSize )
+                hash = IconCache::instance()->checksum( file.read( maxFileSize ).constData(), maxFileSize );
+            else
+                hash = IconCache::instance()->checksum( file.readAll().constData(), static_cast<size_t>( file.size()));
+
+            file.close();
+        }
+
+        if ( hash != 0 ) {
+            cachedFileName = QString( IndexCache::instance()->path() + "/" + QString::number( hash ) + ".png" );
+            if ( cache.load( cachedFileName ))
+                return cache;
+        }
+    }
 
     const HRESULT hrFileInfo = SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( fileName ).utf16()), 0, &fileInfo, sizeof( SHFILEINFO ), flags );
 
@@ -203,6 +271,10 @@ QPixmap IconCache::extractPixmap( const QString &fileName ) {
             DestroyIcon( fileInfo.hIcon );
         }
     }
+
+    // save icon in cache folder as plain PNG for faster reads
+    if ( hash != 0 )
+        pixmap.save( cachedFileName );
 
     return pixmap;
 }

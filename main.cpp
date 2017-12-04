@@ -46,6 +46,7 @@
  *    GitHub page
  *    release beta
  *    mouse scroll does not work
+ *    win32: for some reason a shell folder icon is requested early (see cache)
  *
  *  [NOT URGENT]
  *  [to be implemented/fixed in future versions]
@@ -160,7 +161,6 @@ QSize Main::targetResolution() {
 
     if ( targetResolution.isEmpty() || !targetResolution.isValid())
         return Main::instance()->currentResolution();
-
 
     return targetResolution;
 }

@@ -41,6 +41,7 @@ public:
     QPixmap extractPixmap( const QString &fileName );
     void preLoadWindowsIcons();
     QString getDriveIconName( const QString &path ) const;
+    quint32 checksum( const char *data, size_t len ) const;
 #endif
 
 private slots:

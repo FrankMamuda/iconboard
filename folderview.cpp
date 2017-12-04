@@ -439,6 +439,10 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
     QMouseEvent *mouseEvent;
     int y;
 
+    if ( event->type() == QEvent::Wheel )
+        qDebug() << "wheel";
+
+
     // filter mouse events
     if ( event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease ||
          event->type() == QEvent::MouseMove || event->type() == QEvent::HoverMove ||

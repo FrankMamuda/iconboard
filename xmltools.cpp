@@ -45,7 +45,7 @@ XMLTools::XMLTools( QObject *parent ) : QObject( parent ), singleSave( false ) {
  * @brief XMLTools::saveOnLock
  */
 void XMLTools::saveOnLock( const QVariant &value ) {
-    value.toBool() ? singleSave = true : singleSave = false;
+    this->singleSave = value.toBool();
 }
 
 /**
