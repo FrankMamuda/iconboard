@@ -71,4 +71,6 @@ bool FileStream::seek( FileStream::Origin origin, qint64 position ) {
     case Set:
         return this->device()->seek( position );
     }
+
+    return false;
 }

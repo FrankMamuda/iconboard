@@ -46,7 +46,7 @@
  *    GitHub page
  *    release beta
  *    mouse scroll does not work
- *    win32: for some reason a shell folder icon is requested early (see cache)
+ *    win32: for some reason some icons fail to get shell icon on reload
  *
  *  [NOT URGENT]
  *  [to be implemented/fixed in future versions]
@@ -56,11 +56,6 @@
  *    whole desktop replacement option
  *    multi column list
  *    custom per-item icons
- *    disk-caching of extracted icons and thumbnails
- *      use plain files (collection of sizes 16-512)
- *      thumbnail creator creates previews (if source < thumbnail level, skip)
- *      if iconSize is different from the cached version, upscale/downscale from the closest match
- *      use modified murmur hash and file size check
  *    thumbnail loading as an option
  *    folderView spacing, other props
  *    macOS issues
@@ -69,7 +64,7 @@
  *    QWindow::requestActivate: requestActivate() FolderViewWindow
  *    first run dialog
  *    option to download icon packs
- *    option not to upscale small icons
+ *    option not to upscale small icons (center them instead)
  *    custom icon dir (set in settings)
  *    minor issues with z-order (windows)
  *    handle shortcut/folder drops on tray icon or widget list to add widget
@@ -81,7 +76,6 @@
  *    semi-merger with filemanager project (enable build configuration to build either or)
  *    linux segfault on icon theme change (older Qt versions)
  *    horizontal centering in QListView
- *    lock to resolution
  *    allow QIcon::fromTheme on unix (instead of manual loading)
  *
  *  [CLEANUP]
@@ -98,50 +92,42 @@
  *    application bundle icon
  */
 
+// default message handler
+static const QtMessageHandler QT_DEFAULT_MESSAGE_HANDLER = qInstallMessageHandler( 0 );
+
 /**
  * @brief messageFilter
  * @param type
  * @param context
  * @param msg
  */
-void Main::messageFilter( QtMsgType type, const QMessageLogContext &, const QString &msg ) {
+void Main::messageFilter( QtMsgType type, const QMessageLogContext &context, const QString &msg ) {
     QFile logFile;
     QString output( msg );
 
-    switch ( type ) {
-    case QtDebugMsg:
-        output.prepend( QObject::tr( "Debug: " ));
-        break;
+    // display message as is
+    (*QT_DEFAULT_MESSAGE_HANDLER)( type, context, msg );
 
-    case QtWarningMsg:
-        output.prepend( QObject::tr( "Warning: " ));
-        break;
-
-    case QtCriticalMsg:
-        output.prepend( QObject::tr( "Critical: " ));
-        break;
-
-    case QtFatalMsg:
-        output.prepend( QObject::tr( "Fatal: " ));
+    // quit app on fatal errors
+    if ( type == QtFatalMsg ) {
         Main::instance()->shutdown();
-        break;
+        exit( 0 );
+    }
 
-    case QtInfoMsg:
-        output.prepend( QObject::tr( "Info: " ));
-        break;
-    };
+    // log to file, when not in debug mode
+    if ( qgetenv( "QTDIR" ).isEmpty()) {
+        // open log file and write out
+        logFile.setFileName( QDir::currentPath() + "/" + "log" );
 
-    // open log file and write out
-    logFile.setFileName( QDir::currentPath() + "/" + "log" );
+        if ( logFile.size() > 1024 * 1024 )
+            logFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
+        else
+            logFile.open( QIODevice::WriteOnly | QIODevice::Append );
 
-    if ( logFile.size() > 1024 * 1024 )
-        logFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
-    else
-        logFile.open( QIODevice::WriteOnly | QIODevice::Append );
-
-    QTextStream steam( &logFile );
-    steam << output << endl;
-    logFile.close();
+        QTextStream steam( &logFile );
+        steam << output << endl;
+        logFile.close();
+    }
 }
 
 /**
@@ -178,8 +164,7 @@ int main( int argc, char *argv[] ) {
     qSetMessagePattern( "%{if-category}%{category}: %{endif}%{function}: %{message}" );
 
     // log to file in non-qtcreator environment
-    if ( qgetenv( "QTDIR" ).isEmpty())
-        qInstallMessageHandler( Main::messageFilter );
+    qInstallMessageHandler( Main::messageFilter );
 
     // app
     Application app( argc, argv );

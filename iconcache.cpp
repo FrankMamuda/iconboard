@@ -39,7 +39,7 @@
  * @brief IconCache::IconCache
  * @param parent
  */
-IconCache::IconCache( QObject *parent) : QObject( parent ) {
+IconCache::IconCache( QObject *parent ) : QObject( parent ) {
     // announce
 #ifdef QT_DEBUG
     qInfo() << this->tr( "initializing" );
@@ -90,17 +90,41 @@ QIcon IconCache::icon( const QString &iconName, int scale, const QString theme )
 }
 
 /**
+ * @brief IconCache::fastDownscale
+ * @param pixmap
+ * @return
+ */
+QPixmap IconCache::fastDownscale( const QPixmap &pixmap, int scale ) const {
+    QPixmap downScaled( pixmap );
+
+    if ( pixmap.isNull() || scale <= 0 )
+        return QPixmap();
+
+    if ( downScaled.width() >= scale * 2.0f )
+        downScaled = downScaled.scaled( static_cast<int>( scale * 2.0f ), static_cast<int>( scale * 2.0f ), Qt::IgnoreAspectRatio, Qt::FastTransformation );
+
+    return downScaled.scaled( scale, scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
+}
+
+/**
  * @brief IconCache::thumbnail
  * @param path
  * @param scale
  * @return
  */
-QIcon IconCache::thumbnail( const QString &path, int scale ) {
+QIcon IconCache::thumbnail( const QString &fileName, int scale ) {
     QRect rect;
     QIcon icon;
-    QPixmap pixmap;
+    QPixmap pixmap, cache;
 
-    if ( !pixmap.load( path ))
+    // thumbnail cache
+    QString cachedFile( this->fileNameForHash( hashForFile( fileName ), scale ));
+    if ( !cachedFile.isEmpty()) {
+        if ( cache.load( cachedFile ))
+            return QIcon( cache );
+    }
+
+    if ( !pixmap.load( fileName ))
         return icon;
 
     if ( pixmap.isNull() && !pixmap.width())
@@ -121,25 +145,18 @@ QIcon IconCache::thumbnail( const QString &path, int scale ) {
             rect = QRect( 0, pixmap.height() / 2 - pixmap.width() / 2, pixmap.width(), pixmap.width());
 
         pixmap = pixmap.copy( rect );
-
-        if ( pixmap.width() >= scale * 2.0f )
-            pixmap = pixmap.scaled( static_cast<int>( scale * 2.0f ), static_cast<int>( scale * 2.0f ), Qt::IgnoreAspectRatio, Qt::FastTransformation );
-
-        pixmap = pixmap.scaled( scale, scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
+        pixmap = this->fastDownscale( pixmap, scale );
     }
 
-    if ( !pixmap.isNull())
+    if ( !pixmap.isNull()) {
         icon = QIcon( pixmap );
+
+        if ( !cachedFile.isEmpty())
+            pixmap.save( cachedFile );
+    }
 
     return icon;
 }
-
-/**
- * @brief extractPixmap
- * @param fileName
- * @return
- */
-#ifdef Q_OS_WIN
 
 /**
  * @brief checksum
@@ -177,49 +194,71 @@ quint32 IconCache::checksum( const char* data, size_t len ) const {
 }
 
 /**
+ * @brief IconCache::hashForFile
+ * @param fileName
+ * @return
+ */
+quint32 IconCache::hashForFile( const QString &fileName ) const {
+    QFile file( fileName );
+    const qint64 maxSize = 10485760;
+    quint32 hash = 0;
+
+    if ( file.open( QFile::ReadOnly )) {
+        // read the first 10MB and assume files are identical
+        if ( file.size() >= maxSize )
+            hash = IconCache::instance()->checksum( file.read( maxSize ).constData(), maxSize );
+        else
+            hash = IconCache::instance()->checksum( file.readAll().constData(), static_cast<size_t>( file.size()));
+
+        file.close();
+    }
+
+    return hash;
+}
+
+/**
+ * @brief IconCache::fileNameForHash
+ * @param hash
+ * @return
+ */
+QString IconCache::fileNameForHash( quint32 hash, int scale ) const {
+    QString suffix;
+
+    if ( hash == 0 )
+        return "";
+
+    if ( scale > 0 )
+        suffix = QString( "_%1" ).arg( scale );
+
+    return IndexCache::instance()->path() + "/" + QString::number( hash ) + suffix + ".png";
+}
+
+#ifdef Q_OS_WIN
+
+/**
  * @brief IconCache::extractPixmap
  * @param fileName
  * @return
  */
-QPixmap IconCache::extractPixmap( const QString &fileName ) {
+QPixmap IconCache::extractPixmap( const QString &fileName, int scale ) {
     SHFILEINFO fileInfo;
-    QPixmap pixmap;
+    QPixmap pixmap, cache;
     QImage image;
     QFileInfo info( fileName );
     int flags = SHGFI_ICON | SHGFI_SYSICONINDEX | SHGFI_LARGEICON;
     int y, k;
     bool ok = false;
-    QString cachedFileName;
-    quint32 hash = 0;
 
     memset( &fileInfo, 0, sizeof( SHFILEINFO ));
 
     if ( !info.isDir())
         flags |= SHGFI_USEFILEATTRIBUTES;
 
-
     // win32 icon cache
-    // TODO: extend this to thumbnails
-    {
-        QFile file( fileName );
-        const qint64 maxFileSize = 10485760;
-        QPixmap cache;
-
-        if ( file.open( QFile::ReadOnly )) {
-            // read the first 10MB and assume files are identical
-            if ( file.size() >= maxFileSize )
-                hash = IconCache::instance()->checksum( file.read( maxFileSize ).constData(), maxFileSize );
-            else
-                hash = IconCache::instance()->checksum( file.readAll().constData(), static_cast<size_t>( file.size()));
-
-            file.close();
-        }
-
-        if ( hash != 0 ) {
-            cachedFileName = QString( IndexCache::instance()->path() + "/" + QString::number( hash ) + ".png" );
-            if ( cache.load( cachedFileName ))
-                return cache;
-        }
+    QString cachedFile( this->fileNameForHash( hashForFile( fileName ), scale ));
+    if ( !cachedFile.isEmpty()) {
+        if ( cache.load( cachedFile ))
+            return cache;
     }
 
     const HRESULT hrFileInfo = SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( fileName ).utf16()), 0, &fileInfo, sizeof( SHFILEINFO ), flags );
@@ -273,8 +312,9 @@ QPixmap IconCache::extractPixmap( const QString &fileName ) {
     }
 
     // save icon in cache folder as plain PNG for faster reads
-    if ( hash != 0 )
-        pixmap.save( cachedFileName );
+    pixmap = this->fastDownscale( pixmap, scale );
+    if ( !cachedFile.isEmpty())
+        pixmap.save( cachedFile );
 
     return pixmap;
 }
@@ -362,7 +402,7 @@ QString IconCache::getDriveIconName( const QString &path ) const {
  * @brief IconCache::iconForFilename
  * @return
  */
-QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
+QIcon IconCache::iconForFilename( const QString &fileName, int scale ) {
     QFileInfo info( fileName );
     QFileInfo target( info.symLinkTarget());
     QString iconName, absolutePath( info.isSymLink() ? target.absoluteFilePath() : info.absoluteFilePath());
@@ -386,29 +426,29 @@ QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
     // generate thumbnail for images
     if ( !isDir ) {
         if ( iconName.startsWith( "image-" ))
-            icon = this->thumbnail( absolutePath, iconSize );
+            icon = this->thumbnail( absolutePath, scale );
 #ifdef Q_OS_WIN
         // get icon from executables
         if ( iconName.startsWith( "application-x-ms-dos-executable" ) && !info.isSymLink())
-            icon = QIcon( this->extractPixmap( absolutePath ));
+            icon = QIcon( this->extractPixmap( absolutePath, scale ));
         // get icon from win32 shortcuts
         if ( icon.isNull() && info.isSymLink())
-            icon = QIcon( this->extractPixmap( fileName ));
+            icon = QIcon( this->extractPixmap( fileName, scale ));
         // get icon from appref-ms files
         if ( icon.isNull() && fileName.endsWith( ".appref-ms" ))
-            icon = QIcon( this->extractPixmap( fileName ));
+            icon = QIcon( this->extractPixmap( fileName, scale ));
 #endif
     }
 
     // get icon for mimetype
     if ( icon.isNull())
-        icon = this->icon( iconName, iconSize );
+        icon = this->icon( iconName, scale );
 #ifdef Q_OS_WIN
     // if mimetype icon fails (no custom icon theme, for example), get win32 shell icon
     if ( icon.isNull()) {
         QString alias;
-        icon = QIcon( this->extractPixmap( absolutePath ));
-        alias = QString( "%1_%2_%3" ).arg( iconName ).arg( IconIndex::instance()->defaultTheme()).arg( iconSize );
+        icon = QIcon( this->extractPixmap( absolutePath, scale ));
+        alias = QString( "%1_%2_%3" ).arg( iconName ).arg( IconIndex::instance()->defaultTheme()).arg( scale );
 
         // store shell icon in cache, to avoid unnecessary extractions
         if ( !icon.isNull() && !this->cache.contains( alias ))
@@ -417,7 +457,7 @@ QIcon IconCache::iconForFilename( const QString &fileName, int iconSize ) {
 
     // add symlink label if required
     if ( info.isSymLink() || fileName.endsWith( ".appref-ms" ))
-        icon = this->addSymlinkLabel( icon, iconSize );
+        icon = this->addSymlinkLabel( icon, scale );
 
     // uninitialize COM
     CoUninitialize();

@@ -57,5 +57,5 @@ public slots:
 private:
     XMLTools( QObject *parent = nullptr );
     static XMLTools *createInstance() { return new XMLTools(); }
-    bool singleSave;
+    int singleSave;
 };

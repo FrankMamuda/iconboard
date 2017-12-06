@@ -34,15 +34,18 @@ public:
     static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
     ~IconCache() {}
     QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
-    QIcon thumbnail( const QString &path, int scale );
+    QIcon thumbnail( const QString &fileName, int scale );
     QIcon addSymlinkLabel( const QIcon &icon, int originalSize );
-    QIcon iconForFilename( const QString &fileName, int iconSize );
+    QIcon iconForFilename(const QString &fileName, int scale );
 #ifdef Q_OS_WIN
-    QPixmap extractPixmap( const QString &fileName );
+    QPixmap extractPixmap( const QString &fileName, int scale );
     void preLoadWindowsIcons();
     QString getDriveIconName( const QString &path ) const;
-    quint32 checksum( const char *data, size_t len ) const;
 #endif
+    quint32 checksum( const char *data, size_t len ) const;
+    quint32 hashForFile( const QString &fileName ) const;
+    QString fileNameForHash( quint32 hash, int scale = 0 ) const;
+    QPixmap fastDownscale( const QPixmap &pixmap, int scale ) const;
 
 private slots:
     void add( const QString &fileName, const QIcon &icon ) { this->cache[fileName] = icon; }
