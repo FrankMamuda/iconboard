@@ -22,6 +22,7 @@
 // includes
 //
 #include "singleton.h"
+#include <QMap>
 
 /**
  * @brief The XMLFiles namespace
@@ -48,7 +49,7 @@ public:
         Widgets,
         Themes
     };
-    void write( Modes mode );
+    void write( Modes mode, bool force = false );
     void read( Modes mode );
 
 public slots:
@@ -57,5 +58,4 @@ public slots:
 private:
     XMLTools( QObject *parent = nullptr );
     static XMLTools *createInstance() { return new XMLTools(); }
-    int singleSave;
 };

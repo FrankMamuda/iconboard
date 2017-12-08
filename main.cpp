@@ -45,7 +45,6 @@
  *    cleanup
  *    GitHub page
  *    release beta
- *    mouse scroll does not work
  *    win32: for some reason some icons fail to get shell icon on reload
  *
  *  [NOT URGENT]
@@ -296,16 +295,16 @@ void Main::readConfiguration() {
 /**
  * @brief Main::writeConfiguration
  */
-void Main::writeConfiguration() {
+void Main::writeConfiguration( bool force ) {
     if ( !this->hasInitialized())
         return;
 
     if ( this->reloadScheduled())
         return;
 
-    XMLTools::instance()->write( XMLTools::Widgets );
-    XMLTools::instance()->write( XMLTools::Variables );
-    XMLTools::instance()->write( XMLTools::Themes );
+    XMLTools::instance()->write( XMLTools::Widgets, force );
+    XMLTools::instance()->write( XMLTools::Variables, force );
+    XMLTools::instance()->write( XMLTools::Themes, force );
 }
 
 /**

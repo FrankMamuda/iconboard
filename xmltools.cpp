@@ -38,25 +38,23 @@
  * @brief XMLTools::XMLTools
  * @param parent
  */
-XMLTools::XMLTools( QObject *parent ) : QObject( parent ), singleSave( 0 ) {
-}
+XMLTools::XMLTools( QObject *parent ) : QObject( parent ) {}
 
 /**
  * @brief XMLTools::saveOnLock
+ * @param value
  */
 void XMLTools::saveOnLock( const QVariant &value ) {
     // stupid, but it works (we have to save all three categories of settings)
     if ( value.toBool())
-        this->singleSave = static_cast<int>( Themes ) + 1;
-    else
-        this->singleSave = 0;
+        Main::instance()->writeConfiguration( true );
 }
 
 /**
  * @brief XMLTools::write
  * @param mode
  */
-void XMLTools::write( Modes mode ) {
+void XMLTools::write( Modes mode, bool force ) {
     QString path, savedData, newData;
 
 #ifdef QT_DEBUG
@@ -234,13 +232,11 @@ void XMLTools::write( Modes mode ) {
         if ( Variable::instance()->isEnabled( "app_lockToResolution" )) {
             if ( Main::instance()->targetResolution() != Main::instance()->currentResolution() && mode == Widgets ) {
                 qWarning() << this->tr( "resolution mismatch, aborting save" );
-            } else if ( Variable::instance()->isEnabled( "app_lock" ) && singleSave == 0 ) {
+            } else if ( Variable::instance()->isEnabled( "app_lock" ) && !force ) {
                 qInfo() << this->tr( "widgets are locked, aborting save" );
             } else {
-                if ( singleSave > 0 ) {
-                    qInfo() << this->tr( "allowing single save after widget lock (%1)" ).arg( mode );
-                    singleSave--;
-                }
+                if ( force )
+                    qInfo() << this->tr( "forced save after widget lock (%1)" ).arg( mode );
 
                 // write out as binary (not QIODevice::Text) to avoid CR line endings
                 if ( !xmlFile.open( QFile::WriteOnly | QFile::Truncate )) {

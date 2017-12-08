@@ -52,7 +52,7 @@ protected:
 
 public slots:
     void readConfiguration();
-    void writeConfiguration();
+    void writeConfiguration( bool force = false );
     void reload();
     void scheduleReload();
     void shutdown();

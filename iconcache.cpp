@@ -275,10 +275,11 @@ QPixmap IconCache::extractPixmap( const QString &fileName, int scale ) {
                 IImageList *imageList = nullptr;
                 HICON hIcon = 0;
 
-                if ( SUCCEEDED( SHGetImageList( index, { 0x46eb5926, 0x582e, 0x4017, { 0x9f, 0xdf, 0xe8, 0x99, 0x8d, 0xaa, 0x9, 0x50 }}, reinterpret_cast<void **>( &imageList )))) {
+                if ( SUCCEEDED( SHGetImageList( index, IID_PPV_ARGS( &imageList )))) {
                     if ( SUCCEEDED( imageList->GetIcon( fileInfo.iIcon, ILD_TRANSPARENT, &hIcon ))) {
                         pixmap = QtWin::fromHICON( hIcon );
                         DestroyIcon( hIcon );
+                        imageList->Release();
                     }
                 }
             };
@@ -298,10 +299,56 @@ QPixmap IconCache::extractPixmap( const QString &fileName, int scale ) {
                 }
             }
 
-            // then try to get the large icon
-            if ( pixmap.isNull() || !ok ) {
-                pixmapFromImageList( 0x2, pixmap );
+            // check if icon is really a small, but centered one
+            if ( ok ) {
+                enum Sides { Top = 0, Bottom, Right, Left };
+                auto checkSide = [ image ]( Sides side, int scale ) {
+                    if ( image.width() != 256 || image.height() != 256 )
+                        return false;
+
+                    if ( scale <= 8 || scale >= 128 )
+                        return false;
+
+                    int hOffset = 0, vOffset = 0;
+                    int hBound = image.width();
+                    int vBound = image.height();
+
+                    switch ( side ) {
+                    case Top:
+                        vBound = scale;
+                        break;
+
+                    case Bottom:
+                        vOffset = 256 - scale;
+                        break;
+
+                    case Left:
+                        hBound = scale;
+                        break;
+
+                    case Right:
+                        hOffset = 256 - scale;
+                        break;
+                    }
+
+                    bool blank = true;
+                    for ( int x = hOffset; x < hBound; x++ ) {
+                        for ( int y = vOffset; y < vBound; y++ ) {
+                            if ( image.pixelColor( x, y ).alphaF() > 0.0 )
+                                blank = false;
+                        }
+                    }
+                    return blank;
+                };
+
+                const int cropScale = 64;
+                if ( checkSide( Top, cropScale ) && checkSide( Bottom, cropScale ) && checkSide( Left, cropScale ) && checkSide( Right, cropScale ))
+                    ok = false;
             }
+
+            // then try to get the large icon
+            if ( pixmap.isNull() || !ok )
+                pixmapFromImageList( 0x2, pixmap );
         }
 
         // if everything fails, get icon the old way

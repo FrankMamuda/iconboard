@@ -116,11 +116,13 @@ void TrayIcon::iconActivated( QSystemTrayIcon::ActivationReason reason ) {
 
     switch ( reason ) {
     case QSystemTrayIcon::Trigger:
-        if ( parentWidget->isHidden())
-            parentWidget->show();
-        else
-            parentWidget->hide();
-        break;
+        if ( Variable::instance()->isDisabled( "app_lock" )) {
+            if ( parentWidget->isHidden())
+                parentWidget->show();
+            else
+                parentWidget->hide();
+            break;
+        }
 
     case QSystemTrayIcon::Context:
         this->actionMap[Widgets]->setEnabled( Variable::instance()->isDisabled( "app_lock" ));

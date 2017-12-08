@@ -300,6 +300,9 @@ void FolderView::displayContextMenu( const QPoint &point ) {
             for ( int y = 0; y < 10; y++ )
                 Main::instance()->scheduleReload();
         } );
+        this->connect( menu.addAction( this->tr( "Instant reload" )), &QAction::triggered, [this]() {
+            Main::instance()->scheduleReload();
+        } );
 #endif
     }
 
@@ -439,10 +442,6 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
     QMouseEvent *mouseEvent;
     int y;
 
-    if ( event->type() == QEvent::Wheel )
-        qDebug() << "wheel";
-
-
     // filter mouse events
     if ( event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease ||
          event->type() == QEvent::MouseMove || event->type() == QEvent::HoverMove ||
@@ -527,7 +526,22 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
             break;
 
         case QEvent::Enter:
+#ifdef Q_OS_WIN
+        {
+            // do winapi magic
+            DWORD curentThread, foregroundThread;
+
+            curentThread = GetCurrentThreadId();
+            foregroundThread = GetWindowThreadProcessId( GetForegroundWindow(), NULL );
+
+            // steal input thread form foreground
+            AttachThreadInput( foregroundThread, curentThread, TRUE );
+            SetForegroundWindow( reinterpret_cast<HWND>( this->winId()));
+            AttachThreadInput( foregroundThread, curentThread, FALSE );
+        }
+#else
             this->raise();
+#endif
             break;
 
         case QEvent::Leave:
@@ -641,12 +655,10 @@ void FolderView::setupFrame() {
     this->installEventFilter( this );
 
     // set appropriate window flags
-    this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::Tool | Qt::WindowDoesNotAcceptFocus );
+    this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::Tool );
     this->setAttribute( Qt::WA_TranslucentBackground );
     this->setAttribute( Qt::WA_NoSystemBackground );
     this->setAttribute( Qt::WA_Hover );
-    this->setAttribute( Qt::WA_ShowWithoutActivating );
-    this->setFocusPolicy( Qt::NoFocus );
 
     // make mouse grab areas
     this->makeGrabAreas();
