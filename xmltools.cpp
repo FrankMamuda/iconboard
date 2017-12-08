@@ -229,22 +229,20 @@ void XMLTools::write( Modes mode, bool force ) {
     if ( !QString::compare( savedData, newData )) {
         //qDebug() << this->tr( "data identical, aborting save (%1)" ).arg( mode );
     } else {
-        if ( Variable::instance()->isEnabled( "app_lockToResolution" )) {
-            if ( Main::instance()->targetResolution() != Main::instance()->currentResolution() && mode == Widgets ) {
-                qWarning() << this->tr( "resolution mismatch, aborting save" );
-            } else if ( Variable::instance()->isEnabled( "app_lock" ) && !force ) {
-                qInfo() << this->tr( "widgets are locked, aborting save" );
-            } else {
-                if ( force )
-                    qInfo() << this->tr( "forced save after widget lock (%1)" ).arg( mode );
+        if ( Variable::instance()->isEnabled( "app_lockToResolution" ) && Main::instance()->targetResolution() != Main::instance()->currentResolution() && mode == Widgets ) {
+            qWarning() << this->tr( "resolution mismatch, aborting save" );
+        } else if ( Variable::instance()->isEnabled( "app_lock" ) && !force ) {
+            qInfo() << this->tr( "widgets are locked, aborting save" );
+        } else {
+            if ( force )
+                qInfo() << this->tr( "forced save after widget lock (%1)" ).arg( mode );
 
-                // write out as binary (not QIODevice::Text) to avoid CR line endings
-                if ( !xmlFile.open( QFile::WriteOnly | QFile::Truncate )) {
-                    qCritical() << "could not open configuration file" << path;
-                    return;
-                }
-                xmlFile.write( newData.toUtf8().replace( "\r", "" ));
+            // write out as binary (not QIODevice::Text) to avoid CR line endings
+            if ( !xmlFile.open( QFile::WriteOnly | QFile::Truncate )) {
+                qCritical() << "could not open configuration file" << path;
+                return;
             }
+            xmlFile.write( newData.toUtf8().replace( "\r", "" ));
         }
     }
 

@@ -156,9 +156,10 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
             if ( this->isStopping())
                 return;
 
+            /*
             QFileInfo info( fileName );
             if ( !info.isReadable())
-                return;
+                return;*/
 
             icon = IconCache::instance()->iconForFilename( fileName, iconSize );
             if ( !icon.isNull() || this->isStopping()) {
