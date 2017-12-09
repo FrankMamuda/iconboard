@@ -45,7 +45,6 @@
  *    cleanup
  *    GitHub page
  *    release beta
- *    win32: for some reason some icons fail to get shell icon on reload
  *
  *  [NOT URGENT]
  *  [to be implemented/fixed in future versions]

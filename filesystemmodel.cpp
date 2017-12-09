@@ -30,6 +30,7 @@
 FileSystemModel::FileSystemModel( QObject *parent, const QString &path ) : QFileSystemModel( parent ) {
     // set root path
     this->setRootPath( path );
+    this->setFilter( QDir::NoDotAndDotDot | QDir::System | QDir::NoDot | QDir::NoDotDot | QDir::AllEntries );
 }
 
 /**
