@@ -43,7 +43,8 @@ SOURCES += main.cpp\
     widgetlist.cpp \
     trayicon.cpp \
     filesystemmodel.cpp \
-    desktopicon.cpp
+    desktopicon.cpp \
+    iconsettings.cpp
 
 win32:SOURCES += desktopwidget.cpp
 
@@ -74,7 +75,8 @@ HEADERS  += \
     widgetlist.h \
     trayicon.h \
     filesystemmodel.h \
-    desktopicon.h
+    desktopicon.h \
+    iconsettings.h
 
 win32:HEADERS += desktopwidget.h
 
@@ -84,7 +86,8 @@ FORMS    += \
     settings.ui \
     about.ui \
     themeeditor.ui \
-    widgetlist.ui
+    widgetlist.ui \
+    iconsettings.ui
 
 RESOURCES += \
     resources.qrc

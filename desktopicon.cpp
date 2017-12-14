@@ -31,6 +31,8 @@
 #include <QRgb>
 #include <QMenu>
 
+// TODO: allow larger rect for longer text?
+
 /**
  * @brief DesktopIcon::DesktopIcon
  * @param parent
@@ -121,11 +123,12 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
     QFontMetrics fm( this->font());
     if ( !this->target().isEmpty()) {
         QRect textRect( 0, this->iconSize(), this->iconSize(), fm.height());
+        QString displayText( fm.elidedText( this->title(), Qt::ElideRight, textRect.width()));
 
         painter.setPen( Qt::black );
-        painter.drawText( textRect.adjusted( 0, 2, 2, 0 ), Qt::AlignCenter, this->title());
+        painter.drawText( textRect.adjusted( 0, 2, 2, 0 ), Qt::AlignCenter, displayText );
         painter.setPen( Qt::white );
-        painter.drawText( textRect, Qt::AlignCenter, this->title());
+        painter.drawText( textRect, Qt::AlignCenter, displayText );
     }
 
     // paint parent
