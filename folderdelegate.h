@@ -52,13 +52,25 @@ static const int MarginText = 4;
  */
 class FolderDelegate : public QStyledItemDelegate {
     Q_DISABLE_COPY( FolderDelegate )
+    Q_PROPERTY( int textLineCount READ textLineCount WRITE setTextLineCount )
+    Q_PROPERTY( bool selectionVisible READ isSelectionVisible WRITE setSelectionVisible )
 
 public:
     explicit FolderDelegate( QListView *parent = nullptr );
     ~FolderDelegate() {}
+    int textLineCount() const { return this->m_textLineCount; }
+    bool isSelectionVisible() const { return this->m_selectionVisible; }
+    int topMargin() const { return this->m_textLineCount; }
+    int sideMargin() const { return this->m_sideMargin; }
+    int textMargin() const { return this->m_textMargin; }
 
 public slots:
     void clearCache() { this->cache.clear(); }
+    void setTextLineCount( int count = FolderDelegateNamespace::TextLines ) { this->m_textLineCount = count; }
+    void setSelectionVisible( bool enable ) { this->m_selectionVisible = enable; }
+    void setTopMargin( int margin ) { this->m_topMargin = margin; }
+    void setSideMargin( int margin ) { this->m_sideMargin = margin; }
+    void setTextMargin( int margin ) { this->m_textMargin = margin; }
 
 protected:
     void paint( QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index ) const;
@@ -67,4 +79,9 @@ protected:
 private:
     ListItem textItemForIndex( const QStyleOptionViewItem &option, const QModelIndex &index ) const;
     mutable QHash<QString, ListItem> cache;
+    int m_textLineCount;
+    bool m_selectionVisible;
+    int m_topMargin;
+    int m_sideMargin;
+    int m_textMargin;
 };

@@ -93,23 +93,58 @@ void WidgetList::on_widgetList_doubleClicked( const QModelIndex & ) {
  * @brief WidgetList::on_actionAdd_triggered
  */
 void WidgetList::on_actionAdd_triggered() {
-    QDir dir;
-
-    dir.setPath( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
-    if ( dir.exists()) {
-        FolderView *folderView;
-
+    QMenu menu, *subMenu;
 #ifdef Q_OS_WIN
-        folderView = new FolderView(( QWidget* )FolderManager::instance()->desktop, dir.absolutePath());
+    QWidget *widget = reinterpret_cast<QWidget*>( FolderManager::instance()->desktop );
 #else
-        folderView = new FolderView( nullptr, dir.absolutePath());
+    QWidget *widget = nullptr;
 #endif
-        folderView->show();
-        folderView->resetStyleSheet();
-        folderView->sort();
-        this->ui->widgetList->reset();
-        FolderManager::instance()->add( folderView );
-    }
+
+    // add folder widget lambda
+    menu.addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder" ), [ this, widget ]() {
+        QDir dir( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
+        if ( dir.exists()) {
+            FolderView *folderView;
+            folderView = new FolderView( widget, dir.absolutePath());
+            folderView->show();
+            folderView->resetStyleSheet();
+            folderView->sort();
+            this->ui->widgetList->reset();
+            FolderManager::instance()->add( folderView );
+        }
+    } );
+
+    // subMenu icon->folder target
+    //             ->file target
+    subMenu = menu.addMenu( this->tr( "Icon" ));
+
+    // addIcon lambda
+    auto addIcon = [ this, widget ]( const QString &path ) {
+        DesktopIcon *desktopIcon;
+        desktopIcon = new DesktopIcon( widget, path );
+        desktopIcon->show();
+        FolderManager::instance()->add( desktopIcon );
+    };
+
+    // add icon widget lambda with FILE as its targer
+    subMenu->addAction( IconCache::instance()->icon( "application-x-zerosize", 16 ), this->tr( "File" ), [ this, addIcon ]() {
+        QString fileName( QFileDialog::getOpenFileName( this, this->tr( "Select file or directory" ), "" ));
+        QFileInfo info( fileName );
+        if ( info.exists())
+            addIcon( info.absoluteFilePath());
+
+    } );
+
+    // add icon widget lambda with FOLDER as its targer
+    subMenu->addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder" ), [ this, addIcon ]() {
+        QDir dir( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
+        if ( dir.exists())
+            addIcon( dir.absolutePath());
+    } );
+
+    menu.exec( QCursor::pos());
+
+    this->ui->widgetList->reset();
 }
 
 /**
@@ -118,14 +153,13 @@ void WidgetList::on_actionAdd_triggered() {
 void WidgetList::on_actionRemove_triggered() {
     QMessageBox msgBox;
     FolderView *folderView;
-    int state;
+    DesktopIcon *desktopIcon;
+    int state, index;
 
-    folderView = FolderManager::instance()->at( this->ui->widgetList->currentIndex().row());
-    if ( folderView == nullptr )
-        return;
+    index = this->ui->widgetList->currentIndex().row();
 
     // display warning
-    msgBox.setText( this->tr( "Do you really want to remove \"%1\"?" ).arg( folderView->title()));
+    msgBox.setText( this->tr( "Do you really want to remove this widget?" ));
     msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton( QMessageBox::Yes );
     msgBox.setIcon( QMessageBox::Warning );
@@ -134,8 +168,15 @@ void WidgetList::on_actionRemove_triggered() {
     // check options
     switch ( state ) {
     case QMessageBox::Yes:
-        folderView->hide();
-        FolderManager::instance()->remove( folderView );
+        if ( index >= FolderManager::instance()->count()) {
+            desktopIcon = FolderManager::instance()->iconAt( index - FolderManager::instance()->count());
+            desktopIcon->hide();
+            FolderManager::instance()->remove( desktopIcon );
+        } else {
+            folderView = FolderManager::instance()->at( index );
+            folderView->hide();
+            FolderManager::instance()->remove( folderView );
+        }
         this->ui->widgetList->reset();
         break;
 
@@ -149,19 +190,25 @@ void WidgetList::on_actionRemove_triggered() {
  * @brief WidgetList::on_actionShow_triggered
  */
 void WidgetList::on_actionShow_triggered() {
-    FolderView *folderView;
+    QWidget *widget;
+    int index;
+
+    index = this->ui->widgetList->currentIndex().row();
 
     // TODO: set checkable
+    if ( index >= FolderManager::instance()->count())
+        widget = qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count()));
+    else
+        widget = qobject_cast<QWidget*>( FolderManager::instance()->at( index ));
 
-    folderView = FolderManager::instance()->at( this->ui->widgetList->currentIndex().row());
-    if ( folderView == nullptr )
+    if ( widget == nullptr )
         return;
 
     // toggle visibility
-    if ( folderView->isVisible())
-        folderView->hide();
+    if ( widget->isVisible())
+        widget->hide();
     else
-        folderView->show();
+        widget->show();
 }
 
 /**
@@ -169,15 +216,22 @@ void WidgetList::on_actionShow_triggered() {
  */
 void WidgetList::on_actionMap_triggered() {
     ScreenMapper mapperDialog;
-    FolderView *folderView;
+    QWidget *widget;
+    int index;
 
-    folderView = FolderManager::instance()->at( this->ui->widgetList->currentIndex().row());
-    if ( folderView == nullptr )
+    index = this->ui->widgetList->currentIndex().row();
+
+    // TODO: set checkable
+    if ( index >= FolderManager::instance()->count())
+        widget = qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count()));
+    else
+        widget = qobject_cast<QWidget*>( FolderManager::instance()->at( index ));
+
+    if ( widget == nullptr )
         return;
 
-    mapperDialog.setWidgetRect( folderView->geometry());
+    mapperDialog.setWidgetRect( widget->geometry());
     mapperDialog.exec();
-
 }
 
 /**
@@ -186,4 +240,3 @@ void WidgetList::on_actionMap_triggered() {
 void WidgetList::on_buttonClose_clicked() {
     this->hide();
 }
-

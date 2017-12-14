@@ -6,5 +6,6 @@
     <qresource prefix="/styleSheets">
         <file>dark.qss</file>
         <file>light.qss</file>
+        <file>preview.qss</file>
     </qresource>
 </RCC>

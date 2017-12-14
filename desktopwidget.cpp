@@ -38,6 +38,12 @@ void CALLBACK handleWinEvent( HWINEVENTHOOK, DWORD event, HWND hwnd, LONG, LONG,
                 FolderManager::instance()->desktop->lower();
         }
 
+        for ( y = 0; y < FolderManager::instance()->iconCount(); y++ ) {
+            DesktopIcon *icon = FolderManager::instance()->iconAt( y );
+            if ( reinterpret_cast<HWND>( icon->winId()) == hwnd )
+                FolderManager::instance()->desktop->lower();
+        }
+
         if ( reinterpret_cast<HWND>( FolderManager::instance()->desktop->winId()))
             FolderManager::instance()->desktop->lower();
     }

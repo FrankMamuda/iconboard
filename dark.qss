@@ -15,7 +15,7 @@ QListView#view {
 }
 
 QScrollBar:vertical {
-    width:10px;
+    width: 10px;
     background: rgba( 255, 255, 255, 32 );
     margin: 0px 0px 0px 0px;
 }

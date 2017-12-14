@@ -28,7 +28,7 @@
  * @brief FolderDelegate::FolderDelegate
  * @param parent
  */
-FolderDelegate::FolderDelegate( QListView *parent ) {
+FolderDelegate::FolderDelegate( QListView *parent ) : m_textLineCount( FolderDelegateNamespace::TextLines ), m_selectionVisible( true ), m_topMargin( FolderDelegateNamespace::MarginTop ), m_sideMargin( FolderDelegateNamespace::MarginSide ), m_textMargin( FolderDelegateNamespace::MarginText ) {
     // set parent
     this->setParent( qobject_cast<QObject*>( parent ));
 }
@@ -60,7 +60,7 @@ QSize FolderDelegate::sizeHint( const QStyleOptionViewItem &option, const QModel
     // only icon mode has custom placement
     if ( view->viewMode() == QListView::IconMode ) {
         customOption = option;
-        customOption.rect.setWidth( option.decorationSize.width() + FolderDelegateNamespace::MarginSide * 2 );
+        customOption.rect.setWidth( option.decorationSize.width() + this->sideMargin() * 2 );
 
         if ( this->cache.contains( text )) {
             item = this->cache[text];
@@ -70,7 +70,7 @@ QSize FolderDelegate::sizeHint( const QStyleOptionViewItem &option, const QModel
         }
 
         size.setWidth( customOption.rect.width());
-        size.setHeight( FolderDelegateNamespace::MarginTop + option.decorationSize.height() + item.lines.count() * item.textHeight );
+        size.setHeight( this->topMargin() + option.decorationSize.height() + item.lines.count() * item.textHeight );
     }
 
     return size;
@@ -81,7 +81,7 @@ QSize FolderDelegate::sizeHint( const QStyleOptionViewItem &option, const QModel
  * @param text
  */
 ListItem FolderDelegate::textItemForIndex( const QStyleOptionViewItem &option, const QModelIndex &index ) const {
-    QString text, line[FolderDelegateNamespace::TextLines];
+    QString text, line[this->textLineCount()];
     int y, textHeight, numLines = 0;
     QListView *view;
     ListItem item;
@@ -95,19 +95,19 @@ ListItem FolderDelegate::textItemForIndex( const QStyleOptionViewItem &option, c
     text = view->model()->data( index, Qt::DisplayRole ).toString();
     textHeight = option.fontMetrics.height();
 
-    // split text into max 3 lines
-    while ( FolderDelegateNamespace::TextLines - numLines ) {
+    // split text into lines
+    while ( this->textLineCount() - numLines ) {
         for ( y = 0; y < text.length(); y++ ) {
-            if ( option.fontMetrics.width( text.left( y + 1 )) > option.rect.width() - FolderDelegateNamespace::MarginText * 2 )
+            if ( option.fontMetrics.width( text.left( y + 1 )) > option.rect.width() - this->textMargin() * 2 )
                 break;
         }
 
         if ( y > 0 ) {
-            if ( numLines < FolderDelegateNamespace::TextLines - 1 ) {
+            if ( numLines < this->textLineCount() - 1 ) {
                 line[numLines] = text.left( y );
                 text = text.mid( y, text.length() - y );
             } else
-                line[numLines] = option.fontMetrics.elidedText( text, Qt::ElideRight, option.rect.width() - FolderDelegateNamespace::MarginText * 2 );
+                line[numLines] = option.fontMetrics.elidedText( text, Qt::ElideRight, option.rect.width() - this->textMargin() * 2 );
         } else
             break;
 
@@ -147,7 +147,7 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
     painter->setPen( Qt::NoPen );
 
     // mouseOver/hover item
-    if ( option.state & QStyle::State_MouseOver || option.state & QStyle::State_Selected ) {
+    if (( option.state & QStyle::State_MouseOver || option.state & QStyle::State_Selected ) && this->isSelectionVisible()) {
         hilightBrush.setColor( QColor::fromRgbF( hilightBrush.color().redF(), hilightBrush.color().greenF(), hilightBrush.color().blueF(), 0.25 ));
         painter->fillRect( option.rect, hilightBrush );
     }
@@ -169,7 +169,7 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
         // get pixmap and its dimensions
         icon = qvariant_cast<QIcon>( view->model()->data( index, Qt::DecorationRole ));
         rect = option.rect;
-        rect.setY( rect.y() + FolderDelegateNamespace::MarginTop );
+        rect.setY( rect.y() + this->topMargin());
         width = option.decorationSize.width();
         height = option.decorationSize.height();
 
@@ -197,7 +197,7 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
 
         // init text rectangle
         rect = option.rect;
-        rect.setY( FolderDelegateNamespace::MarginTop + rect.y() + height - item.textHeight );
+        rect.setY( this->topMargin() + rect.y() + height - item.textHeight );
 
         // display multi-line text
         for ( y = 0; y < item.lines.count(); y++ ) {

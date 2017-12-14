@@ -70,9 +70,18 @@ class FolderView : public QWidget {
     Q_PROPERTY( bool directoriesFirst READ directoriesFirst WRITE setDirectoriesFirst )
     Q_PROPERTY( bool caseSensitive READ isCaseSensitive WRITE setCaseSensitive )
     Q_PROPERTY( QListView::ViewMode viewMode READ viewMode WRITE setViewMode )
+    Q_PROPERTY( Modes mode READ mode WRITE setMode )
 
 public:
-    explicit FolderView( QWidget *parent = nullptr, const QString &rootPath = QString::null );
+    // modes
+    enum Modes {
+        NoMode = -1,
+        Folder,
+        Preview
+    };
+    Q_ENUMS( Modes )
+
+    explicit FolderView( QWidget *parent = nullptr, const QString &rootPath = QString::null, Modes mode = Folder );
     ~FolderView();
 
     // properties
@@ -88,9 +97,13 @@ public:
     bool directoriesFirst() const { return this->m_dirsFirst; }
     bool isCaseSensitive() const { return this->m_caseSensitive; }
     QListView::ViewMode viewMode() const { return this->ui->view->viewMode(); }
+    Modes mode() const { return this->m_mode; }
 
     // rootIndex for proxy model
     QModelIndex rootIndex() const { return this->ui->view->rootIndex(); }
+
+    // thumbnail
+    QPixmap thumbnail;
 
 #ifdef Q_OS_WIN
     static void openShellContextMenuForObject( const std::wstring &path, QPoint pos, HWND parentWindow );
@@ -128,12 +141,15 @@ public slots:
     void setDirectoriesFirst( bool enable = true ) { this->m_dirsFirst = enable; }
     void setCaseSensitive( bool enable = false ) { this->m_caseSensitive = enable; }
     void setViewMode( QListView::ViewMode viewMode ) { this->ui->view->setViewMode( viewMode ); }
+    void setMode( Modes mode ) { this->m_mode = mode; }
+    void setupPreviewMode( int rows = 3, int columns = 3 );
 
     // other functions
     void sort();
     void displayContextMenu( const QPoint &point );
     void resetStyleSheet();
     void setIconSize();
+    void makeThumbnail();
 
 protected:
     void paintEvent( QPaintEvent *event );
@@ -168,4 +184,5 @@ private:
     Qt::SortOrder m_sortOrder;
     bool m_dirsFirst;
     bool m_caseSensitive;
+    Modes m_mode;
 };

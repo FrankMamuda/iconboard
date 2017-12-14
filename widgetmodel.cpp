@@ -29,7 +29,7 @@
  * @return
  */
 int WidgetModel::rowCount( const QModelIndex & ) const {
-    return FolderManager::instance()->count();
+    return FolderManager::instance()->count() + FolderManager::instance()->iconCount();
 }
 
 /**
@@ -38,7 +38,12 @@ int WidgetModel::rowCount( const QModelIndex & ) const {
  * @param role
  * @return
  */
-QVariant WidgetModel::data( const QModelIndex &index, int role ) const {
+QVariant WidgetModel::data( const QModelIndex &index, int role ) const {    
+    //
+    // TODO/FIXME: everything here is inefficient and needs an urgent rewrite
+    //             with the use of QtConcurrent multithreading
+    //
+
     if ( !index.isValid() || index.row() < 0 )
         return QVariant();
 
@@ -46,18 +51,28 @@ QVariant WidgetModel::data( const QModelIndex &index, int role ) const {
     case Qt::DecorationRole:
     {
         QPixmap pixmap;
-        pixmap = FolderManager::instance()->at( index.row())->grab();
 
-        // TODO: USE ASPECT RATIO OF SCREEN
-        // and QtConcurrent
+        if ( index.row() >= FolderManager::instance()->count())
+            pixmap = FolderManager::instance()->iconAt( index.row() - FolderManager::instance()->count())->thumbnail;
+        else {
+            FolderManager::instance()->at( index.row())->makeThumbnail();
+            pixmap = FolderManager::instance()->at( index.row())->thumbnail;
+        }
+
+        if ( pixmap.isNull())
+            pixmap = IconCache::instance()->icon( "application-x-zerosize", 24 ).pixmap( 24, 24 );
+
         if ( !pixmap.isNull())
-            return pixmap.scaled( 40, 30 );
+            return pixmap.scaled( 24, 24, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
     }
+        break;
 
     case Qt::DisplayRole:
-        return FolderManager::instance()->at( index.row())->title();
+        if ( index.row() >= FolderManager::instance()->count())
+            return FolderManager::instance()->iconAt( index.row() - FolderManager::instance()->count())->title() + " (icon)";
 
-    default:
-        return QVariant();
+        return FolderManager::instance()->at( index.row())->title() + " (folder)";
     }
+
+    return QVariant();
 }

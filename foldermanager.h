@@ -23,6 +23,7 @@
 //
 #include "singleton.h"
 #include "folderview.h"
+#include "desktopicon.h"
 
 //
 // classes
@@ -40,18 +41,24 @@ public:
     ~FolderManager();
     static FolderManager *instance() { return Singleton<FolderManager>::instance( FolderManager::createInstance ); }
     int count() const;
+    int iconCount() const;
     FolderView *at( int index ) const;
+    DesktopIcon *iconAt( int index ) const;
 #ifdef Q_OS_WIN
     DesktopWidget *desktop;
 #endif
+    QList<FolderView*> previews;
 
 public slots:
     void add( FolderView *folderView );
+    void add( DesktopIcon *desktopIcon );
     void remove( FolderView *folderView );
+    void remove( DesktopIcon *desktopIcon );
     void shutdown();
 
 private:
     FolderManager( QObject *parent = nullptr );
     static FolderManager *createInstance() { return new FolderManager(); }
     QList<FolderView*> list;
+    QList<DesktopIcon*> iconList;
 };

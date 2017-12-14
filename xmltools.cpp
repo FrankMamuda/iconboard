@@ -125,6 +125,7 @@ void XMLTools::write( Modes mode, bool force ) {
     case Widgets:
     {
         int y;
+
         for ( y = 0; y < FolderManager::instance()->count(); y++ ) {
             FolderView *folderView;
 
@@ -171,6 +172,37 @@ void XMLTools::write( Modes mode, bool force ) {
 
             // icon size
             stream.writeTextElement( "iconSize", QString::number( folderView->iconSize()));
+
+            // end widget element
+            stream.writeEndElement();
+        }
+
+        for ( y = 0; y < FolderManager::instance()->iconCount(); y++ ) {
+            DesktopIcon *desktopIcon;
+
+            desktopIcon = FolderManager::instance()->iconAt( y );
+            if ( desktopIcon == nullptr )
+                continue;
+
+            stream.writeStartElement( "icon" );
+            stream.writeAttribute( "target", desktopIcon->target());
+
+            // geometry
+            stream.writeEmptyElement( "position" );
+            stream.writeAttribute( "x", QString::number( desktopIcon->pos().x()));
+            stream.writeAttribute( "y", QString::number( desktopIcon->pos().y()));
+
+            // visibility
+            if ( !desktopIcon->isVisible())
+                stream.writeTextElement( "visible", QString::number( 0 ));
+
+            // other attribures
+            stream.writeTextElement( "iconSize", QString::number( desktopIcon->iconSize()));
+            stream.writeTextElement( "previewIconSize", QString::number( desktopIcon->previewIconSize()));
+            stream.writeEmptyElement( "gridSize" );
+            stream.writeAttribute( "rows", QString::number( desktopIcon->rows()));
+            stream.writeAttribute( "columns", QString::number( desktopIcon->columns()));
+            stream.writeTextElement( "padding", QString::number( desktopIcon->padding()));
 
             // end widget element
             stream.writeEndElement();
@@ -310,11 +342,10 @@ void XMLTools::read( Modes mode ) {
                 QString text, styleSheet;
                 bool isVisible = true;
                 bool readOnly = true;
-                QRect widgetGeometry;
+                QRect widgetGeometry, vGeom, pGeom;
                 Qt::SortOrder sortOrder = Qt::AscendingOrder;
                 bool dirsFirst = true;
                 bool caseSensitive = false;
-                QRect vGeom, pGeom;
 
                 childNode = element.firstChild();
 #ifdef Q_OS_WIN
@@ -362,7 +393,6 @@ void XMLTools::read( Modes mode ) {
                 if ( isVisible )
                     widget->show();
 
-
                 // detect if widget is off-screen
                 vGeom = qApp->primaryScreen()->virtualGeometry();
                 pGeom = qApp->primaryScreen()->geometry();
@@ -378,6 +408,57 @@ void XMLTools::read( Modes mode ) {
                 widget->sort();
 
                 FolderManager::instance()->add( widget );
+            } else if ( !QString::compare( element.tagName(), "icon" ) && mode == Widgets ) {
+                DesktopIcon *desktopIcon;
+                QString target, text;
+                bool isVisible = true;
+                QPoint position;
+                QRect geometry, vGeom, pGeom;
+
+                childNode = element.firstChild();
+#ifdef Q_OS_WIN
+                desktopIcon = new DesktopIcon(( QWidget* )FolderManager::instance()->desktop, element.attribute( "target" ));
+#else
+                desktopIcon = new DesktopIcon( nullptr, element.attribute( "target" ));
+#endif
+                geometry = desktopIcon->geometry();
+
+                while ( !childNode.isNull()) {
+                    childElement = childNode.toElement();
+                    text = childElement.text();
+
+                    if ( !childElement.isNull()) {
+                        if ( !QString::compare( childElement.tagName(), "position" )) {
+                            geometry.setX( childElement.attribute( "x" ).toInt());
+                            geometry.setY( childElement.attribute( "y" ).toInt());
+                        } else if ( !QString::compare( childElement.tagName(), "iconSize" )) {
+                            desktopIcon->setIconSize( text.toInt());
+                        } else if ( !QString::compare( childElement.tagName(), "previewIconSize" )) {
+                            desktopIcon->setPreviewIconSize( text.toInt());
+                        } else if ( !QString::compare( childElement.tagName(), "gridSize" )) {
+                            desktopIcon->setRows( childElement.attribute( "rows" ).toInt());
+                            desktopIcon->setColumns( childElement.attribute( "columns" ).toInt());
+                        } else if ( !QString::compare( childElement.tagName(), "visible" )) {
+                            isVisible = static_cast<bool>( text.toInt());
+                        } else if ( !QString::compare( childElement.tagName(), "padding" )) {
+                            desktopIcon->setPadding( text.toInt());
+                        }
+                    }
+
+                    childNode = childNode.nextSibling();
+                }
+
+                if ( isVisible )
+                    desktopIcon->show();
+
+                // detect if widget is off-screen
+                vGeom = qApp->primaryScreen()->virtualGeometry();
+                pGeom = qApp->primaryScreen()->geometry();
+                if ( !vGeom.contains( geometry ))
+                    geometry = QRect( pGeom.width() / 2 - geometry.width() / 2, pGeom.height() / 2 - geometry.height() / 2, geometry.width(), geometry.height());
+
+                desktopIcon->setGeometry( geometry );
+                FolderManager::instance()->add( desktopIcon );
             } else if ( !QString::compare( element.tagName(), "variable" ) && mode == Variables ) {
                 QString key;
                 QVariant value;

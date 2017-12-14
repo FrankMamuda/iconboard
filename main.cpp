@@ -67,7 +67,6 @@
  *    minor issues with z-order (windows)
  *    handle shortcut/folder drops on tray icon or widget list to add widget
  *    fix flickering with batched resize (currently listview set to singlepass)
- *    folder previews in popups
  *    fix no icons by default on linux (add some build in basic file and folder)
  *    alias (custom naming) of items
  *    basic support for .desktop files (use for drag and drop instead of lnk)

@@ -59,6 +59,14 @@ int FolderManager::count() const {
 }
 
 /**
+ * @brief FolderManager::iconCount
+ * @return
+ */
+int FolderManager::iconCount() const {
+    return this->iconList.count();
+}
+
+/**
  * @brief FolderManager::at
  * @param index
  * @return
@@ -71,11 +79,31 @@ FolderView *FolderManager::at( int index ) const {
 }
 
 /**
+ * @brief FolderManager::iconAt
+ * @param index
+ * @return
+ */
+DesktopIcon *FolderManager::iconAt( int index ) const {
+    if ( index < 0 || index >= this->iconCount())
+        return nullptr;
+
+    return this->iconList.at( index );
+}
+
+/**
  * @brief FolderManager::add
  * @param folderView
  */
 void FolderManager::add( FolderView *folderView ) {
     this->list << folderView;
+}
+
+/**
+ * @brief FolderManager::add
+ * @param desktopIcon
+ */
+void FolderManager::add( DesktopIcon *desktopIcon ) {
+    this->iconList << desktopIcon;
 }
 
 /**
@@ -88,9 +116,20 @@ void FolderManager::remove( FolderView *folderView ) {
 }
 
 /**
+ * @brief FolderManager::remove
+ * @param desktopIcon
+ */
+void FolderManager::remove( DesktopIcon *desktopIcon ) {
+    this->iconList.removeOne( desktopIcon );
+    delete desktopIcon;
+}
+
+/**
  * @brief FolderManager::shutdown
  */
 void FolderManager::shutdown() {
     qDeleteAll( this->list );
     this->list.clear();
+    qDeleteAll( this->iconList );
+    this->iconList.clear();
 }

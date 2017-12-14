@@ -42,7 +42,8 @@ SOURCES += main.cpp\
     foldermanager.cpp \
     widgetlist.cpp \
     trayicon.cpp \
-    filesystemmodel.cpp
+    filesystemmodel.cpp \
+    desktopicon.cpp
 
 win32:SOURCES += desktopwidget.cpp
 
@@ -72,7 +73,8 @@ HEADERS  += \
     main.h \
     widgetlist.h \
     trayicon.h \
-    filesystemmodel.h
+    filesystemmodel.h \
+    desktopicon.h
 
 win32:HEADERS += desktopwidget.h
 

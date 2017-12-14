@@ -35,7 +35,9 @@
 #include "variable.h"
 #include "main.h"
 #include <QDebug>
+#include <QScrollBar>
 #include "filesystemmodel.h"
+#include "foldermanager.h"
 
 #ifdef Q_OS_WIN
 #include <shlobj.h>
@@ -46,7 +48,7 @@
  * @param parent
  * @param rootPath
  */
-FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( parent ), ui( new Ui::FolderView ), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ) {
+FolderView::FolderView( QWidget *parent, const QString &rootPath, Modes mode ) : QWidget( parent ), ui( new Ui::FolderView ), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ), m_mode( mode ) {
     QDir dir( rootPath );
     QFile styleSheet;
 
@@ -69,18 +71,60 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath ) : QWidget( pa
     this->ui->title->setAutoFillBackground( true );
     dir.isRoot() ? this->ui->title->setText( QStorageInfo( dir ).displayName()) : this->ui->title->setText( dir.dirName());
 
+    // remove frame
+    this->setupFrame();
+
+    // special settings for preview mode
+    if ( this->mode() == Preview ) {
+        this->ui->title->hide();
+        this->ui->view->setUniformItemSizes( true );
+        this->ui->view->setSpacing( 4 );
+        this->delegate->setSelectionVisible( false );
+        this->delegate->setTextLineCount( 1 );
+        this->delegate->setSideMargin( 12 );
+        this->delegate->setTextMargin( 8 );
+        this->delegate->setTopMargin( 8 );
+        this->setIconSize( 48 );
+        this->setReadOnly( true );
+
+        styleSheet.setFileName( ":/styleSheets/preview.qss" );
+    } else if ( this->mode() == Folder ) {
+        styleSheet.setFileName( ":/styleSheets/dark.qss" );
+    }
+
     // set default styleSheet
-    styleSheet.setFileName( ":/styleSheets/dark.qss" );
     if ( styleSheet.open( QFile::ReadOnly )) {
         this->m_defaultStyleSheet = styleSheet.readAll().constData();
         styleSheet.close();
     }
 
-    // remove frame
-    this->setupFrame();
-
     // connect variable
     Variable::instance()->bind( "ui_displaySymlinkIcon", this, SLOT( displaySymlinkLabelsChanged()));
+}
+
+/**
+ * @brief FolderView::setupPreviewMode
+ */
+void FolderView::setupPreviewMode( int rows, int columns ) {
+    int x, y, w, h;
+    QFontMetrics fm( this->font());
+
+    w = this->iconSize() + this->delegate->sideMargin() * 2 + this->ui->view->spacing() * 2 + 10 /*scollbar*/;
+    h = this->iconSize() + this->delegate->topMargin() + this->ui->view->spacing() * 2 + fm.height();
+    w *= columns;
+    h *= rows;
+    h += 4;
+
+    x = qMax( 0, QCursor::pos().x() - w / 2 );
+    y = qMax( 0, QCursor::pos().y() - h / 2 );
+
+    if ( x + w > qApp->primaryScreen()->availableGeometry().right())
+        x = qApp->primaryScreen()->geometry().right() - w;
+
+    if ( y + h > qApp->primaryScreen()->availableGeometry().bottom())
+        y = qApp->primaryScreen()->geometry().bottom() - h;
+
+    this->setGeometry( x, y, w, h );
 }
 
 /**
@@ -140,6 +184,9 @@ int FolderView::iconSize() const {
 void FolderView::displayContextMenu( const QPoint &point ) {
     QMenu menu;
     QAction *actionReadOnly;
+
+    if ( this->mode() == Preview )
+        return;
 
     // lock
     if ( Variable::instance()->isEnabled( "app_lock" )) {
@@ -367,6 +414,49 @@ void FolderView::setIconSize() {
 }
 
 /**
+ * @brief FolderView::makeThumbnail
+ */
+void FolderView::makeThumbnail() {
+    QPixmap pixmap( 48, 48 );
+    QIcon icon;
+
+    // for now don't do any updates
+    if ( !this->thumbnail.isNull())
+        return;
+
+    pixmap.fill( Qt::transparent );
+    {
+        QPainter painter( &pixmap );
+
+        painter.setBrush( QColor( Qt::white ));
+        painter.setRenderHint( QPainter::Antialiasing );
+        painter.drawRoundedRect( QRect( 1, 1, 46, 46 ), 4, 4 );
+
+#ifdef ALT_ICON
+        icon = IconCache::instance()->iconForFilename( this->rootPath(), 32 );
+
+        // draw folder icon
+        if ( !icon.isNull()) {
+            painter.drawPixmap( 8, 8, 32, 32, icon.pixmap( 32, 32 ));
+            this->thumbnail = pixmap.scaled( 48, 48 );
+        }
+#else
+        icon = IconCache::instance()->icon( "inode-folder", 16 );
+
+        // draw folder icon
+        if ( !icon.isNull()) {
+            painter.drawPixmap( 8, 8,   16, 16, icon.pixmap( 16, 16 ));
+            painter.drawPixmap( 8, 24,  16, 16, icon.pixmap( 16, 16 ));
+            painter.drawPixmap( 24, 8,  16, 16, icon.pixmap( 16, 16 ));
+            painter.drawPixmap( 24, 24, 16, 16, icon.pixmap( 16, 16 ));
+
+            this->thumbnail = pixmap.scaled( 48, 48 );
+        }
+#endif
+    }
+}
+
+/**
  * @brief FolderView::setReadOnly
  */
 void FolderView::setReadOnly( bool enable ) {
@@ -442,6 +532,15 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
     QMouseEvent *mouseEvent;
     int y;
 
+
+    // TODO: use this instead of the hook in desktop widget?
+    if ( event->type() == QEvent::ActivationChange && this->mode() == Preview ) {
+        if ( QApplication::activeWindow() != this ) {
+            //if ( QApplication::activeWindow() != this->parentWidget())
+            this->close();
+        }
+    }
+
     // filter mouse events
     if ( event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease ||
          event->type() == QEvent::MouseMove || event->type() == QEvent::HoverMove ||
@@ -452,7 +551,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
         mouseEvent = static_cast<QMouseEvent*>( event );
 
         // lock resize and move events
-        if ( Variable::instance()->isEnabled( "app_lock" )) {
+        if ( Variable::instance()->isEnabled( "app_lock" ) || this->mode() == Preview ) {
             this->gesture = NoGesture;
             this->currentGrabArea = NoArea;
         } else {
@@ -520,7 +619,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
         case QEvent::MouseButtonRelease:
             this->gesture = NoGesture;
 
-            if ( mouseEvent->button() == Qt::RightButton )
+            if ( mouseEvent->button() == Qt::RightButton && this->mode() == Folder )
                 this->displayContextMenu( mouseEvent->pos());
 
             break;
@@ -550,6 +649,10 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
 
             if ( this->ui->view->testAttribute( Qt::WA_TransparentForMouseEvents ))
                 this->ui->view->setAttribute( Qt::WA_TransparentForMouseEvents, false );
+
+            if ( this->mode() == Preview )
+                this->close();
+
             break;
 
         case QEvent::MouseMove:
@@ -655,13 +758,21 @@ void FolderView::setupFrame() {
     this->installEventFilter( this );
 
     // set appropriate window flags
-    this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::Tool );
+    if ( this->mode() == Folder )
+        this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::Tool );
+    else if ( this->mode() == Preview ) {
+        this->setWindowFlags( Qt::FramelessWindowHint | Qt::Tool );
+        this->setWindowModality( Qt::NonModal );
+    }
+
+    // set attributes
     this->setAttribute( Qt::WA_TranslucentBackground );
     this->setAttribute( Qt::WA_NoSystemBackground );
     this->setAttribute( Qt::WA_Hover );
 
     // make mouse grab areas
-    this->makeGrabAreas();
+    if ( this->mode() == Folder )
+        this->makeGrabAreas();
 }
 
 /**
@@ -671,6 +782,17 @@ void FolderView::setupFrame() {
 void FolderView::on_view_clicked( const QModelIndex &index ) {
     if ( !index.isValid())
         return;
+
+    QString path( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString());
+    QFileInfo info( path );
+    if ( info.isDir() && this->mode() == Folder ) {
+        FolderView *fv = new FolderView( this, info.absoluteFilePath(), Preview );
+        fv->setAttribute( Qt::WA_DeleteOnClose, true );
+        fv->show();
+        fv->sort();
+        fv->setupPreviewMode();
+        return;
+    }
 
     QDesktopServices::openUrl( QUrl::fromLocalFile( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()));
     this->ui->view->clearSelection();
