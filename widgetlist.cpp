@@ -122,6 +122,7 @@ void WidgetList::on_actionAdd_triggered() {
     auto addIcon = [ this, widget ]( const QString &path ) {
         DesktopIcon *desktopIcon;
         desktopIcon = new DesktopIcon( widget, path );
+        desktopIcon->setupFrame();
         desktopIcon->show();
         FolderManager::instance()->add( desktopIcon );
     };

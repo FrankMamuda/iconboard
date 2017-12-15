@@ -27,6 +27,7 @@
 #include <QIcon>
 #include <QWidget>
 #include <QGesture>
+#include <QTimer>
 
 /**
  * @brief The Icon namespace
@@ -51,13 +52,23 @@ class DesktopIcon : public QWidget {
     Q_PROPERTY( int columns READ columns WRITE setColumns )
     Q_PROPERTY( int padding READ padding WRITE setPadding )
     Q_PROPERTY( QString title READ title WRITE setTitle )
+    Q_PROPERTY( qreal textWidth READ textWidth WRITE setTextWidth )
+    //Q_PROPERTY( Modes mode READ mode WRITE setMode )
     // SHOW LABEL
     // HOVER PREVIEW
     // ETC.
 
 public:
+    // modes
+    /*enum Modes {
+        NoMode = -1,
+        Normal,
+        Demo
+    };
+    Q_ENUMS( Modes )*/
+
     explicit DesktopIcon( QWidget *parent = nullptr, const QString &target = QString::null );
-    ~DesktopIcon() {}
+    ~DesktopIcon();
     QString target() const { return this->m_target; }
     QIcon icon() const { return this->m_icon; }
     int iconSize() const { return this->m_iconSize; }
@@ -66,6 +77,8 @@ public:
     int columns() const { return this->m_columns; }
     int padding() const { return this->m_padding; }
     QString title() const { return this->m_title; }
+    qreal textWidth() const { return this->m_textWidth; }
+    //Modes mode() const { return this->m_mode; }
 
     // thumbnail for widget list
     QPixmap thumbnail;
@@ -73,12 +86,16 @@ public:
 public slots:
     void setTarget( const QString &target ) { this->m_target = target; }
     void setIcon( const QIcon &icon ) { this->m_icon = icon; }
-    void setIconSize( int size ) { this->m_iconSize = size; }
+    void setIconSize( int size ) { this->m_iconSize = size; this->adjustFrame(); }
     void setPreviewIconSize( int size ) { this->m_previewIconSize = size; }
     void setRows( int rows ) { this->m_rows = rows; }
     void setColumns( int columns ) { this->m_columns = columns; }
     void setPadding( int padding ) { this->m_padding = padding; }
     void setTitle( const QString &title ) { this->m_title = title; }
+    void setTextWidth( qreal fraction ) { fraction = qMin( fraction, 2.0 );  fraction = qMax( fraction, 0.5 ); this->m_textWidth = fraction; }
+    //void setMode( Modes mode ) { this->m_mode = mode; }
+    void setupFrame();
+    void adjustFrame();
 
 protected:
     void paintEvent( QPaintEvent *event );
@@ -95,4 +112,7 @@ private:
     int m_padding;
     FolderView *preview;
     QString m_title;
+    QTimer timer;
+    qreal m_textWidth;
+    //Modes m_mode;
 };

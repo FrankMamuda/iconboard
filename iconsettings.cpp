@@ -28,6 +28,13 @@
  */
 IconSettings::IconSettings( QWidget *parent ) : QDialog(parent), ui( new Ui::IconSettings ) {
     this->ui->setupUi( this );
+    this->ui->iconWidgetDemo->setIconSize( 128 );
+    this->ui->iconSizeSlider->setValue( 128 );
+
+    this->connect( this->ui->iconSizeSlider, &QSlider::valueChanged, [ this ]( int value ) {
+        this->ui->iconWidgetDemo->setIconSize( value );
+        //this->ui->frame->setFixedSize( this->ui->iconWidgetDemo->size());
+    } );
 }
 
 /**

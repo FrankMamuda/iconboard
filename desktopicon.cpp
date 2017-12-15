@@ -22,12 +22,12 @@
 #include "desktopicon.h"
 #include "folderview.h"
 #include "iconcache.h"
+#include "iconsettings.h"
 #include <QPainter>
 #include <QFileInfo>
 #include <QDebug>
 #include <QMouseEvent>
 #include <QDesktopServices>
-#include <QTapAndHoldGesture>
 #include <QRgb>
 #include <QMenu>
 
@@ -40,37 +40,69 @@
 DesktopIcon::DesktopIcon( QWidget *parent, const QString &target ) : QWidget( parent ),
     m_target( target ), m_iconSize( Icon::IconSize ), m_previewIconSize( Icon::IconSize ),
     m_rows( Icon::RowCount ), m_columns( Icon::ColumnCount ),
-    m_move( false ), m_padding( Icon::Padding ), preview( nullptr ) {
+    m_move( false ), m_padding( Icon::Padding ), preview( nullptr ), m_textWidth( 1.5 )/*, m_mode( Normal )*/ {
+
+    // set up timer
+    this->timer.setInterval( 200 );
+    this->connect( &this->timer, &QTimer::timeout, [ this ]() {
+        if ( this->geometry().contains( QCursor::pos())) {
+            this->m_move = true;
+            this->setCursor( QCursor( Qt::ClosedHandCursor ));
+            this->repaint();
+        }
+        this->timer.stop();
+    });
+
     // set object name for styling
     this->setObjectName( "DesktopIcon" );
 
     // TODO: display warning icon if anything fails
-    if ( this->target().isEmpty()) {
+    if ( this->target().isEmpty())
         qCritical() << this->tr( "empty target" );
-        this->close();
-    }
 
     QFileInfo info( this->target());
+    QIcon icon;
     if ( !info.exists()) {
         qCritical() << this->tr( "invalid target" );
-        this->close();
+        icon = IconCache::instance()->icon( "messagebox_warning", this->iconSize());
+        this->setTitle( this->tr( "Desktop icon" ));
     } else {
         this->setTitle( info.fileName());
         this->preview = new FolderView( this, info.absoluteFilePath(), FolderView::Preview );
+        icon = IconCache::instance()->iconForFilename( info.absoluteFilePath(), this->iconSize());
     }
 
     // set icon from target file or folder
-    this->setIcon( IconCache::instance()->iconForFilename( info.absoluteFilePath(), this->iconSize()));
-    if ( this->icon().isNull()) {
-        qCritical() << this->tr( "invalid icon" );
-        this->close();
-    }
+    this->setIcon( icon );
+    if ( this->icon().isNull())
+        qWarning() << this->tr( "invalid icon" );
 
     // resize to icon size for now
     // TODO: add padding, margins, shadow, shape and other features later
-    QFontMetrics fm( this->font());
-    this->setFixedSize( this->iconSize(), this->iconSize() + fm.height());
+    this->adjustFrame();
+}
 
+/**
+ * @brief DesktopIcon::~DesktopIcon
+ */
+DesktopIcon::~DesktopIcon() {
+    if ( this->preview != nullptr )
+        delete this->preview;
+}
+
+/**
+ * @brief DesktopIcon::setIconSize
+ * @param size
+ */
+void DesktopIcon::adjustFrame() {
+    QFontMetrics fm( this->font());
+    this->setFixedSize( static_cast<int>( this->iconSize() * this->textWidth()), this->iconSize() + fm.height());
+}
+
+/**
+ * @brief DesktopIcon::setupFrame
+ */
+void DesktopIcon::setupFrame() {
     // set up frame
     this->setAutoFillBackground( true );
     this->setMouseTracking( true );
@@ -78,10 +110,6 @@ DesktopIcon::DesktopIcon( QWidget *parent, const QString &target ) : QWidget( pa
     this->setAttribute( Qt::WA_TranslucentBackground );
     this->setAttribute( Qt::WA_NoSystemBackground );
     this->setAttribute( Qt::WA_Hover );
-
-    // detect move event
-    this->grabGesture( Qt::TapAndHoldGesture );
-    QTapAndHoldGesture::setTimeout( 300 );
 
     // filter events
     this->installEventFilter( this );
@@ -98,6 +126,8 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
     QColor white( 255, 255, 255, 196 );
     QPixmap pixmap( this->iconSize(), this->iconSize());
     QPainter painter( this );
+    int width = static_cast<int>( this->iconSize() * this->textWidth());
+    int offset = ( width - this->iconSize()) / 2;
 
     pixmap.fill( Qt::transparent );
     {
@@ -107,13 +137,13 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
         thumb.setRenderHint( QPainter::Antialiasing );
         painter.setPen( white );
         painter.setBrush( white );
-        painter.drawEllipse( QPoint( this->iconSize() / 2, this->iconSize() / 2 ), this->iconSize() / 2 - 1, this->iconSize() / 2 - 1 );
+        painter.drawEllipse( QPoint( width / 2, this->iconSize() / 2 ), this->iconSize() / 2 - 1, this->iconSize() / 2 - 1 );
         thumb.drawEllipse( QPoint( this->iconSize() / 2, this->iconSize() / 2 ), this->iconSize() / 2 - 1, this->iconSize() / 2 - 1 );
 
         // draw folder icon
         if ( !this->icon().isNull()) {
             int scale = this->iconSize() - this->padding() * 2;
-            painter.drawPixmap( this->padding(), this->padding(), scale, scale, this->icon().pixmap( QSize( this->iconSize() - this->padding() * 2, this->iconSize() - this->padding() * 2 ), this->m_move ? QIcon::Disabled : QIcon::Normal ));
+            painter.drawPixmap( this->padding() + offset, this->padding(), scale, scale, this->icon().pixmap( QSize( this->iconSize() - this->padding() * 2, this->iconSize() - this->padding() * 2 ), this->m_move ? QIcon::Disabled : QIcon::Normal ));
             thumb.drawPixmap( this->padding(), this->padding(), scale, scale, this->icon().pixmap( QSize( this->iconSize() - this->padding() * 2, this->iconSize() - this->padding() * 2 ), this->m_move ? QIcon::Disabled : QIcon::Normal ));
             this->thumbnail = pixmap.scaled( 48, 48 );
         }
@@ -122,7 +152,7 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
     // draw text
     QFontMetrics fm( this->font());
     if ( !this->target().isEmpty()) {
-        QRect textRect( 0, this->iconSize(), this->iconSize(), fm.height());
+        QRect textRect( 0, this->iconSize(), width, fm.height());
         QString displayText( fm.elidedText( this->title(), Qt::ElideRight, textRect.width()));
 
         painter.setPen( Qt::black );
@@ -142,28 +172,26 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
  * @return
  */
 bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
-    // handle tap-and hold (move) event
-    if ( event->type() == QEvent::Gesture ) {
-        if ( QGesture *gesture = static_cast<QGestureEvent*>( event )->gesture( Qt::TapAndHoldGesture )) {
-            if ( gesture->state() == Qt::GestureStarted ) {
-                this->m_move = true;
-                this->setCursor( QCursor( Qt::ClosedHandCursor ));
-                this->repaint();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // TODO: CHANGE CURSOR SHAPE ON ENTER
-
     // filter mouse events
-    if ( event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::MouseMove ||
+    if ( event->type() == QEvent::MouseButtonPress ||
+         event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::MouseMove ||
          event->type() == QEvent::Enter || event->type() == QEvent::Leave
          ) {
+        QMouseEvent *mouseEvent( static_cast<QMouseEvent*>( event ));
+
         // handle events
         switch ( event->type()) {
+        case QEvent::MouseButtonPress:
+            if ( mouseEvent->button() == Qt::LeftButton )
+                this->timer.start();
+            else
+                this->timer.stop();
+
+            return true;
+
         case QEvent::MouseButtonRelease:
+            this->timer.stop();
+
             if ( this->m_move ) {
                 // disable move gesture and repaint icon
                 this->m_move = false;
@@ -180,11 +208,13 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
                     return false;
 
                 // context menu
-                QMouseEvent *mouseEvent( static_cast<QMouseEvent*>( event ));
                 if ( mouseEvent->button() == Qt::RightButton ) {
 #ifdef QT_DEBUG
                     QMenu menu;
-                    menu.addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Configure" ), [](){ qDebug() << "unimplemented"; } );
+                    menu.addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Configure" ), []() {
+                        IconSettings iconSettings;
+                        iconSettings.exec();
+                    } );
                     menu.exec( QCursor::pos());
 #endif
                     return false;

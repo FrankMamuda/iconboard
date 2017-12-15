@@ -150,6 +150,8 @@ public slots:
     void resetStyleSheet();
     void setIconSize();
     void makeThumbnail();
+    void setRootDirectory( const QString &path );
+    void createPreviewWidget( const QString &path );
 
 protected:
     void paintEvent( QPaintEvent *event );
@@ -185,4 +187,7 @@ private:
     bool m_dirsFirst;
     bool m_caseSensitive;
     Modes m_mode;
+
+    // preview
+    FolderView *preview;
 };

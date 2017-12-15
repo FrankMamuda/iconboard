@@ -6,266 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>223</width>
-    <height>393</height>
+    <width>465</width>
+    <height>418</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Icon settings</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <layout class="QHBoxLayout" name="iconWidgetLayout">
-     <item>
-      <spacer name="leftSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QWidget" name="iconWidget" native="true">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>128</width>
-         <height>128</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>128</width>
-         <height>128</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="rightSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="titleLayout">
-     <item>
-      <widget class="QLabel" name="titleLabel">
-       <property name="text">
-        <string>Title</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="titleEdit"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="iconSizeLayout">
-     <item>
-      <widget class="QLabel" name="iconSizeLabel">
-       <property name="text">
-        <string>Widget icon size</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="iconSizeSlider">
-       <property name="minimum">
-        <number>24</number>
-       </property>
-       <property name="maximum">
-        <number>128</number>
-       </property>
-       <property name="singleStep">
-        <number>8</number>
-       </property>
-       <property name="pageStep">
-        <number>8</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="previewSizeLayout">
-     <item>
-      <widget class="QLabel" name="previewSizeLabel">
-       <property name="text">
-        <string>Preview icon size:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="previewSizeSlider">
-       <property name="minimum">
-        <number>24</number>
-       </property>
-       <property name="maximum">
-        <number>128</number>
-       </property>
-       <property name="singleStep">
-        <number>8</number>
-       </property>
-       <property name="pageStep">
-        <number>8</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="paddingLayout">
-     <item>
-      <widget class="QLabel" name="paddingLabel">
-       <property name="text">
-        <string>Padding</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="paddingSlider">
-       <property name="maximum">
-        <number>64</number>
-       </property>
-       <property name="singleStep">
-        <number>2</number>
-       </property>
-       <property name="pageStep">
-        <number>8</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="checkBoxLayout">
-     <item>
-      <widget class="QCheckBox" name="hoverPreviewCheckBox">
-       <property name="text">
-        <string>Hover preview</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="displayTitleCheckBox">
-       <property name="text">
-        <string>Display title</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="iconShapeLayout">
-     <item>
-      <widget class="QLabel" name="iconShapeLabel">
-       <property name="text">
-        <string>Icon shape</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="iconShapeCombo"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="rowCountLayout">
-     <item>
-      <widget class="QLabel" name="rowCountLabel">
-       <property name="text">
-        <string>Rows</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="rowCountSlider">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>9</number>
-       </property>
-       <property name="singleStep">
-        <number>8</number>
-       </property>
-       <property name="pageStep">
-        <number>8</number>
-       </property>
-       <property name="value">
-        <number>3</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="columnCountLayout">
-     <item>
-      <widget class="QLabel" name="columnCountLabel">
-       <property name="text">
-        <string>Columns</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="columnCountSlider">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>9</number>
-       </property>
-       <property name="singleStep">
-        <number>8</number>
-       </property>
-       <property name="pageStep">
-        <number>8</number>
-       </property>
-       <property name="value">
-        <number>3</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="10" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -275,8 +24,377 @@
      </property>
     </widget>
    </item>
+   <item row="6" column="0">
+    <widget class="QFrame" name="frame">
+     <property name="minimumSize">
+      <size>
+       <width>256</width>
+       <height>256</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>256</width>
+       <height>256</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="1" column="1">
+         <widget class="DesktopIcon" name="iconWidgetDemo" native="true">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <spacer name="leftSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="2">
+         <spacer name="rightSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="1">
+         <spacer name="topSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="1">
+         <spacer name="bottomSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QGroupBox" name="iconGroup">
+     <property name="title">
+      <string>Icon</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
+      <item>
+       <layout class="QHBoxLayout" name="paddingLayout">
+        <item>
+         <widget class="QLabel" name="paddingLabel">
+          <property name="text">
+           <string>Padding</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="paddingSlider">
+          <property name="maximum">
+           <number>64</number>
+          </property>
+          <property name="singleStep">
+           <number>2</number>
+          </property>
+          <property name="pageStep">
+           <number>8</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="iconSizeLayout">
+        <item>
+         <widget class="QLabel" name="iconSizeLabel">
+          <property name="text">
+           <string>Widget icon size</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="iconSizeSlider">
+          <property name="minimum">
+           <number>24</number>
+          </property>
+          <property name="maximum">
+           <number>128</number>
+          </property>
+          <property name="singleStep">
+           <number>8</number>
+          </property>
+          <property name="pageStep">
+           <number>8</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="iconShapeLayout">
+        <item>
+         <widget class="QLabel" name="iconShapeLabel">
+          <property name="text">
+           <string>Icon shape</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="iconShapeCombo"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="1" rowspan="2">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QGroupBox" name="titleGroup">
+       <property name="title">
+        <string>Title</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QCheckBox" name="titleCheckBox">
+          <property name="text">
+           <string>Show title</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="textLayout">
+          <item>
+           <widget class="QLabel" name="textLabel">
+            <property name="text">
+             <string>Text</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="textEdit"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="widthLayout">
+          <item>
+           <widget class="QLabel" name="widthLabel">
+            <property name="text">
+             <string>Width</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="widthSlider">
+            <property name="minimum">
+             <number>50</number>
+            </property>
+            <property name="maximum">
+             <number>200</number>
+            </property>
+            <property name="singleStep">
+             <number>25</number>
+            </property>
+            <property name="pageStep">
+             <number>50</number>
+            </property>
+            <property name="value">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>Preview</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="hoverCheckBox">
+          <property name="text">
+           <string>Show on hover</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="rowCountLayout">
+          <item>
+           <widget class="QLabel" name="rowCountLabel">
+            <property name="text">
+             <string>Rows</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="rowCountSlider">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>9</number>
+            </property>
+            <property name="singleStep">
+             <number>8</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="columnCountLayout">
+          <item>
+           <widget class="QLabel" name="columnCountLabel">
+            <property name="text">
+             <string>Columns</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="columnCountSlider">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>9</number>
+            </property>
+            <property name="singleStep">
+             <number>8</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="previewSizeLayout">
+          <item>
+           <widget class="QLabel" name="sizeLabel">
+            <property name="text">
+             <string>Icon size</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="previewSizeSlider">
+            <property name="minimum">
+             <number>24</number>
+            </property>
+            <property name="maximum">
+             <number>128</number>
+            </property>
+            <property name="singleStep">
+             <number>8</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DesktopIcon</class>
+   <extends>QWidget</extends>
+   <header>desktopicon.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

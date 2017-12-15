@@ -48,7 +48,7 @@
  * @param parent
  * @param rootPath
  */
-FolderView::FolderView( QWidget *parent, const QString &rootPath, Modes mode ) : QWidget( parent ), ui( new Ui::FolderView ), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ), m_mode( mode ) {
+FolderView::FolderView( QWidget *parent, const QString &rootPath, Modes mode ) : QWidget( parent ), ui( new Ui::FolderView ), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ), m_mode( mode ), preview( nullptr ) {
     QDir dir( rootPath );
     QFile styleSheet;
 
@@ -103,6 +103,14 @@ FolderView::FolderView( QWidget *parent, const QString &rootPath, Modes mode ) :
 }
 
 /**
+ * @brief FolderView::createPreviewWidget
+ */
+void FolderView::createPreviewWidget( const QString &path ) {
+    // create preview widget
+    this->preview = new FolderView( this, path, FolderView::Preview );
+}
+
+/**
  * @brief FolderView::setupPreviewMode
  */
 void FolderView::setupPreviewMode( int rows, int columns ) {
@@ -141,6 +149,7 @@ FolderView::~FolderView() {
     delete this->proxyModel;
     delete this->delegate;
     delete this->model;
+    delete this->preview;
     delete this->ui;
 }
 
@@ -178,6 +187,17 @@ int FolderView::iconSize() const {
 }
 
 /**
+ * @brief FolderView::setRootDirectory
+ * @param path
+ */
+void FolderView::setRootDirectory( const QString &path ) {
+    // NOTE: seems this does not crash app
+    //this->proxyModel->waitForThreads();
+    this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( path )));
+    this->sort();
+}
+
+/**
  * @brief FolderView::displayContextMenu
  * @param point
  */
@@ -207,10 +227,10 @@ void FolderView::displayContextMenu( const QPoint &point ) {
             dir.setPath( QFileDialog::getExistingDirectory( this->parentWidget(), this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
 
             if ( dir.exists()) {
-                this->proxyModel->waitForThreads();
-                this->ui->view->setRootIndex( this->proxyModel->mapFromSource( this->model->setRootPath( dir.absolutePath())));
-                this->ui->title->setText( dir.dirName());
-                this->sort();
+                this->setRootDirectory( dir.absolutePath());
+
+                if ( this->mode() == Folder )
+                    this->ui->title->setText( dir.dirName());
             }
         } );
 
@@ -786,11 +806,13 @@ void FolderView::on_view_clicked( const QModelIndex &index ) {
     QString path( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString());
     QFileInfo info( path );
     if ( info.isDir() && this->mode() == Folder ) {
-        FolderView *fv = new FolderView( this, info.absoluteFilePath(), Preview );
-        fv->setAttribute( Qt::WA_DeleteOnClose, true );
-        fv->show();
-        fv->sort();
-        fv->setupPreviewMode();
+        if ( this->preview == nullptr )
+            this->createPreviewWidget( info.absoluteFilePath());
+
+        this->preview->show();
+        this->preview->sort();
+        this->preview->setupPreviewMode();
+        this->preview->setRootDirectory( info.absoluteFilePath());
         return;
     }
 

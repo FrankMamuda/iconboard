@@ -421,6 +421,7 @@ void XMLTools::read( Modes mode ) {
 #else
                 desktopIcon = new DesktopIcon( nullptr, element.attribute( "target" ));
 #endif
+                desktopIcon->setupFrame();
                 geometry = desktopIcon->geometry();
 
                 while ( !childNode.isNull()) {
