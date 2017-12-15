@@ -46,6 +46,10 @@ public:
     ~IconSettings();
     void setIcon( DesktopIcon *icon );
 
+public slots:
+    void accept();
+
 private:
     Ui::IconSettings *ui;
+    DesktopIcon *icon;
 };

@@ -203,6 +203,18 @@ void XMLTools::write( Modes mode, bool force ) {
             stream.writeAttribute( "rows", QString::number( desktopIcon->rows()));
             stream.writeAttribute( "columns", QString::number( desktopIcon->columns()));
             stream.writeTextElement( "padding", QString::number( desktopIcon->padding()));
+            stream.writeTextElement( "title", desktopIcon->title());
+            stream.writeTextElement( "textWidth", QString::number( desktopIcon->textWidth()));
+            stream.writeTextElement( "shape", QString::number( static_cast<int>( desktopIcon->shape())));
+            stream.writeTextElement( "titleVisible", QString::number( static_cast<int>( desktopIcon->isTitleVisible())));
+            stream.writeTextElement( "hoverPreview", QString::number( static_cast<int>( desktopIcon->hoverPreview())));
+
+            // background colour
+            stream.writeEmptyElement( "background" );
+            stream.writeAttribute( "r", QString::number( desktopIcon->background().redF()));
+            stream.writeAttribute( "g", QString::number( desktopIcon->background().greenF()));
+            stream.writeAttribute( "b", QString::number( desktopIcon->background().blueF()));
+            stream.writeAttribute( "a", QString::number( desktopIcon->background().alphaF()));
 
             // end widget element
             stream.writeEndElement();
@@ -443,6 +455,22 @@ void XMLTools::read( Modes mode ) {
                             isVisible = static_cast<bool>( text.toInt());
                         } else if ( !QString::compare( childElement.tagName(), "padding" )) {
                             desktopIcon->setPadding( text.toInt());
+                        } else if ( !QString::compare( childElement.tagName(), "title" )) {
+                            desktopIcon->setTitle( text );
+                        } else if ( !QString::compare( childElement.tagName(), "textWidth" )) {
+                            desktopIcon->setTextWidth( text.toDouble());
+                        } else if ( !QString::compare( childElement.tagName(), "shape" )) {
+                            desktopIcon->setShape( static_cast<DesktopIcon::Shapes>( text.toInt()));
+                        } else if ( !QString::compare( childElement.tagName(), "titleVisible" )) {
+                            desktopIcon->setTitleVisible( static_cast<bool>( text.toInt()));
+                        } else if ( !QString::compare( childElement.tagName(), "hoverPreview" )) {
+                            desktopIcon->setHoverPreview( static_cast<bool>( text.toInt()));
+                        } else if ( !QString::compare( childElement.tagName(), "position" )) {
+                            desktopIcon->setBackground( QColor::fromRgbF(
+                                                            childElement.attribute( "r" ).toDouble(),
+                                                            childElement.attribute( "g" ).toDouble(),
+                                                            childElement.attribute( "b" ).toDouble(),
+                                                            childElement.attribute( "a" ).toDouble()));
                         }
                     }
 

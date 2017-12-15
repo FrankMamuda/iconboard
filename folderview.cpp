@@ -117,10 +117,13 @@ void FolderView::setupPreviewMode( int rows, int columns ) {
     int x, y, w, h;
     QFontMetrics fm( this->font());
 
-    w = this->iconSize() + this->delegate->sideMargin() * 2 + this->ui->view->spacing() * 2 + 10 /*scollbar*/;
+    // TODO: scroll to beginning
+
+    w = this->iconSize() + this->delegate->sideMargin() * 2 + this->ui->view->spacing() * 2 /*scollbar*/;
     h = this->iconSize() + this->delegate->topMargin() + this->ui->view->spacing() * 2 + fm.height();
     w *= columns;
     h *= rows;
+    w += 10;
     h += 4;
 
     x = qMax( 0, QCursor::pos().x() - w / 2 );

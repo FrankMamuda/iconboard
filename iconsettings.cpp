@@ -87,5 +87,26 @@ void IconSettings::setIcon( DesktopIcon *icon ) {
     // TODO: background
     this->ui->titleCheckBox->setChecked( icon->isTitleVisible());
     this->ui->titleCheckBox->setChecked( icon->hoverPreview());
-    //this->ui->iconWidgetDemo->adjustFrame();
+
+    // finally set icon
+    this->icon = icon;
+}
+
+/**
+ * @brief IconSettings::accept
+ */
+void IconSettings::accept() {
+    this->icon->setIconSize( this->ui->iconSizeSlider->value());
+    this->icon->setPreviewIconSize( this->ui->previewSizeSlider->value());
+    this->icon->setRows( this->ui->rowCountSlider->value());
+    this->icon->setColumns( this->ui->columnCountSlider->value());
+    this->icon->setPadding( this->ui->paddingSlider->value());
+    this->icon->setTitle( this->ui->textEdit->text());
+    this->icon->setTextWidth( static_cast<qreal>( this->ui->widthSlider->value()) / 100.0 );
+    this->icon->setShape( static_cast<DesktopIcon::Shapes>( this->ui->iconShapeCombo->currentIndex()));
+    // TODO: background
+    this->icon->setTitleVisible( this->ui->titleCheckBox->isChecked());
+    this->icon->setHoverPreview( this->ui->titleCheckBox->isChecked());
+
+    QDialog::accept();
 }

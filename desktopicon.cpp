@@ -76,7 +76,12 @@ DesktopIcon::DesktopIcon( QWidget *parent, const QString &target ) : QWidget( pa
     } else {
         this->setTitle( info.fileName());
         this->preview = new FolderView( this, info.absoluteFilePath(), FolderView::Preview );
-        icon = IconCache::instance()->iconForFilename( info.absoluteFilePath(), this->iconSize());
+
+#ifdef Q_OS_WIN
+        icon = IconCache::instance()->extractPixmap( info.absoluteFilePath(), this->iconSize());
+#else
+        icon = IconCache::instance()->iconForFilename( info.absoluteFilePath(), this->iconSize() - this->padding() * 2 );
+#endif
     }
 
     // set icon from target file or folder
@@ -238,15 +243,14 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
 
                 // context menu
                 if ( mouseEvent->button() == Qt::RightButton ) {
-#ifdef QT_DEBUG
                     QMenu menu;
                     menu.addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Configure" ), [ this ]() {
                         IconSettings iconSettings;
-                        iconSettings.exec();
                         iconSettings.setIcon( this );
+                        iconSettings.exec();
                     } );
                     menu.exec( QCursor::pos());
-#endif
+
                     return false;
                 }
 
