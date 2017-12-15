@@ -30,6 +30,11 @@ namespace Ui {
 class IconSettings;
 }
 
+//
+// classes
+//
+class DesktopIcon;
+
 /**
  * @brief The IconSettings class
  */
@@ -39,6 +44,7 @@ class IconSettings : public QDialog {
 public:
     explicit IconSettings( QWidget *parent = 0 );
     ~IconSettings();
+    void setIcon( DesktopIcon *icon );
 
 private:
     Ui::IconSettings *ui;

@@ -6,263 +6,127 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>465</width>
-    <height>418</height>
+    <width>516</width>
+    <height>420</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Icon settings</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="10" column="0" colspan="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QFrame" name="frame">
-     <property name="minimumSize">
-      <size>
-       <width>256</width>
-       <height>256</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>256</width>
-       <height>256</height>
-      </size>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <property name="spacing">
-       <number>0</number>
-      </property>
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <item>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="1" column="1">
-         <widget class="DesktopIcon" name="iconWidgetDemo" native="true">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <spacer name="leftSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="2">
-         <spacer name="rightSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="1">
-         <spacer name="topSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="2" column="1">
-         <spacer name="bottomSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="7" column="0">
-    <widget class="QGroupBox" name="iconGroup">
-     <property name="title">
-      <string>Icon</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_5">
-      <item>
-       <layout class="QHBoxLayout" name="paddingLayout">
-        <item>
-         <widget class="QLabel" name="paddingLabel">
-          <property name="text">
-           <string>Padding</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSlider" name="paddingSlider">
-          <property name="maximum">
-           <number>64</number>
-          </property>
-          <property name="singleStep">
-           <number>2</number>
-          </property>
-          <property name="pageStep">
-           <number>8</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="iconSizeLayout">
-        <item>
-         <widget class="QLabel" name="iconSizeLabel">
-          <property name="text">
-           <string>Widget icon size</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSlider" name="iconSizeSlider">
-          <property name="minimum">
-           <number>24</number>
-          </property>
-          <property name="maximum">
-           <number>128</number>
-          </property>
-          <property name="singleStep">
-           <number>8</number>
-          </property>
-          <property name="pageStep">
-           <number>8</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="iconShapeLayout">
-        <item>
-         <widget class="QLabel" name="iconShapeLabel">
-          <property name="text">
-           <string>Icon shape</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="iconShapeCombo"/>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="6" column="1" rowspan="2">
+   <item row="6" column="1" rowspan="3">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QGroupBox" name="titleGroup">
+      <widget class="QGroupBox" name="iconGroup">
        <property name="title">
-        <string>Title</string>
+        <string>Icon appearance</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
+       <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
-         <widget class="QCheckBox" name="titleCheckBox">
-          <property name="text">
-           <string>Show title</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="textLayout">
+         <layout class="QHBoxLayout" name="paddingLayout">
           <item>
-           <widget class="QLabel" name="textLabel">
+           <widget class="QLabel" name="paddingLabel">
             <property name="text">
-             <string>Text</string>
+             <string>Padding</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="textEdit"/>
+           <widget class="QSlider" name="paddingSlider">
+            <property name="maximum">
+             <number>32</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="widthLayout">
+         <layout class="QHBoxLayout" name="iconSizeLayout">
           <item>
-           <widget class="QLabel" name="widthLabel">
+           <widget class="QLabel" name="iconSizeLabel">
             <property name="text">
-             <string>Width</string>
+             <string>Widget icon size</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QSlider" name="widthSlider">
+           <widget class="QSlider" name="iconSizeSlider">
             <property name="minimum">
-             <number>50</number>
+             <number>24</number>
             </property>
             <property name="maximum">
-             <number>200</number>
+             <number>128</number>
             </property>
             <property name="singleStep">
-             <number>25</number>
+             <number>8</number>
             </property>
             <property name="pageStep">
-             <number>50</number>
-            </property>
-            <property name="value">
-             <number>100</number>
+             <number>8</number>
             </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="iconShapeLayout">
+          <item>
+           <widget class="QLabel" name="iconShapeLabel">
+            <property name="text">
+             <string>Icon shape</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="iconShapeCombo">
+            <item>
+             <property name="text">
+              <string>Circle</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Square</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Rounded</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Plain</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Background color</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton">
+            <property name="text">
+             <string>...</string>
             </property>
            </widget>
           </item>
@@ -274,7 +138,7 @@
      <item>
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
-        <string>Preview</string>
+        <string>Folder preview</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
@@ -385,6 +249,181 @@
      </item>
     </layout>
    </item>
+   <item row="11" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="BackgroundFrame" name="frame">
+     <property name="minimumSize">
+      <size>
+       <width>256</width>
+       <height>256</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>256</width>
+       <height>256</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="1" column="1">
+         <widget class="DesktopIcon" name="iconWidgetDemo" native="true">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <spacer name="leftSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="2">
+         <spacer name="rightSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="1">
+         <spacer name="topSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="1">
+         <spacer name="bottomSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QGroupBox" name="titleGroup">
+     <property name="title">
+      <string>Icon title</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <widget class="QCheckBox" name="titleCheckBox">
+        <property name="text">
+         <string>Show title</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="textLayout">
+        <item>
+         <widget class="QLabel" name="textLabel">
+          <property name="text">
+           <string>Text</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="textEdit"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="widthLayout">
+        <item>
+         <widget class="QLabel" name="widthLabel">
+          <property name="text">
+           <string>Width (%)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="widthSlider">
+          <property name="minimum">
+           <number>50</number>
+          </property>
+          <property name="maximum">
+           <number>200</number>
+          </property>
+          <property name="singleStep">
+           <number>25</number>
+          </property>
+          <property name="pageStep">
+           <number>50</number>
+          </property>
+          <property name="value">
+           <number>100</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -392,6 +431,12 @@
    <class>DesktopIcon</class>
    <extends>QWidget</extends>
    <header>desktopicon.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BackgroundFrame</class>
+   <extends>QFrame</extends>
+   <header>backgroundframe.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -53,19 +53,25 @@ class DesktopIcon : public QWidget {
     Q_PROPERTY( int padding READ padding WRITE setPadding )
     Q_PROPERTY( QString title READ title WRITE setTitle )
     Q_PROPERTY( qreal textWidth READ textWidth WRITE setTextWidth )
-    //Q_PROPERTY( Modes mode READ mode WRITE setMode )
+    Q_PROPERTY( Shapes shape READ shape WRITE setShape )
+    Q_PROPERTY( QColor background READ background WRITE setBackground )
+    Q_PROPERTY( bool titleVisible READ isTitleVisible WRITE setTitleVisible )
+    Q_PROPERTY( bool hoverPreview READ hoverPreview WRITE setHoverPreview )
+
     // SHOW LABEL
     // HOVER PREVIEW
     // ETC.
 
 public:
     // modes
-    /*enum Modes {
-        NoMode = -1,
-        Normal,
-        Demo
+    enum Shapes {
+        NoShape = -1,
+        Circle,
+        Square,
+        Rounded,
+        Plain
     };
-    Q_ENUMS( Modes )*/
+    Q_ENUMS( Shapes )
 
     explicit DesktopIcon( QWidget *parent = nullptr, const QString &target = QString::null );
     ~DesktopIcon();
@@ -78,22 +84,29 @@ public:
     int padding() const { return this->m_padding; }
     QString title() const { return this->m_title; }
     qreal textWidth() const { return this->m_textWidth; }
-    //Modes mode() const { return this->m_mode; }
+    Shapes shape() const { return this->m_shape; }
+    QColor background() const { return this->m_background; }
+    bool isTitleVisible() const { return this->m_titleVisible; }
+    bool hoverPreview() const { return this->m_hoverPreview; }
 
     // thumbnail for widget list
     QPixmap thumbnail;
 
 public slots:
     void setTarget( const QString &target ) { this->m_target = target; }
-    void setIcon( const QIcon &icon ) { this->m_icon = icon; }
+    void setIcon( const QIcon &icon ) { this->m_icon = icon; this->repaint(); }
     void setIconSize( int size ) { this->m_iconSize = size; this->adjustFrame(); }
     void setPreviewIconSize( int size ) { this->m_previewIconSize = size; }
     void setRows( int rows ) { this->m_rows = rows; }
     void setColumns( int columns ) { this->m_columns = columns; }
-    void setPadding( int padding ) { this->m_padding = padding; }
-    void setTitle( const QString &title ) { this->m_title = title; }
-    void setTextWidth( qreal fraction ) { fraction = qMin( fraction, 2.0 );  fraction = qMax( fraction, 0.5 ); this->m_textWidth = fraction; }
-    //void setMode( Modes mode ) { this->m_mode = mode; }
+    void setPadding( int padding ) { this->m_padding = padding; this->repaint(); }
+    void setTitle( const QString &title ) { this->m_title = title; this->repaint(); }
+    void setTextWidth( qreal fraction ) { fraction = qMin( fraction, 2.0 );  fraction = qMax( fraction, 0.5 ); this->m_textWidth = fraction; this->adjustFrame(); }
+    void setShape( Shapes shape ) { this->m_shape = shape; this->repaint(); }
+    void setBackground( const QColor &color ) { this->m_background = color; this->repaint(); }
+    void setTitleVisible( bool enable ) { this->m_titleVisible = enable; this->repaint(); }
+    void setHoverPreview( bool enable ) { this->m_hoverPreview = enable; }
+
     void setupFrame();
     void adjustFrame();
 
@@ -114,5 +127,8 @@ private:
     QString m_title;
     QTimer timer;
     qreal m_textWidth;
-    //Modes m_mode;
+    Shapes m_shape;
+    QColor m_background;
+    bool m_titleVisible;
+    bool m_hoverPreview;
 };

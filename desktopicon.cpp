@@ -40,7 +40,14 @@
 DesktopIcon::DesktopIcon( QWidget *parent, const QString &target ) : QWidget( parent ),
     m_target( target ), m_iconSize( Icon::IconSize ), m_previewIconSize( Icon::IconSize ),
     m_rows( Icon::RowCount ), m_columns( Icon::ColumnCount ),
-    m_move( false ), m_padding( Icon::Padding ), preview( nullptr ), m_textWidth( 1.5 )/*, m_mode( Normal )*/ {
+    m_move( false ), m_padding( Icon::Padding ), preview( nullptr ), m_textWidth( 1.5 ),
+    m_shape( Circle ),
+    m_background( Qt::white ),
+    m_titleVisible( true ),
+    m_hoverPreview( false )
+{
+    // TODO: padding as percent?
+
 
     // set up timer
     this->timer.setInterval( 200 );
@@ -135,9 +142,31 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
 
         painter.setRenderHint( QPainter::Antialiasing );
         thumb.setRenderHint( QPainter::Antialiasing );
-        painter.setPen( white );
-        painter.setBrush( white );
-        painter.drawEllipse( QPoint( width / 2, this->iconSize() / 2 ), this->iconSize() / 2 - 1, this->iconSize() / 2 - 1 );
+        painter.setPen( this->background());
+        painter.setBrush( this->background());
+
+        switch ( this->shape()) {
+        case Circle:
+            painter.drawEllipse( QPoint( width / 2, this->iconSize() / 2 ), this->iconSize() / 2 - 1, this->iconSize() / 2 - 1 );
+            break;
+
+        case Square:
+            painter.fillRect( QRect( offset, 0, this->iconSize() - 2, this->iconSize() - 2 ), QBrush( this->background()));
+            break;
+
+        case Rounded:
+        {
+            QPainterPath path;
+            path.addRoundedRect( QRectF( offset, 0, this->iconSize() - 2, this->iconSize() - 2 ), this->iconSize() * 0.125, this->iconSize() * 0.125 );
+            painter.fillPath( path,QBrush( this->background()));
+        }
+            break;
+
+        case NoShape:
+        case Plain:
+            break;
+        }
+
         thumb.drawEllipse( QPoint( this->iconSize() / 2, this->iconSize() / 2 ), this->iconSize() / 2 - 1, this->iconSize() / 2 - 1 );
 
         // draw folder icon
@@ -151,7 +180,7 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
 
     // draw text
     QFontMetrics fm( this->font());
-    if ( !this->target().isEmpty()) {
+    if ( !this->title().isEmpty() && this->isTitleVisible()) {
         QRect textRect( 0, this->iconSize(), width, fm.height());
         QString displayText( fm.elidedText( this->title(), Qt::ElideRight, textRect.width()));
 
@@ -211,9 +240,10 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
                 if ( mouseEvent->button() == Qt::RightButton ) {
 #ifdef QT_DEBUG
                     QMenu menu;
-                    menu.addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Configure" ), []() {
+                    menu.addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Configure" ), [ this ]() {
                         IconSettings iconSettings;
                         iconSettings.exec();
+                        iconSettings.setIcon( this );
                     } );
                     menu.exec( QCursor::pos());
 #endif

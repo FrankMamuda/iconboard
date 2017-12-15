@@ -21,6 +21,8 @@
 //
 #include "iconsettings.h"
 #include "ui_iconsettings.h"
+#include "desktopicon.h"
+#include <QDebug>
 
 /**
  * @brief IconSettings::IconSettings
@@ -28,12 +30,36 @@
  */
 IconSettings::IconSettings( QWidget *parent ) : QDialog(parent), ui( new Ui::IconSettings ) {
     this->ui->setupUi( this );
-    this->ui->iconWidgetDemo->setIconSize( 128 );
-    this->ui->iconSizeSlider->setValue( 128 );
-
     this->connect( this->ui->iconSizeSlider, &QSlider::valueChanged, [ this ]( int value ) {
         this->ui->iconWidgetDemo->setIconSize( value );
-        //this->ui->frame->setFixedSize( this->ui->iconWidgetDemo->size());
+    } );
+    this->connect( this->ui->previewSizeSlider, &QSlider::valueChanged, [ this ]( int value ) {
+        this->ui->iconWidgetDemo->setPreviewIconSize( value );
+    } );
+    this->connect( this->ui->rowCountSlider, &QSlider::valueChanged, [ this ]( int value ) {
+        this->ui->iconWidgetDemo->setRows( value );
+    } );
+    this->connect( this->ui->columnCountSlider, &QSlider::valueChanged, [ this ]( int value ) {
+        this->ui->iconWidgetDemo->setColumns( value );
+    } );
+    this->connect( this->ui->paddingSlider, &QSlider::valueChanged, [ this ]( int value ) {
+        this->ui->iconWidgetDemo->setPadding( value );
+    } );
+    this->connect( this->ui->textEdit, &QLineEdit::textChanged, [ this ]( const QString &text ) {
+        this->ui->iconWidgetDemo->setTitle( text );
+    } );
+    this->connect( this->ui->widthSlider, &QSlider::valueChanged, [ this ]( int value ) {
+        this->ui->iconWidgetDemo->setTextWidth( static_cast<qreal>( value ) / 100.0 );
+    } );
+    this->connect( this->ui->iconShapeCombo, static_cast< void( QComboBox::* )( int )>( &QComboBox::activated ), [ this ]( int index ) {
+        this->ui->iconWidgetDemo->setShape( static_cast<DesktopIcon::Shapes>( index ));
+    } );
+    // TODO: color
+    this->connect( this->ui->titleCheckBox, &QCheckBox::toggled, [ this ]( bool enable ) {
+        this->ui->iconWidgetDemo->setTitleVisible( enable );
+    } );
+    this->connect( this->ui->hoverCheckBox, &QCheckBox::toggled, [ this ]( bool enable ) {
+        this->ui->iconWidgetDemo->setHoverPreview( enable );
     } );
 }
 
@@ -42,4 +68,24 @@ IconSettings::IconSettings( QWidget *parent ) : QDialog(parent), ui( new Ui::Ico
  */
 IconSettings::~IconSettings() {
     delete this->ui;
+}
+
+/**
+ * @brief IconSettings::setIcon
+ * @param icon
+ */
+void IconSettings::setIcon( DesktopIcon *icon ) {
+    // TODO: block signals?
+    this->ui->iconSizeSlider->setValue( icon->iconSize());
+    this->ui->previewSizeSlider->setValue( icon->previewIconSize());
+    this->ui->rowCountSlider->setValue( icon->rows());
+    this->ui->columnCountSlider->setValue( icon->columns());
+    this->ui->paddingSlider->setValue( icon->padding());
+    this->ui->textEdit->setText( icon->title());
+    this->ui->widthSlider->setValue( static_cast<int>( icon->textWidth() * 100 ));
+    this->ui->iconShapeCombo->setCurrentIndex( static_cast<int>( icon->shape()));
+    // TODO: background
+    this->ui->titleCheckBox->setChecked( icon->isTitleVisible());
+    this->ui->titleCheckBox->setChecked( icon->hoverPreview());
+    //this->ui->iconWidgetDemo->adjustFrame();
 }
