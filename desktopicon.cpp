@@ -37,17 +37,18 @@
  * @brief DesktopIcon::DesktopIcon
  * @param parent
  */
-DesktopIcon::DesktopIcon( QWidget *parent, const QString &target ) : QWidget( parent ),
-    m_target( target ), m_iconSize( Icon::IconSize ), m_previewIconSize( Icon::IconSize ),
+DesktopIcon::DesktopIcon( QWidget *parent, const QString &target, qreal padding, int iconSize, const QString &customIcon ) : QWidget( parent ),
+    m_target( target ), m_iconSize( iconSize ), m_previewIconSize( Icon::IconSize ),
     m_rows( Icon::RowCount ), m_columns( Icon::ColumnCount ),
-    m_move( false ), m_padding( Icon::Padding ), preview( nullptr ), m_textWidth( 1.5 ),
+    m_move( false ), m_padding( padding ), preview( nullptr ), m_textWidth( 1.5 ),
     m_shape( Circle ),
     m_background( Qt::white ),
     m_titleVisible( true ),
-    m_hoverPreview( false )
+    m_hoverPreview( false ),
+    m_hOffset( 0 ), m_vOffset( 0 ),
+    m_customIcon( customIcon )
 {
     // TODO: padding as percent?
-
 
     // set up timer
     this->timer.setInterval( 200 );
@@ -64,28 +65,11 @@ DesktopIcon::DesktopIcon( QWidget *parent, const QString &target ) : QWidget( pa
     this->setObjectName( "DesktopIcon" );
 
     // TODO: display warning icon if anything fails
-    if ( this->target().isEmpty())
-        qCritical() << this->tr( "empty target" );
-
-    QFileInfo info( this->target());
-    QIcon icon;
-    if ( !info.exists()) {
-        qCritical() << this->tr( "invalid target" );
-        icon = IconCache::instance()->icon( "messagebox_warning", this->iconSize());
-        this->setTitle( this->tr( "Desktop icon" ));
-    } else {
-        this->setTitle( info.fileName());
-        this->preview = new FolderView( this, info.absoluteFilePath(), FolderView::Preview );
-
-#ifdef Q_OS_WIN
-        icon = IconCache::instance()->extractPixmap( info.absoluteFilePath(), this->iconSize());
-#else
-        icon = IconCache::instance()->iconForFilename( info.absoluteFilePath(), this->iconSize() - this->padding() * 2 );
-#endif
-    }
+    //if ( this->target().isEmpty())
+    //    qCritical() << this->tr( "empty target" );
 
     // set icon from target file or folder
-    this->setIcon( icon );
+    this->setCustomIcon( this->customIcon());
     if ( this->icon().isNull())
         qWarning() << this->tr( "invalid icon" );
 
@@ -109,6 +93,46 @@ DesktopIcon::~DesktopIcon() {
 void DesktopIcon::adjustFrame() {
     QFontMetrics fm( this->font());
     this->setFixedSize( static_cast<int>( this->iconSize() * this->textWidth()), this->iconSize() + fm.height());
+}
+
+/**
+ * @brief DesktopIcon::loadIcon
+ */
+void DesktopIcon::setIcon() {
+    int scale = static_cast<int>( this->iconSize() - this->padded() * 2 );
+
+    if ( this->customIcon().isNull()) {
+        QFileInfo info( this->target());
+        QIcon icon;
+
+        if ( !info.exists()) {
+            //qCritical() << this->tr( "invalid target" );
+            icon = IconCache::instance()->icon( "messagebox_warning", scale );
+            this->setTitle( this->tr( "Desktop icon" ));
+        } else {
+            this->setTitle( info.fileName());
+            this->preview = new FolderView( this, info.absoluteFilePath(), FolderView::Preview );
+    #ifdef Q_OS_WIN
+            if ( info.isDir())
+                icon = IconCache::instance()->extractPixmap( info.absoluteFilePath(), scale );
+            else
+    #endif
+            icon = IconCache::instance()->iconForFilename( info.absoluteFilePath(), scale, true );
+        }
+
+        this->m_icon = icon;
+    } else {        
+        this->m_icon = QIcon( this->customIcon());
+    }
+}
+
+/**
+ * @brief DesktopIcon::setCustomIcon
+ * @param icon
+ */
+void DesktopIcon::setCustomIcon( const QString &icon ) {
+    this->m_customIcon = icon;
+    this->setIcon();
 }
 
 /**
@@ -138,8 +162,10 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
     QColor white( 255, 255, 255, 196 );
     QPixmap pixmap( this->iconSize(), this->iconSize());
     QPainter painter( this );
-    int width = static_cast<int>( this->iconSize() * this->textWidth());
-    int offset = ( width - this->iconSize()) / 2;
+    qreal width = this->iconSize() * this->textWidth();
+    qreal offset = ( width - this->iconSize()) / 2.0;
+    int hOfs = static_cast<int>( this->iconSize() * this->hOffset());
+    int vOfs = static_cast<int>( this->iconSize() * this->vOffset());
 
     pixmap.fill( Qt::transparent );
     {
@@ -152,18 +178,18 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
 
         switch ( this->shape()) {
         case Circle:
-            painter.drawEllipse( QPoint( width / 2, this->iconSize() / 2 ), this->iconSize() / 2 - 1, this->iconSize() / 2 - 1 );
+            painter.drawEllipse( QPointF( width / 2.0, this->iconSize() / 2.0 ), this->iconSize() / 2.0 - 1.0, this->iconSize() / 2.0 - 1.0 );
             break;
 
         case Square:
-            painter.fillRect( QRect( offset, 0, this->iconSize() - 2, this->iconSize() - 2 ), QBrush( this->background()));
+            painter.fillRect( QRectF( offset, 0, this->iconSize() - 2.0, this->iconSize() - 2.0 ), QBrush( this->background()));
             break;
 
         case Rounded:
         {
             QPainterPath path;
             path.addRoundedRect( QRectF( offset, 0, this->iconSize() - 2, this->iconSize() - 2 ), this->iconSize() * 0.125, this->iconSize() * 0.125 );
-            painter.fillPath( path,QBrush( this->background()));
+            painter.fillPath( path, QBrush( this->background()));
         }
             break;
 
@@ -176,9 +202,12 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
 
         // draw folder icon
         if ( !this->icon().isNull()) {
-            int scale = this->iconSize() - this->padding() * 2;
-            painter.drawPixmap( this->padding() + offset, this->padding(), scale, scale, this->icon().pixmap( QSize( this->iconSize() - this->padding() * 2, this->iconSize() - this->padding() * 2 ), this->m_move ? QIcon::Disabled : QIcon::Normal ));
-            thumb.drawPixmap( this->padding(), this->padding(), scale, scale, this->icon().pixmap( QSize( this->iconSize() - this->padding() * 2, this->iconSize() - this->padding() * 2 ), this->m_move ? QIcon::Disabled : QIcon::Normal ));
+            int pd = static_cast<int>( this->padded());
+            int scale = this->iconSize() - pd * 2;
+
+            QPixmap pm( this->icon().pixmap( QSize( scale, scale ), this->m_move ? QIcon::Disabled : QIcon::Normal ));
+            painter.drawPixmap( static_cast<int>( pd + offset ) + hOfs, pd + vOfs, scale, scale, pm );
+            thumb.drawPixmap( pd + hOfs, pd + vOfs, scale, scale, pm );
             this->thumbnail = pixmap.scaled( 48, 48 );
         }
     }
@@ -186,8 +215,8 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
     // draw text
     QFontMetrics fm( this->font());
     if ( !this->title().isEmpty() && this->isTitleVisible()) {
-        QRect textRect( 0, this->iconSize(), width, fm.height());
-        QString displayText( fm.elidedText( this->title(), Qt::ElideRight, textRect.width()));
+        QRectF textRect( 0, this->iconSize(), width, fm.height());
+        QString displayText( fm.elidedText( this->title(), Qt::ElideRight, static_cast<int>( textRect.width())));
 
         painter.setPen( Qt::black );
         painter.drawText( textRect.adjusted( 0, 2, 2, 0 ), Qt::AlignCenter, displayText );

@@ -34,9 +34,9 @@ public:
     static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
     ~IconCache() {}
     QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
-    QIcon thumbnail( const QString &fileName, int scale );
+    QIcon thumbnail( const QString &fileName, int scale, bool upscale = false );
     QIcon addSymlinkLabel( const QIcon &icon, int originalSize );
-    QIcon iconForFilename(const QString &fileName, int scale );
+    QIcon iconForFilename( const QString &fileName, int scale, bool upscale = false );
 #ifdef Q_OS_WIN
     QPixmap extractPixmap( const QString &fileName, int scale );
     void preLoadWindowsIcons();

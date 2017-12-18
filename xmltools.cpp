@@ -186,6 +186,10 @@ void XMLTools::write( Modes mode, bool force ) {
 
             stream.writeStartElement( "icon" );
             stream.writeAttribute( "target", desktopIcon->target());
+            stream.writeAttribute( "iconSize", QString::number( desktopIcon->iconSize()));
+            stream.writeAttribute( "padding", QString::number( desktopIcon->padding()));
+            stream.writeAttribute( "customIcon", desktopIcon->customIcon());
+
 
             // geometry
             stream.writeEmptyElement( "position" );
@@ -197,12 +201,12 @@ void XMLTools::write( Modes mode, bool force ) {
                 stream.writeTextElement( "visible", QString::number( 0 ));
 
             // other attribures
-            stream.writeTextElement( "iconSize", QString::number( desktopIcon->iconSize()));
+            //stream.writeTextElement( "iconSize", QString::number( desktopIcon->iconSize()));
             stream.writeTextElement( "previewIconSize", QString::number( desktopIcon->previewIconSize()));
             stream.writeEmptyElement( "gridSize" );
             stream.writeAttribute( "rows", QString::number( desktopIcon->rows()));
             stream.writeAttribute( "columns", QString::number( desktopIcon->columns()));
-            stream.writeTextElement( "padding", QString::number( desktopIcon->padding()));
+            //stream.writeTextElement( "padding", QString::number( desktopIcon->padding()));
             stream.writeTextElement( "title", desktopIcon->title());
             stream.writeTextElement( "textWidth", QString::number( desktopIcon->textWidth()));
             stream.writeTextElement( "shape", QString::number( static_cast<int>( desktopIcon->shape())));
@@ -215,6 +219,11 @@ void XMLTools::write( Modes mode, bool force ) {
             stream.writeAttribute( "g", QString::number( desktopIcon->background().greenF()));
             stream.writeAttribute( "b", QString::number( desktopIcon->background().blueF()));
             stream.writeAttribute( "a", QString::number( desktopIcon->background().alphaF()));
+
+            // offset
+            stream.writeEmptyElement( "offset" );
+            stream.writeAttribute( "h", QString::number( desktopIcon->hOffset()));
+            stream.writeAttribute( "v", QString::number( desktopIcon->vOffset()));
 
             // end widget element
             stream.writeEndElement();
@@ -426,13 +435,27 @@ void XMLTools::read( Modes mode ) {
                 bool isVisible = true;
                 QPoint position;
                 QRect geometry, vGeom, pGeom;
+                int iconSize = Icon::IconSize;
+                qreal padding = Icon::Padding;
+                QWidget *widget = nullptr;
+                QString customIcon = QString::null;
 
                 childNode = element.firstChild();
 #ifdef Q_OS_WIN
-                desktopIcon = new DesktopIcon(( QWidget* )FolderManager::instance()->desktop, element.attribute( "target" ));
-#else
-                desktopIcon = new DesktopIcon( nullptr, element.attribute( "target" ));
+                widget = reinterpret_cast<QWidget*>( FolderManager::instance()->desktop );
 #endif
+                if ( element.hasAttribute( "iconSize" ))
+                    iconSize = element.attribute( "iconSize" ).toInt();
+
+                if ( element.hasAttribute( "padding" ))
+                    padding = element.attribute( "padding" ).toDouble();
+
+                if ( element.hasAttribute( "customIcon" ))
+                    customIcon = element.attribute( "customIcon" );
+
+                // make icon
+                desktopIcon = new DesktopIcon( widget, element.attribute( "target" ), padding, iconSize, customIcon );
+
                 desktopIcon->setupFrame();
                 geometry = desktopIcon->geometry();
 
@@ -444,8 +467,8 @@ void XMLTools::read( Modes mode ) {
                         if ( !QString::compare( childElement.tagName(), "position" )) {
                             geometry.setX( childElement.attribute( "x" ).toInt());
                             geometry.setY( childElement.attribute( "y" ).toInt());
-                        } else if ( !QString::compare( childElement.tagName(), "iconSize" )) {
-                            desktopIcon->setIconSize( text.toInt());
+                        //} else if ( !QString::compare( childElement.tagName(), "iconSize" )) {
+                        //    desktopIcon->setIconSize( text.toInt());
                         } else if ( !QString::compare( childElement.tagName(), "previewIconSize" )) {
                             desktopIcon->setPreviewIconSize( text.toInt());
                         } else if ( !QString::compare( childElement.tagName(), "gridSize" )) {
@@ -453,8 +476,8 @@ void XMLTools::read( Modes mode ) {
                             desktopIcon->setColumns( childElement.attribute( "columns" ).toInt());
                         } else if ( !QString::compare( childElement.tagName(), "visible" )) {
                             isVisible = static_cast<bool>( text.toInt());
-                        } else if ( !QString::compare( childElement.tagName(), "padding" )) {
-                            desktopIcon->setPadding( text.toInt());
+                        //} else if ( !QString::compare( childElement.tagName(), "padding" )) {
+                        //    desktopIcon->setPadding( text.toInt());
                         } else if ( !QString::compare( childElement.tagName(), "title" )) {
                             desktopIcon->setTitle( text );
                         } else if ( !QString::compare( childElement.tagName(), "textWidth" )) {
@@ -465,12 +488,15 @@ void XMLTools::read( Modes mode ) {
                             desktopIcon->setTitleVisible( static_cast<bool>( text.toInt()));
                         } else if ( !QString::compare( childElement.tagName(), "hoverPreview" )) {
                             desktopIcon->setHoverPreview( static_cast<bool>( text.toInt()));
-                        } else if ( !QString::compare( childElement.tagName(), "position" )) {
+                        } else if ( !QString::compare( childElement.tagName(), "background" )) {
                             desktopIcon->setBackground( QColor::fromRgbF(
                                                             childElement.attribute( "r" ).toDouble(),
                                                             childElement.attribute( "g" ).toDouble(),
                                                             childElement.attribute( "b" ).toDouble(),
                                                             childElement.attribute( "a" ).toDouble()));
+                        } else if ( !QString::compare( childElement.tagName(), "offset" )) {
+                            desktopIcon->setHOffset( childElement.attribute( "h" ).toDouble());
+                            desktopIcon->setVOffset( childElement.attribute( "v" ).toDouble());
                         }
                     }
 

@@ -7,265 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>516</width>
-    <height>420</height>
+    <height>449</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Icon settings</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="6" column="1" rowspan="3">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QGroupBox" name="iconGroup">
-       <property name="title">
-        <string>Icon appearance</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <layout class="QHBoxLayout" name="paddingLayout">
-          <item>
-           <widget class="QLabel" name="paddingLabel">
-            <property name="text">
-             <string>Padding</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSlider" name="paddingSlider">
-            <property name="maximum">
-             <number>32</number>
-            </property>
-            <property name="singleStep">
-             <number>2</number>
-            </property>
-            <property name="pageStep">
-             <number>8</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="iconSizeLayout">
-          <item>
-           <widget class="QLabel" name="iconSizeLabel">
-            <property name="text">
-             <string>Widget icon size</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSlider" name="iconSizeSlider">
-            <property name="minimum">
-             <number>24</number>
-            </property>
-            <property name="maximum">
-             <number>128</number>
-            </property>
-            <property name="singleStep">
-             <number>8</number>
-            </property>
-            <property name="pageStep">
-             <number>8</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="iconShapeLayout">
-          <item>
-           <widget class="QLabel" name="iconShapeLabel">
-            <property name="text">
-             <string>Icon shape</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="iconShapeCombo">
-            <item>
-             <property name="text">
-              <string>Circle</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Square</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Rounded</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Plain</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Background color</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>...</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>Folder preview</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
-         <widget class="QCheckBox" name="hoverCheckBox">
-          <property name="text">
-           <string>Show on hover</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="rowCountLayout">
-          <item>
-           <widget class="QLabel" name="rowCountLabel">
-            <property name="text">
-             <string>Rows</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSlider" name="rowCountSlider">
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>9</number>
-            </property>
-            <property name="singleStep">
-             <number>8</number>
-            </property>
-            <property name="pageStep">
-             <number>8</number>
-            </property>
-            <property name="value">
-             <number>3</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="columnCountLayout">
-          <item>
-           <widget class="QLabel" name="columnCountLabel">
-            <property name="text">
-             <string>Columns</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSlider" name="columnCountSlider">
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>9</number>
-            </property>
-            <property name="singleStep">
-             <number>8</number>
-            </property>
-            <property name="pageStep">
-             <number>8</number>
-            </property>
-            <property name="value">
-             <number>3</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="previewSizeLayout">
-          <item>
-           <widget class="QLabel" name="sizeLabel">
-            <property name="text">
-             <string>Icon size</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSlider" name="previewSizeSlider">
-            <property name="minimum">
-             <number>24</number>
-            </property>
-            <property name="maximum">
-             <number>128</number>
-            </property>
-            <property name="singleStep">
-             <number>8</number>
-            </property>
-            <property name="pageStep">
-             <number>8</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="11" column="0" colspan="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
+   <item row="0" column="0">
     <widget class="BackgroundFrame" name="frame">
      <property name="minimumSize">
       <size>
@@ -367,7 +116,7 @@
      </layout>
     </widget>
    </item>
-   <item row="7" column="0">
+   <item row="2" column="0">
     <widget class="QGroupBox" name="titleGroup">
      <property name="title">
       <string>Icon title</string>
@@ -406,7 +155,7 @@
         <item>
          <widget class="QSlider" name="widthSlider">
           <property name="minimum">
-           <number>50</number>
+           <number>100</number>
           </property>
           <property name="maximum">
            <number>200</number>
@@ -425,9 +174,388 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QLabel" name="widthValue">
+          <property name="text">
+           <string>_</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="iconButton">
+       <property name="text">
+        <string>Select custom icon</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="resetButton">
+       <property name="text">
+        <string>Reset icon</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1" rowspan="3">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="2,1">
+     <item>
+      <widget class="QGroupBox" name="iconGroup">
+       <property name="title">
+        <string>Icon appearance</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <layout class="QHBoxLayout" name="paddingLayout">
+          <item>
+           <widget class="QLabel" name="paddingLabel">
+            <property name="text">
+             <string>Padding (%)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="paddingSlider">
+            <property name="maximum">
+             <number>32</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="paddingValue">
+            <property name="text">
+             <string>_</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="iconSizeLayout">
+          <item>
+           <widget class="QLabel" name="iconSizeLabel">
+            <property name="text">
+             <string>Widget icon size</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="iconSizeSlider">
+            <property name="minimum">
+             <number>24</number>
+            </property>
+            <property name="maximum">
+             <number>128</number>
+            </property>
+            <property name="singleStep">
+             <number>8</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="iconSize">
+            <property name="text">
+             <string>_</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="iconShapeLayout">
+          <item>
+           <widget class="QLabel" name="iconShapeLabel">
+            <property name="text">
+             <string>Icon shape</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="iconShapeCombo">
+            <item>
+             <property name="text">
+              <string>Circle</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Square</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Rounded</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Plain</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="backgroundLayout">
+          <item>
+           <widget class="QLabel" name="backgroundLabel">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Background color</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="backgroundButton">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="hOffsetLayout">
+          <item>
+           <widget class="QLabel" name="hOffsetLabel">
+            <property name="text">
+             <string>H offset (%)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="hOffsetSlider">
+            <property name="minimum">
+             <number>-25</number>
+            </property>
+            <property name="maximum">
+             <number>25</number>
+            </property>
+            <property name="singleStep">
+             <number>5</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="hOffset">
+            <property name="text">
+             <string>_</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="vOffsetLayout">
+          <item>
+           <widget class="QLabel" name="vOffsetLabel">
+            <property name="text">
+             <string>V offset (%)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="vOffsetSlider">
+            <property name="minimum">
+             <number>-25</number>
+            </property>
+            <property name="maximum">
+             <number>25</number>
+            </property>
+            <property name="singleStep">
+             <number>5</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="vOffset">
+            <property name="text">
+             <string>_</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="previewGroup">
+       <property name="title">
+        <string>Folder preview</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="hoverCheckBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Show on hover</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="rowCountLayout">
+          <item>
+           <widget class="QLabel" name="rowCountLabel">
+            <property name="text">
+             <string>Rows</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="rowCountSlider">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>16</number>
+            </property>
+            <property name="singleStep">
+             <number>8</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="rowCount">
+            <property name="text">
+             <string>_</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="columnCountLayout">
+          <item>
+           <widget class="QLabel" name="columnCountLabel">
+            <property name="text">
+             <string>Columns</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="columnCountSlider">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>24</number>
+            </property>
+            <property name="singleStep">
+             <number>8</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="columnCount">
+            <property name="text">
+             <string>_</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="previewSizeLayout">
+          <item>
+           <widget class="QLabel" name="previewSizeLabel">
+            <property name="text">
+             <string>Icon size</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="previewSizeSlider">
+            <property name="minimum">
+             <number>24</number>
+            </property>
+            <property name="maximum">
+             <number>128</number>
+            </property>
+            <property name="singleStep">
+             <number>8</number>
+            </property>
+            <property name="pageStep">
+             <number>8</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="previewSize">
+            <property name="text">
+             <string>_</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
     </widget>
    </item>
   </layout>

@@ -101,7 +101,7 @@ void WidgetList::on_actionAdd_triggered() {
 #endif
 
     // add folder widget lambda
-    menu.addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder" ), [ this, widget ]() {
+    menu.addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder widget" ), [ this, widget ]() {
         QDir dir( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
         if ( dir.exists()) {
             FolderView *folderView;
@@ -116,7 +116,7 @@ void WidgetList::on_actionAdd_triggered() {
 
     // subMenu icon->folder target
     //             ->file target
-    subMenu = menu.addMenu( this->tr( "Icon" ));
+    subMenu = menu.addMenu( this->tr( "Icon widget" ));
 
     // addIcon lambda
     auto addIcon = [ this, widget ]( const QString &path ) {
@@ -128,8 +128,8 @@ void WidgetList::on_actionAdd_triggered() {
     };
 
     // add icon widget lambda with FILE as its targer
-    subMenu->addAction( IconCache::instance()->icon( "application-x-zerosize", 16 ), this->tr( "File" ), [ this, addIcon ]() {
-        QString fileName( QFileDialog::getOpenFileName( this, this->tr( "Select file or directory" ), "" ));
+    subMenu->addAction( IconCache::instance()->icon( "application-x-zerosize", 16 ), this->tr( "File target" ), [ this, addIcon ]() {
+        QString fileName( QFileDialog::getOpenFileName( this, this->tr( "Select file" ), "" ));
         QFileInfo info( fileName );
         if ( info.exists())
             addIcon( info.absoluteFilePath());
@@ -137,7 +137,7 @@ void WidgetList::on_actionAdd_triggered() {
     } );
 
     // add icon widget lambda with FOLDER as its targer
-    subMenu->addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder" ), [ this, addIcon ]() {
+    subMenu->addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder target" ), [ this, addIcon ]() {
         QDir dir( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
         if ( dir.exists())
             addIcon( dir.absolutePath());

@@ -286,7 +286,7 @@ void Main::readConfiguration() {
     this->widgetList->reset();
 
     // all done
-    if ( !FolderManager::instance()->count())
+    if ( !FolderManager::instance()->count() && !FolderManager::instance()->iconCount())
         this->widgetList->show();
 }
 

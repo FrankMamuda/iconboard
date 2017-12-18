@@ -45,6 +45,7 @@ public:
     explicit IconSettings( QWidget *parent = 0 );
     ~IconSettings();
     void setIcon( DesktopIcon *icon );
+    void setBackgroundColour( const QColor &colour );
 
 public slots:
     void accept();

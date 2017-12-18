@@ -36,7 +36,7 @@ namespace Icon {
     const static int RowCount = 3;
     const static int ColumnCount = 3;
     const static int IconSize = 48;
-    const static int Padding = 8;
+    const static qreal Padding = 0.125;
 };
 
 /**
@@ -45,18 +45,20 @@ namespace Icon {
 class DesktopIcon : public QWidget {
     Q_OBJECT
     Q_PROPERTY( QString target READ target WRITE setTarget )
-    Q_PROPERTY( QIcon icon READ icon WRITE setIcon )
     Q_PROPERTY( int iconSize READ iconSize WRITE setIconSize )
     Q_PROPERTY( int previewIconSize READ previewIconSize WRITE setPreviewIconSize )
     Q_PROPERTY( int rows READ rows WRITE setRows )
     Q_PROPERTY( int columns READ columns WRITE setColumns )
-    Q_PROPERTY( int padding READ padding WRITE setPadding )
+    Q_PROPERTY( qreal padding READ padding WRITE setPadding )
     Q_PROPERTY( QString title READ title WRITE setTitle )
     Q_PROPERTY( qreal textWidth READ textWidth WRITE setTextWidth )
     Q_PROPERTY( Shapes shape READ shape WRITE setShape )
     Q_PROPERTY( QColor background READ background WRITE setBackground )
     Q_PROPERTY( bool titleVisible READ isTitleVisible WRITE setTitleVisible )
     Q_PROPERTY( bool hoverPreview READ hoverPreview WRITE setHoverPreview )
+    Q_PROPERTY( qreal hOffset READ hOffset WRITE setHOffset )
+    Q_PROPERTY( qreal vOffset READ vOffset WRITE setVOffset )
+    Q_PROPERTY( QString customIcon READ customIcon WRITE setCustomIcon )
 
     // SHOW LABEL
     // HOVER PREVIEW
@@ -73,7 +75,7 @@ public:
     };
     Q_ENUMS( Shapes )
 
-    explicit DesktopIcon( QWidget *parent = nullptr, const QString &target = QString::null );
+    explicit DesktopIcon( QWidget *parent = nullptr, const QString &target = QString::null, qreal padding = Icon::Padding, int iconSize = Icon::IconSize, const QString &customIcon = QString::null );
     ~DesktopIcon();
     QString target() const { return this->m_target; }
     QIcon icon() const { return this->m_icon; }
@@ -81,31 +83,38 @@ public:
     int previewIconSize() const { return this->m_previewIconSize; }
     int rows() const { return this->m_rows; }
     int columns() const { return this->m_columns; }
-    int padding() const { return this->m_padding; }
+    qreal padding() const { return this->m_padding; }
+    qreal padded() const { return this->iconSize() * this->padding(); }
     QString title() const { return this->m_title; }
     qreal textWidth() const { return this->m_textWidth; }
     Shapes shape() const { return this->m_shape; }
     QColor background() const { return this->m_background; }
     bool isTitleVisible() const { return this->m_titleVisible; }
     bool hoverPreview() const { return this->m_hoverPreview; }
+    qreal hOffset() const { return this->m_hOffset; }
+    qreal vOffset() const { return this->m_vOffset; }
+    QString customIcon() const { return this->m_customIcon; }
 
     // thumbnail for widget list
     QPixmap thumbnail;
 
 public slots:
     void setTarget( const QString &target ) { this->m_target = target; }
-    void setIcon( const QIcon &icon ) { this->m_icon = icon; this->repaint(); }
-    void setIconSize( int size ) { this->m_iconSize = size; this->adjustFrame(); }
+    void setIcon();
+    void setIconSize( int size ) { this->m_iconSize = size; this->setIcon(); this->adjustFrame(); }
     void setPreviewIconSize( int size ) { this->m_previewIconSize = size; }
     void setRows( int rows ) { this->m_rows = rows; }
     void setColumns( int columns ) { this->m_columns = columns; }
-    void setPadding( int padding ) { this->m_padding = padding; this->repaint(); }
+    void setPadding( qreal padding ) { this->m_padding = padding; this->setIcon(); this->repaint(); }
     void setTitle( const QString &title ) { this->m_title = title; this->repaint(); }
     void setTextWidth( qreal fraction ) { fraction = qMin( fraction, 2.0 );  fraction = qMax( fraction, 0.5 ); this->m_textWidth = fraction; this->adjustFrame(); }
     void setShape( Shapes shape ) { this->m_shape = shape; this->repaint(); }
     void setBackground( const QColor &color ) { this->m_background = color; this->repaint(); }
     void setTitleVisible( bool enable ) { this->m_titleVisible = enable; this->repaint(); }
     void setHoverPreview( bool enable ) { this->m_hoverPreview = enable; }
+    void setHOffset( qreal offset ) { this->m_hOffset = offset; this->repaint(); }
+    void setVOffset( qreal offset ) { this->m_vOffset = offset; this->repaint(); }
+    void setCustomIcon( const QString &icon );
 
     void setupFrame();
     void adjustFrame();
@@ -122,7 +131,7 @@ private:
     int m_rows;
     int m_columns;
     bool m_move;
-    int m_padding;
+    qreal m_padding;
     FolderView *preview;
     QString m_title;
     QTimer timer;
@@ -131,4 +140,7 @@ private:
     QColor m_background;
     bool m_titleVisible;
     bool m_hoverPreview;
+    qreal m_hOffset;
+    qreal m_vOffset;
+    QString m_customIcon;
 };

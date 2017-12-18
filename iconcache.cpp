@@ -112,7 +112,7 @@ QPixmap IconCache::fastDownscale( const QPixmap &pixmap, int scale ) const {
  * @param scale
  * @return
  */
-QIcon IconCache::thumbnail( const QString &fileName, int scale ) {
+QIcon IconCache::thumbnail( const QString &fileName, int scale, bool upscale ) {
     QRect rect;
     QIcon icon;
     QPixmap pixmap, cache;
@@ -129,6 +129,9 @@ QIcon IconCache::thumbnail( const QString &fileName, int scale ) {
 
     if ( pixmap.isNull() && !pixmap.width())
         return icon;
+
+    if ( upscale && pixmap.width() < scale )
+        pixmap = pixmap.scaledToWidth( scale, Qt::SmoothTransformation );
 
     if ( pixmap.height() < scale || pixmap.width() < scale ) {
         QPixmap result( scale, scale );
@@ -449,7 +452,7 @@ QString IconCache::getDriveIconName( const QString &path ) const {
  * @brief IconCache::iconForFilename
  * @return
  */
-QIcon IconCache::iconForFilename( const QString &fileName, int scale ) {
+QIcon IconCache::iconForFilename( const QString &fileName, int scale, bool upscale ) {
     QFileInfo info( fileName );
     QFileInfo target( info.symLinkTarget());
     QString iconName, absolutePath( info.isSymLink() ? target.absoluteFilePath() : info.absoluteFilePath());
@@ -473,7 +476,7 @@ QIcon IconCache::iconForFilename( const QString &fileName, int scale ) {
     // generate thumbnail for images
     if ( !isDir ) {
         if ( iconName.startsWith( "image-" ))
-            icon = this->thumbnail( absolutePath, scale );
+            icon = this->thumbnail( absolutePath, scale, upscale );
 #ifdef Q_OS_WIN
         // get icon from executables
         if ( iconName.startsWith( "application-x-ms-dos-executable" ) && !info.isSymLink())
