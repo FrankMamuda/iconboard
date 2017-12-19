@@ -48,8 +48,6 @@ DesktopIcon::DesktopIcon( QWidget *parent, const QString &target, qreal padding,
     m_hOffset( 0 ), m_vOffset( 0 ),
     m_customIcon( customIcon )
 {
-    // TODO: padding as percent?
-
     // set up timer
     this->timer.setInterval( 200 );
     this->connect( &this->timer, &QTimer::timeout, [ this ]() {
@@ -64,17 +62,12 @@ DesktopIcon::DesktopIcon( QWidget *parent, const QString &target, qreal padding,
     // set object name for styling
     this->setObjectName( "DesktopIcon" );
 
-    // TODO: display warning icon if anything fails
-    //if ( this->target().isEmpty())
-    //    qCritical() << this->tr( "empty target" );
-
     // set icon from target file or folder
     this->setCustomIcon( this->customIcon());
     if ( this->icon().isNull())
         qWarning() << this->tr( "invalid icon" );
 
-    // resize to icon size for now
-    // TODO: add padding, margins, shadow, shape and other features later
+    // adjust frame size
     this->adjustFrame();
 }
 
@@ -101,27 +94,25 @@ void DesktopIcon::adjustFrame() {
 void DesktopIcon::setIcon() {
     int scale = static_cast<int>( this->iconSize() - this->padded() * 2 );
 
-    if ( this->customIcon().isNull()) {
+    if ( this->customIcon().isEmpty()) {
         QFileInfo info( this->target());
         QIcon icon;
 
         if ( !info.exists()) {
-            //qCritical() << this->tr( "invalid target" );
             icon = IconCache::instance()->icon( "messagebox_warning", scale );
             this->setTitle( this->tr( "Desktop icon" ));
         } else {
             this->setTitle( info.fileName());
-            this->preview = new FolderView( this, info.absoluteFilePath(), FolderView::Preview );
-    #ifdef Q_OS_WIN
+#ifdef Q_OS_WIN
             if ( info.isDir())
                 icon = IconCache::instance()->extractPixmap( info.absoluteFilePath(), scale );
             else
-    #endif
-            icon = IconCache::instance()->iconForFilename( info.absoluteFilePath(), scale, true );
+#endif
+                icon = IconCache::instance()->iconForFilename( info.absoluteFilePath(), scale, true );
         }
 
         this->m_icon = icon;
-    } else {        
+    } else {
         this->m_icon = QIcon( this->customIcon());
     }
 }
@@ -150,8 +141,16 @@ void DesktopIcon::setupFrame() {
     // filter events
     this->installEventFilter( this );
 
-    this->setRows( 3 );
-    this->setColumns( 4 );
+    // set up preview
+    QFileInfo info( this->target());
+    if ( this->preview == nullptr ) {
+        this->preview = new FolderView( this, info.absoluteFilePath(), FolderView::Preview );
+        this->preview->setIconSize( this->previewIconSize());
+        this->preview->setupPreviewMode( this->rows(), this->columns());
+        this->preview->show();
+        this->preview->sort();
+        this->preview->hide();
+    }
 }
 
 /**
@@ -291,9 +290,9 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
                 if ( info.isDir()) {
                     // show a new preview
                     this->preview->setIconSize( this->previewIconSize());
+                    this->preview->setupPreviewMode( this->rows(), this->columns());
                     this->preview->show();
                     this->preview->sort();
-                    this->preview->setupPreviewMode( this->rows(), this->columns());
                 } else {
                     // open file directly
                     QDesktopServices::openUrl( QUrl::fromLocalFile( info.absoluteFilePath()));

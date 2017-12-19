@@ -60,10 +60,6 @@ class DesktopIcon : public QWidget {
     Q_PROPERTY( qreal vOffset READ vOffset WRITE setVOffset )
     Q_PROPERTY( QString customIcon READ customIcon WRITE setCustomIcon )
 
-    // SHOW LABEL
-    // HOVER PREVIEW
-    // ETC.
-
 public:
     // modes
     enum Shapes {

@@ -94,6 +94,9 @@ IconSettings::IconSettings( QWidget *parent ) : QDialog(parent), ui( new Ui::Ico
     this->connect( this->ui->resetButton, &QPushButton::clicked, [ this ]() {
         this->ui->iconWidgetDemo->setCustomIcon( QString::null );
     } );
+
+    // NOTE: for now
+    this->ui->hoverCheckBox->hide();
 }
 
 /**
@@ -140,6 +143,7 @@ void IconSettings::setIcon( DesktopIcon *icon ) {
     this->ui->hOffset->setText( QString::number( static_cast<int>( icon->hOffset() * 100.0 )) + "%" );
     this->ui->vOffset->setText( QString::number( static_cast<int>( icon->vOffset() * 100.0 )) + "%" );
     this->ui->iconWidgetDemo->setCustomIcon( icon->customIcon());
+    this->ui->iconWidgetDemo->setShape( icon->shape());
 
     // finally set icon
     this->icon = icon;
