@@ -428,11 +428,8 @@
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
          <widget class="QCheckBox" name="hoverCheckBox">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
           <property name="text">
-           <string>Show on hover</string>
+           <string>Show on hover (when locked)</string>
           </property>
          </widget>
         </item>

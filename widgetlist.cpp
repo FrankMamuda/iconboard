@@ -222,7 +222,6 @@ void WidgetList::on_actionMap_triggered() {
 
     index = this->ui->widgetList->currentIndex().row();
 
-    // TODO: set checkable
     if ( index >= FolderManager::instance()->count())
         widget = qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count()));
     else

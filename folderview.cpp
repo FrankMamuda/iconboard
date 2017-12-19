@@ -555,7 +555,6 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
     QMouseEvent *mouseEvent;
     int y;
 
-
     // TODO: use this instead of the hook in desktop widget?
     if ( event->type() == QEvent::ActivationChange && this->mode() == Preview ) {
         if ( QApplication::activeWindow() != this ) {

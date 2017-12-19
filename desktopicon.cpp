@@ -23,6 +23,7 @@
 #include "folderview.h"
 #include "iconcache.h"
 #include "iconsettings.h"
+#include "variable.h"
 #include <QPainter>
 #include <QFileInfo>
 #include <QDebug>
@@ -51,12 +52,14 @@ DesktopIcon::DesktopIcon( QWidget *parent, const QString &target, qreal padding,
     // set up timer
     this->timer.setInterval( 200 );
     this->connect( &this->timer, &QTimer::timeout, [ this ]() {
-        if ( this->geometry().contains( QCursor::pos())) {
-            this->m_move = true;
-            this->setCursor( QCursor( Qt::ClosedHandCursor ));
-            this->repaint();
+        if ( !Variable::instance()->isEnabled( "app_lock" )) {
+            if ( this->geometry().contains( QCursor::pos())) {
+                this->m_move = true;
+                this->setCursor( QCursor( Qt::ClosedHandCursor ));
+                this->repaint();
+            }
+            this->timer.stop();
         }
-        this->timer.stop();
     });
 
     // set object name for styling
@@ -86,6 +89,16 @@ DesktopIcon::~DesktopIcon() {
 void DesktopIcon::adjustFrame() {
     QFontMetrics fm( this->font());
     this->setFixedSize( static_cast<int>( this->iconSize() * this->textWidth()), this->iconSize() + fm.height());
+}
+
+/**
+ * @brief DesktopIcon::setupPreview
+ */
+void DesktopIcon::setupPreview() {
+    this->preview->setIconSize( this->previewIconSize());
+    this->preview->setupPreviewMode( this->rows(), this->columns());
+    this->preview->show();
+    this->preview->sort();
 }
 
 /**
@@ -145,10 +158,7 @@ void DesktopIcon::setupFrame() {
     QFileInfo info( this->target());
     if ( this->preview == nullptr ) {
         this->preview = new FolderView( this, info.absoluteFilePath(), FolderView::Preview );
-        this->preview->setIconSize( this->previewIconSize());
-        this->preview->setupPreviewMode( this->rows(), this->columns());
-        this->preview->show();
-        this->preview->sort();
+        this->setupPreview();
         this->preview->hide();
     }
 }
@@ -270,7 +280,7 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
                     return false;
 
                 // context menu
-                if ( mouseEvent->button() == Qt::RightButton ) {
+                if ( mouseEvent->button() == Qt::RightButton && !Variable::instance()->isEnabled( "app_lock" )) {
                     QMenu menu;
                     menu.addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Configure" ), [ this ]() {
                         IconSettings iconSettings;
@@ -288,11 +298,7 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
                 // open either folder preview or file
                 QFileInfo info( this->target());
                 if ( info.isDir()) {
-                    // show a new preview
-                    this->preview->setIconSize( this->previewIconSize());
-                    this->preview->setupPreviewMode( this->rows(), this->columns());
-                    this->preview->show();
-                    this->preview->sort();
+                    this->setupPreview();
                 } else {
                     // open file directly
                     QDesktopServices::openUrl( QUrl::fromLocalFile( info.absoluteFilePath()));
@@ -302,6 +308,12 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
 
         case QEvent::Enter:
             this->setCursor( QCursor( Qt::PointingHandCursor ));
+
+            if ( this->hoverPreview() && Variable::instance()->isEnabled( "app_lock" )) {
+                QFileInfo info( this->target());
+                if ( info.isDir())
+                    this->setupPreview();
+            }
             break;
 
         case QEvent::Leave:

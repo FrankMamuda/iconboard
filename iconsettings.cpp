@@ -96,7 +96,7 @@ IconSettings::IconSettings( QWidget *parent ) : QDialog(parent), ui( new Ui::Ico
     } );
 
     // NOTE: for now
-    this->ui->hoverCheckBox->hide();
+    //this->ui->hoverCheckBox->hide();
 }
 
 /**

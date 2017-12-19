@@ -114,6 +114,7 @@ public slots:
 
     void setupFrame();
     void adjustFrame();
+    void setupPreview();
 
 protected:
     void paintEvent( QPaintEvent *event );
