@@ -25,7 +25,6 @@
 #include <QMap>
 #include <QSet>
 #include <QDir>
-#include "singleton.h"
 
 /**
  * @brief The IconIndexNamespace namespace
@@ -37,11 +36,11 @@ const static QStringList Extensions( QStringList() << "png" << "svg" );
 /**
  * @brief The IconIndex class
  */
-class IconIndex : public QObject {
+class IconIndex final : public QObject {
     Q_OBJECT
 
 public:
-    static IconIndex *instance() { return Singleton<IconIndex>::instance( IconIndex::createInstance ); }
+    static IconIndex *instance() { static IconIndex *instance( new IconIndex()); return instance; }
     ~IconIndex() {}
     QString path() const { return m_path; }
     QString defaultTheme() const { return m_defaultTheme; }
@@ -57,7 +56,6 @@ private slots:
 
 private:
     IconIndex( QObject *parent = nullptr );
-    static IconIndex *createInstance() { return new IconIndex(); }
     QString m_path;
     QString m_defaultTheme;
     QMap<QString, QSet<QString> > index;

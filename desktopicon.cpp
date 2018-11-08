@@ -301,7 +301,11 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
                     this->setupPreview();
                 } else {
                     // open file directly
-                    QDesktopServices::openUrl( QUrl::fromLocalFile( info.absoluteFilePath()));
+                    // if any, otherwise remove icon from view
+                    if ( info.exists())
+                        QDesktopServices::openUrl( QUrl::fromLocalFile( info.absoluteFilePath()));
+                    else
+                        this->hide();
                 }
             }
             return true;

@@ -22,16 +22,15 @@
 // includes
 //
 #include <QIcon>
-#include "singleton.h"
 
 /**
  * @brief The IconCache class
  */
-class IconCache : public QObject {
+class IconCache final : public QObject {
     Q_OBJECT
 
 public:
-    static IconCache *instance() { return Singleton<IconCache>::instance( IconCache::createInstance ); }
+    static IconCache *instance() { static IconCache *instance( new IconCache()); return instance; }
     ~IconCache() {}
     QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
     QIcon thumbnail( const QString &fileName, int scale, bool upscale = false );
@@ -55,6 +54,5 @@ public slots:
 
 private:
     IconCache( QObject *parent = nullptr );
-    static IconCache *createInstance() { return new IconCache(); }
     QHash<QString, QIcon> cache;
 };

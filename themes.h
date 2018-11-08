@@ -23,7 +23,6 @@
 //
 #include <QMap>
 #include <QObject>
-#include "singleton.h"
 
 /**
  * @brief The BuiltInThemes namespace
@@ -55,12 +54,12 @@ Q_DECLARE_METATYPE( Theme* )
 /**
  * @brief The Theme class
  */
-class Themes: public QObject {
+class Themes final : public QObject {
     Q_OBJECT
 
 public:
     ~Themes() {}
-    static Themes *instance() { return Singleton<Themes>::instance( Themes::createInstance ); }
+    static Themes *instance() { static Themes *instance( new Themes()); return instance; }
     bool contains( const QString &name ) const;
     QList<Theme*> list;
     Theme *find( const QString &name ) const;
@@ -72,5 +71,4 @@ public slots:
 
 private:
     Themes( QObject *parent = nullptr );
-    static Themes *createInstance() { return new Themes(); }
 };

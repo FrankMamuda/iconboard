@@ -2,6 +2,7 @@
     <qresource prefix="/icons">
         <file alias="launcher_96">launcher_96.png</file>
         <file alias="link">icons/link.svg</file>
+        <file alias="launcher_debug_96">launcher_debug_96.png</file>
     </qresource>
     <qresource prefix="/styleSheets">
         <file>dark.qss</file>

@@ -55,8 +55,6 @@ HEADERS  += \
     iconcache.h \
     filestream.h \
     iconindex.h \
-    callonce.h \
-    singleton.h \
     indexcache.h \
     screenmapper.h \
     settings.h \

@@ -25,7 +25,6 @@
 #include <QVariant>
 #include <QString>
 #include <QMetaMethod>
-#include "singleton.h"
 
 /**
  * @brief The VariableEntry class
@@ -47,12 +46,12 @@ private:
 /**
  * @brief The Variable class
  */
-class Variable : public QObject {
+class Variable final : public QObject {
     Q_OBJECT
 
 public:
     ~Variable() {}
-    static Variable *instance() { return Singleton<Variable>::instance( Variable::createInstance ); }
+    static Variable *instance() { static Variable *instance( new Variable()); return instance; }
     bool contains( const QString &key ) const { return this->list.contains( key ); }
 
     template<typename T>
@@ -111,5 +110,4 @@ signals:
 
 private:
     explicit Variable() {}
-    static Variable *createInstance() { return new Variable(); }
 };

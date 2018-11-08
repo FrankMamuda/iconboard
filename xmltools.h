@@ -21,8 +21,8 @@
 //
 // includes
 //
-#include "singleton.h"
 #include <QMap>
+#include <QObject>
 
 /**
  * @brief The XMLFiles namespace
@@ -36,13 +36,13 @@ const static QString Themes( "themes.xml" );
 /**
  * @brief The XMLTools class
  */
-class XMLTools : public QObject {
+class XMLTools final : public QObject {
     Q_OBJECT
     Q_ENUMS( Modes )
 
 public:
     ~XMLTools() {}
-    static XMLTools *instance() { return Singleton<XMLTools>::instance( XMLTools::createInstance ); }
+    static XMLTools *instance() { static XMLTools *instance( new XMLTools()); return instance; }
     enum Modes {
         NoMode = -1,
         Variables,
@@ -57,5 +57,4 @@ public slots:
 
 private:
     XMLTools( QObject *parent = nullptr );
-    static XMLTools *createInstance() { return new XMLTools(); }
 };

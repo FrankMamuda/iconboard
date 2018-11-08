@@ -21,6 +21,7 @@
 //
 #include "foldermanager.h"
 #include "folderview.h"
+#include "main.h"
 #ifdef Q_OS_WIN
 #include "desktopwidget.h"
 #endif
@@ -39,6 +40,9 @@ FolderManager::FolderManager( QObject *parent ) : QObject( parent )
 #ifdef QT_DEBUG
     qInfo() << this->tr( "initializing" );
 #endif
+
+    // add to garbage collector
+    GarbageMan::instance()->add( this );
 }
 
 /**

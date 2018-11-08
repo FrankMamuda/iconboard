@@ -74,6 +74,9 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
     }
 
     this->setValid( true );
+
+    // add to garbage collector
+    GarbageMan::instance()->add( this );
 }
 
 /**

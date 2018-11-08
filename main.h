@@ -21,7 +21,6 @@
 //
 // includes
 //
-#include "singleton.h"
 #include <QTimer>
 #include <QVariant>
 
@@ -34,13 +33,13 @@ class TrayIcon;
 /**
  * @brief The Main class
  */
-class Main : public QObject {
+class Main final : public QObject {
     Q_OBJECT
     Q_PROPERTY( bool initialized READ hasInitialized WRITE setInitialized )
 
 public:
     ~Main() {}
-    static Main *instance() { return Singleton<Main>::instance( Main::createInstance ); }
+    static Main *instance() { static Main *instance( new Main()); return instance; }
     bool hasInitialized() const { return this->m_initialized; }
     static void messageFilter( QtMsgType type, const QMessageLogContext &, const QString &msg );
     bool reloadScheduled() const { return this->m_reloadScheduled; }
@@ -63,10 +62,50 @@ private slots:
 
 private:
     Main( QObject *parent = nullptr );
-    static Main *createInstance() { return new Main(); }
     bool m_initialized;
     WidgetList *widgetList;
     TrayIcon *tray;
     bool m_reloadScheduled;
     QTimer timer;
+};
+
+/**
+ * @brief The GarbageMan class
+ */
+class GarbageMan final {
+public:
+    /**
+     * @brief instance
+     * @return
+     */
+    static GarbageMan *instance() { static GarbageMan *instance( new GarbageMan()); return instance; }
+    GarbageMan( const GarbageMan & ) = delete;
+    ~GarbageMan() = default;
+
+    /**
+     * @brief add adds pointers (singletons) to garbage collection list
+     * @param object
+     */
+    void add( QObject *object ) {
+        if ( !this->garbage.contains( object ))
+            this->garbage << object;
+    }
+
+    /**
+     * @brief clear deletes poiners in reverse order
+     */
+    void clear() {
+        std::reverse( this->garbage.begin(), this->garbage.end());
+        foreach ( QObject *object, this->garbage ) {
+            if ( object != nullptr ) {
+                delete object;
+                object = nullptr;
+            }
+        }
+        this->garbage.clear();
+    }
+
+private:
+    explicit GarbageMan() = default;
+    QList<QObject*> garbage;
 };

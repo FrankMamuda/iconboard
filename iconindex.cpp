@@ -24,6 +24,7 @@
 #include <QRegularExpression>
 #include <QElapsedTimer>
 #include "iconindex.h"
+#include "main.h"
 
 /**
  * @brief IconIndex::IconIndex
@@ -41,6 +42,9 @@ IconIndex::IconIndex( QObject *parent ) : QObject( parent ) {
     // NOTE: not sure about macOS (can we use a custom dir from Settings dialog)
     this->setPath( "/usr/share/icons" );
 #endif
+
+    // add to garbage collector
+    GarbageMan::instance()->add( this );
 }
 
 /**

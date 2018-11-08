@@ -38,7 +38,10 @@
  * @brief XMLTools::XMLTools
  * @param parent
  */
-XMLTools::XMLTools( QObject *parent ) : QObject( parent ) {}
+XMLTools::XMLTools( QObject *parent ) : QObject( parent ) {
+    // add to garbage collector
+    GarbageMan::instance()->add( this );
+}
 
 /**
  * @brief XMLTools::saveOnLock

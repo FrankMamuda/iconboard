@@ -22,7 +22,6 @@
 // includes
 //
 #include <QHash>
-#include "singleton.h"
 #include "filestream.h"
 
 /**
@@ -66,12 +65,12 @@ namespace IndexCacheNamespace {
 /**
  * @brief The IndexCache class
  */
-class IndexCache : public QObject {
+class IndexCache final : public QObject {
     Q_OBJECT
     Q_PROPERTY( QString path READ path WRITE setPath )
 
 public:
-    static IndexCache *instance() { return Singleton<IndexCache>::instance( IndexCache::createInstance ); }
+    static IndexCache *instance() { static IndexCache *instance( new IndexCache()); return instance; }
     ~IndexCache() {}
     QIcon icon( const QString &iconName, int scale, const QString &theme );
     QString path() const { return this->m_path; }
@@ -86,7 +85,6 @@ private slots:
 
 private:
     IndexCache( QObject *parent = nullptr );
-    static IndexCache *createInstance() { return new IndexCache(); }
     FileStream indexFile;
     QHash<QString, Entry> index;
     QString m_path;

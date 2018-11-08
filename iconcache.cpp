@@ -34,6 +34,7 @@
 #include <shellapi.h>
 #include <winuser.h>
 #endif
+#include "main.h"
 
 /**
  * @brief IconCache::IconCache
@@ -44,6 +45,9 @@ IconCache::IconCache( QObject *parent ) : QObject( parent ) {
 #ifdef QT_DEBUG
     qInfo() << this->tr( "initializing" );
 #endif
+
+    // add to garbage collector
+    GarbageMan::instance()->add( this );
 }
 
 /**

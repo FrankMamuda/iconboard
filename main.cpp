@@ -45,6 +45,8 @@
  *    cleanup
  *    GitHub page
  *    release beta
+ *    remove widgets from task switcher (ALT+TAB) (not an issue on W7)
+ *    no tray icon with system icon theme
  *
  *  [NOT URGENT]
  *  [to be implemented/fixed in future versions]
@@ -87,6 +89,11 @@
  *    icon should not be visible in dock
  *    resize/move issues
  *    application bundle icon
+ *
+ *  [BACKPORT]
+ *    variables
+ *    garbage manager for singletons
+ *
  */
 
 // default message handler
@@ -226,6 +233,13 @@ int main( int argc, char *argv[] ) {
 
     // read config
     Main::instance()->readConfiguration();
+
+    // clean up on exit
+    qApp->connect( qApp, &QApplication::aboutToQuit, []() {
+        GarbageMan::instance()->clear();
+        delete GarbageMan::instance();
+        delete Variable::instance();
+    } );
 
     return app.exec();
 }

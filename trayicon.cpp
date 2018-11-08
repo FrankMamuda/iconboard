@@ -78,7 +78,7 @@ TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
 
 #ifdef QT_DEBUG
     // set another icon to distinguish release from debug build
-    this->setIcon( IconCache::instance()->icon( "application-exit", 16 ));
+    this->setIcon( QIcon( ":/icons/launcher_debug_96" ));
 #else
     this->setIcon( QIcon( ":/icons/launcher_96" ));
 #endif

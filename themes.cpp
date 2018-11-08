@@ -22,6 +22,7 @@
 #include "themes.h"
 #include <QFile>
 #include <QDebug>
+#include "main.h"
 
 /**
  * @brief Themes::Themes
@@ -45,6 +46,9 @@ Themes::Themes( QObject *parent ) : QObject( parent ) {
             styleSheet.close();
         }
     }
+
+    // add to garbage collector
+    GarbageMan::instance()->add( this );
 }
 
 /**
