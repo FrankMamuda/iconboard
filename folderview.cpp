@@ -49,7 +49,7 @@
  * @param rootPath
  */
 FolderView::FolderView( QWidget *parent, const QString &rootPath, Modes mode ) : QWidget( parent ), ui( new Ui::FolderView ), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ), m_mode( mode ), preview( nullptr ) {
-    QDir dir( rootPath );
+    const QDir dir( rootPath );
     QFile styleSheet;
 
     // set up UI
@@ -115,7 +115,7 @@ void FolderView::createPreviewWidget( const QString &path ) {
  */
 void FolderView::setupPreviewMode( int rows, int columns ) {
     int x, y, w, h;
-    QFontMetrics fm( this->font());
+    const QFontMetrics fm( this->font());
 
     // TODO: scroll to beginning
 
@@ -180,13 +180,9 @@ QString FolderView::currentStyleSheet() const {
  * @return
  */
 int FolderView::iconSize() const {
-    int size;
+    const int size = this->ui->view->iconSize().width();
 
-    size = this->ui->view->iconSize().width();
-    if ( !size )
-        return Ui::DefaultIconSize;
-
-    return size;
+    return size ? size : Ui::DefaultIconSize;
 }
 
 /**
@@ -424,10 +420,9 @@ void FolderView::resetStyleSheet() {
  * @brief FolderView::setIconSize
  */
 void FolderView::setIconSize() {
-    int size;
     bool ok;
 
-    size = QInputDialog::getInt( this->parentWidget(), this->tr( "Set icon size" ), this->tr( "Size:" ), this->iconSize(), 16, 256, 16, &ok );
+    const int size = QInputDialog::getInt( this->parentWidget(), this->tr( "Set icon size" ), this->tr( "Size:" ), this->iconSize(), 16, 256, 16, &ok );
     if ( ok ) {
         this->setIconSize( size );
         this->proxyModel->clearCache();
@@ -441,7 +436,6 @@ void FolderView::setIconSize() {
  */
 void FolderView::makeThumbnail() {
     QPixmap pixmap( 48, 48 );
-    QIcon icon;
 
     // for now don't do any updates
     if ( !this->thumbnail.isNull())
@@ -464,7 +458,7 @@ void FolderView::makeThumbnail() {
             this->thumbnail = pixmap.scaled( 48, 48 );
         }
 #else
-        icon = IconCache::instance()->icon( "inode-folder", 16 );
+        const QIcon icon( IconCache::instance()->icon( "inode-folder", 16 ));
 
         // draw folder icon
         if ( !icon.isNull()) {
@@ -805,8 +799,7 @@ void FolderView::on_view_clicked( const QModelIndex &index ) {
     if ( !index.isValid())
         return;
 
-    QString path( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString());
-    QFileInfo info( path );
+    const QFileInfo info( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString());
     if ( info.isDir() && this->mode() == Folder ) {
         if ( this->preview == nullptr )
             this->createPreviewWidget( info.absoluteFilePath());
@@ -834,26 +827,25 @@ void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint
     ITEMIDLIST *itemIdList;
     IShellFolder *shellFolder;
     LPCITEMIDLIST idChild;
-    HRESULT result;
     IContextMenu *contextMenu;
     HMENU popupMenu;
 
-    result = SHParseDisplayName( path.c_str(), 0, &itemIdList, 0, 0 );
-    if ( !SUCCEEDED( result ) || itemIdList == nullptr )
+    const int result = static_cast<const int>( SHParseDisplayName( path.c_str(), 0, &itemIdList, 0, 0 ));
+    if ( result < 0 || itemIdList == nullptr )
         return;
 
-    result = SHBindToParent( itemIdList, IID_IShellFolder, reinterpret_cast<void**>( &shellFolder ), &idChild );
-    if ( !SUCCEEDED( result ) || shellFolder == nullptr )
+    const int result2 = static_cast<const int>( SHBindToParent( itemIdList, IID_IShellFolder, reinterpret_cast<void**>( &shellFolder ), &idChild ));
+    if ( result2 < 0 || shellFolder == nullptr )
         return;
 
-    if ( !SUCCEEDED( shellFolder->GetUIObjectOf( parentWindow, 1, reinterpret_cast<const ITEMIDLIST **>( &idChild ), IID_IContextMenu, 0, reinterpret_cast<void**>( &contextMenu ))))
+    if ( static_cast<const int>( shellFolder->GetUIObjectOf( parentWindow, 1, reinterpret_cast<const ITEMIDLIST **>( &idChild ), IID_IContextMenu, 0, reinterpret_cast<void**>( &contextMenu ))) < 0 )
         return;
 
     popupMenu = CreatePopupMenu();
     if ( popupMenu == nullptr )
         return;
 
-    if ( SUCCEEDED( contextMenu->QueryContextMenu( popupMenu, 0, 1, 0x7FFF, CMF_NORMAL ))) {
+    if ( static_cast<const int>( contextMenu->QueryContextMenu( popupMenu, 0, 1, 0x7FFF, CMF_NORMAL )) >= 0 ) {
         int command;
 
         command = TrackPopupMenuEx( popupMenu, TPM_RETURNCMD, pos.x(), pos.y(), parentWindow, NULL );
@@ -865,8 +857,8 @@ void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint
             info.cbSize = sizeof( info );
             info.fMask = CMIC_MASK_UNICODE;
             info.hwnd = parentWindow;
-            info.lpVerb  = MAKEINTRESOURCEA( command - 1 );
-            info.lpVerbW = MAKEINTRESOURCEW( command - 1 );
+            info.lpVerb  = reinterpret_cast<LPSTR>( static_cast<ULONG_PTR>( static_cast<WORD>( command - 1 )));
+            info.lpVerbW = reinterpret_cast<LPWSTR>( static_cast<ULONG_PTR>( static_cast<WORD>( command - 1 )));
             info.nShow = SW_SHOWNORMAL;
 
             contextMenu->InvokeCommand( reinterpret_cast<LPCMINVOKECOMMANDINFO>( &info ));
@@ -881,9 +873,8 @@ void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint
  * @param pos
  */
 void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
-    QModelIndex index;
+    const QModelIndex index( this->ui->view->indexAt( pos ));
 
-    index = this->ui->view->indexAt( pos );
     if ( !index.isValid())
         return;
 
@@ -905,4 +896,3 @@ void FolderView::showEvent( QShowEvent *event ) {
     // set stylesheet here
     this->setCustomStyleSheet( this->currentStyleSheet());
 }
-

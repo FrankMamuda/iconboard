@@ -59,7 +59,6 @@ IconCache::IconCache( QObject *parent ) : QObject( parent ) {
  */
 QIcon IconCache::icon( const QString &iconName, int scale, const QString theme ) {
     QIcon icon;
-    QString alias;
     QString themeName( theme );
 
     // revert to default if empty
@@ -71,7 +70,7 @@ QIcon IconCache::icon( const QString &iconName, int scale, const QString theme )
         return QIcon();
 
     // make unique icons for different sizes
-    alias = QString( "%1_%2_%3" ).arg( iconName ).arg( themeName ).arg( scale );
+    const QString alias( QString( "%1_%2_%3" ).arg( iconName ).arg( themeName ).arg( scale ));
 
     // retrieve icon from index cache if it is not available in internal cache
     if ( !this->cache.contains( alias )) {
@@ -268,11 +267,11 @@ QPixmap IconCache::extractPixmap( const QString &fileName, int scale ) {
             return cache;
     }
 
-    const HRESULT hrFileInfo = SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( fileName ).utf16()), 0, &fileInfo, sizeof( SHFILEINFO ), flags );
+    const int hrFileInfo = static_cast<const int>( SHGetFileInfo( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( fileName ).utf16()), 0, &fileInfo, sizeof( SHFILEINFO ), static_cast<UINT>( flags )));
 
     // for some reason this always fails on msvc
 #ifndef Q_CC_MSVC
-    if ( SUCCEEDED( hrFileInfo ))
+    if ( static_cast<const int>( hrFileInfo ) >= 0 )
 #else
     Q_UNUSED( hrFileInfo )
 #endif
@@ -282,8 +281,8 @@ QPixmap IconCache::extractPixmap( const QString &fileName, int scale ) {
                 IImageList *imageList = nullptr;
                 HICON hIcon = 0;
 
-                if ( SUCCEEDED( SHGetImageList( index, IID_PPV_ARGS( &imageList )))) {
-                    if ( SUCCEEDED( imageList->GetIcon( fileInfo.iIcon, ILD_TRANSPARENT, &hIcon ))) {
+                if ( static_cast<int>( SHGetImageList( index, IID_PPV_ARGS( &imageList ))) >= 0 ) {
+                    if ( static_cast<int>( imageList->GetIcon( fileInfo.iIcon, ILD_TRANSPARENT, &hIcon )) >=0 ) {
                         pixmap = QtWin::fromHICON( hIcon );
                         DestroyIcon( hIcon );
                         imageList->Release();
@@ -385,7 +384,6 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize ) {
     QIcon overlayIcon( ":/icons/link" );
     const float factor = 4.0f;
     int overlaySize = static_cast<int>( originalSize / factor );
-    QSize actualSize;
 
     // abort if disabled
     if ( Variable::instance()->isDisabled( "ui_displaySymlinkIcon" ))
@@ -399,7 +397,7 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize ) {
 
     // get base pixmap (the icon)
     base = icon.pixmap( originalSize, originalSize );
-    actualSize = icon.actualSize( QSize( originalSize, originalSize ));
+    const QSize actualSize( icon.actualSize( QSize( originalSize, originalSize )));
 
     // get overlay arrow (TODO: allow custom arrows)
     overlay = overlayIcon.pixmap( overlaySize, overlaySize );
@@ -425,9 +423,8 @@ QIcon IconCache::addSymlinkLabel( const QIcon &icon, int originalSize ) {
  */
 #ifdef Q_OS_WIN
 QString IconCache::getDriveIconName( const QString &path ) const {
-    UINT type;
+    const UINT type = GetDriveType( reinterpret_cast<const wchar_t *>( path.utf16()));
 
-    type = GetDriveType( reinterpret_cast<const wchar_t *>( path.utf16()));
     switch ( type ) {
     case DRIVE_REMOVABLE:
         return "drive-removable-media";
@@ -456,21 +453,23 @@ QString IconCache::getDriveIconName( const QString &path ) const {
  * @brief IconCache::iconForFilename
  * @return
  */
+// TODO: const?
 QIcon IconCache::iconForFilename( const QString &fileName, int scale, bool upscale ) {
-    QFileInfo info( fileName );
-    QFileInfo target( info.symLinkTarget());
-    QString iconName, absolutePath( info.isSymLink() ? target.absoluteFilePath() : info.absoluteFilePath());
-    QMimeDatabase db;
+    const QFileInfo info( fileName );
+    const QFileInfo target( info.symLinkTarget());
+    QString iconName;
+    const QString absolutePath( info.isSymLink() ? target.absoluteFilePath() : info.absoluteFilePath());
+    const QMimeDatabase db;
     QIcon icon;
-    bool isDir = info.isDir() || target.isDir();
+    const bool isDir = info.isDir() || target.isDir();
 
     // get mimetype by matching content
     iconName = isDir ? "inode-directory" : db.mimeTypeForFile( absolutePath, QMimeDatabase::MatchContent ).iconName();
 
 #ifdef Q_OS_WIN
     // initialize COM (needed for SHGetFileInfo in a threaded environment)
-    const HRESULT hrCoInit = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED );
-    if ( FAILED( hrCoInit ))
+    const int hrCoInit = static_cast<const int>( CoInitializeEx( NULL, COINIT_APARTMENTTHREADED ));
+    if ( hrCoInit < 0 )
         return icon;
 
     if ( info.isRoot() || target.isRoot())
@@ -534,7 +533,7 @@ void IconCache::preLoadWindowsIcons() {
     } WindowsIcon_t;
 
     // icons in imageres.dll
-    WindowsIcon_t imageresDllIcons[] = {
+    const WindowsIcon_t imageresDllIcons[] = {
         // tray menu
         { "view-list-icons", 148, 16 }, // "Widget List"
         { "configure", 68, 16 }, // "Settings"
@@ -565,7 +564,7 @@ void IconCache::preLoadWindowsIcons() {
     };
 
     // icons in shell32.dll
-    WindowsIcon_t shellDllIcons[] = {
+    const WindowsIcon_t shellDllIcons[] = {
         // widget list
         { "list-add", 319, 16 }, // "Add"
     };
@@ -577,7 +576,7 @@ void IconCache::preLoadWindowsIcons() {
 
         // open library
         hMod = GetModuleHandle( dllName );
-        if ( hMod == NULL)
+        if ( hMod == NULL )
             hMod = LoadLibrary( dllName );
 
         if ( hMod == NULL )
@@ -585,15 +584,14 @@ void IconCache::preLoadWindowsIcons() {
 
         // go through icon list
         for ( y = 0; y < count; y++ ) {
-            QPixmap pixmap;
-            QString alias;
-
             // get icons
-            pixmap = QtWin::fromHICON( reinterpret_cast<HICON>( LoadImage( hMod, MAKEINTRESOURCE( list[y].index ), IMAGE_ICON, list[y].scale, list[y].scale, LR_DEFAULTCOLOR | LR_SHARED )));
-            if ( !pixmap.isNull()) {
-                alias = QString( "%1_%2_%3" ).arg( list[y].name ).arg( IconIndex::instance()->defaultTheme()).arg( list[y].scale );
-                this->add( alias, QIcon( pixmap ));
-            }
+#if defined(UNICODE)
+            const QPixmap pixmap( QtWin::fromHICON( reinterpret_cast<HICON>( LoadImage( hMod, reinterpret_cast<LPWSTR>( static_cast<ULONG_PTR>( static_cast<WORD>( list[y].index ))), IMAGE_ICON, list[y].scale, list[y].scale, LR_DEFAULTCOLOR | LR_SHARED ))));
+#elif
+            const QPixmap pixmap( QtWin::fromHICON( reinterpret_cast<HICON>( LoadImage( hMod, reinterpret_cast<LPSTR>( static_cast<ULONG_PTR>( static_cast<WORD>( list[y].index ))), IMAGE_ICON, list[y].scale, list[y].scale, LR_DEFAULTCOLOR | LR_SHARED ))));
+#endif
+            if ( !pixmap.isNull())
+                this->add( QString( "%1_%2_%3" ).arg( list[y].name ).arg( IconIndex::instance()->defaultTheme()).arg( list[y].scale ), QIcon( pixmap ));
         }
 
         // close libarary

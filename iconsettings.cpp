@@ -129,7 +129,7 @@ void IconSettings::setIcon( DesktopIcon *icon ) {
     this->ui->iconWidgetDemo->setTarget( icon->target());
     this->ui->iconWidgetDemo->setIcon();
 
-    QFileInfo info( icon->target());
+    const QFileInfo info( icon->target());
     if ( !info.isDir())
         this->ui->previewGroup->setDisabled( true );
 

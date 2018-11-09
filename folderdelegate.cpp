@@ -41,25 +41,19 @@ FolderDelegate::FolderDelegate( QListView *parent ) : m_textLineCount( FolderDel
  */
 QSize FolderDelegate::sizeHint( const QStyleOptionViewItem &option, const QModelIndex &index ) const {
     ListItem item;
-    QListView *view;
-    QSize size;
-    QStyleOptionViewItem customOption;
-    QString text;
+    QListView *view( qobject_cast<QListView*>( this->parent()));
+    QSize size( QStyledItemDelegate::sizeHint( option, index ));
+    QStyleOptionViewItem customOption( option );
 
     // get parent listView
-    view = qobject_cast<QListView*>( this->parent());
     if ( view == nullptr )
         return QStyledItemDelegate::sizeHint( option, index );
 
-    // calculate proper size for multi-line text
-    size = QStyledItemDelegate::sizeHint( option, index );
-
     // get display text
-    text = view->model()->data( index, Qt::DisplayRole ).toString();
+    const QString text( view->model()->data( index, Qt::DisplayRole ).toString());
 
     // only icon mode has custom placement
     if ( view->viewMode() == QListView::IconMode ) {
-        customOption = option;
         customOption.rect.setWidth( option.decorationSize.width() + this->sideMargin() * 2 );
 
         if ( this->cache.contains( text )) {
@@ -81,19 +75,18 @@ QSize FolderDelegate::sizeHint( const QStyleOptionViewItem &option, const QModel
  * @param text
  */
 ListItem FolderDelegate::textItemForIndex( const QStyleOptionViewItem &option, const QModelIndex &index ) const {
-    QString text, line[this->textLineCount()];
-    int y, textHeight, numLines = 0;
-    QListView *view;
+    QString line[this->textLineCount()];
+    int y, numLines = 0;
+    QListView *view( qobject_cast<QListView*>( this->parent()));
     ListItem item;
 
     // get parent listView
-    view = qobject_cast<QListView*>( this->parent());
     if ( view == nullptr )
         return item;
 
     // get display text and height
-    text = view->model()->data( index, Qt::DisplayRole ).toString();
-    textHeight = option.fontMetrics.height();
+    QString text( view->model()->data( index, Qt::DisplayRole ).toString());
+    const int textHeight = option.fontMetrics.height();
 
     // split text into lines
     while ( this->textLineCount() - numLines ) {
@@ -131,13 +124,10 @@ ListItem FolderDelegate::textItemForIndex( const QStyleOptionViewItem &option, c
  * @param index
  */
 void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index ) const {
-    int width, height, offset;
-    QListView *view;
+    QListView *view( qobject_cast<QListView*>( this->parent()));
     QBrush hilightBrush;
-    QString text;
 
     // get parent listView
-    view = qobject_cast<QListView*>( this->parent());
     if ( view == nullptr )
         return;
 
@@ -153,7 +143,7 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
     }
 
     // get display text
-    text = view->model()->data( index, Qt::DisplayRole ).toString();
+    const QString text( view->model()->data( index, Qt::DisplayRole ).toString());
 
     // restore painter state
     painter->restore();
@@ -162,20 +152,19 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
     if ( view->viewMode() == QListView::IconMode ) {
         ListItem item;
         QRect rect;
-        QIcon icon;
         int y;
         QTextOption to;
 
         // get pixmap and its dimensions
-        icon = qvariant_cast<QIcon>( view->model()->data( index, Qt::DecorationRole ));
+        const QIcon icon( qvariant_cast<QIcon>( view->model()->data( index, Qt::DecorationRole )));
         rect = option.rect;
         rect.setY( rect.y() + this->topMargin());
-        width = option.decorationSize.width();
-        height = option.decorationSize.height();
+        const int width = option.decorationSize.width();
+        const int height = option.decorationSize.height();
 
         // properly position pixmap
         if ( width < rect.width()) {
-            offset = rect.width() - width;
+            const int offset = rect.width() - width;
             rect.setX( rect.x() + offset / 2 );
             rect.setWidth( width );
         }
@@ -208,7 +197,7 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
             painter->drawText( rect, item.lines.at( y ), to );
         }
     } else {
-        QStyleOptionViewItem optionNoSelection;
+        QStyleOptionViewItem optionNoSelection( option );
         QStyle::State state;
 
         // remove hover/selection flags
@@ -218,7 +207,6 @@ void FolderDelegate::paint( QPainter *painter, const QStyleOptionViewItem &optio
         state = state & ( ~QStyle::State_HasFocus );
         state = state & ( ~QStyle::State_Active );
 
-        optionNoSelection = option;
         optionNoSelection.state = state;
 
         // paint it exactly the same as before, yet ignoring selections

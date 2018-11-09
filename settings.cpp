@@ -36,7 +36,7 @@
  * @param parent
  */
 Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings ), signalMapper( new QSignalMapper( this )) {
-    QDir dir( IconIndex::instance()->path());
+    const QDir dir( IconIndex::instance()->path());
 
     // set up ui
     this->ui->setupUi( this );
@@ -49,7 +49,7 @@ Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings 
     // find all icon dirs
     this->ui->iconTheme->addItem( this->tr( "System default" ), "system" );
     foreach ( const QString &path, dir.entryList( QDir::AllDirs | QDir::NoDotAndDotDot )) {
-        QFile file( IconIndex::instance()->path() + "/" + path + "/" + "index.theme" );
+        const QFile file( IconIndex::instance()->path() + "/" + path + "/" + "index.theme" );
         if ( !file.exists())
             continue;
 

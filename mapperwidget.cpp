@@ -30,10 +30,7 @@
  */
 void MapperWidget::paintEvent( QPaintEvent *event ) {
     QPainter painter( this );
-    QRect rect;
-
-    // get whole geometry
-    rect = QApplication::primaryScreen()->virtualGeometry();
+    const QRect rect( QApplication::primaryScreen()->virtualGeometry());
 
     // make a pixmap of screen geometries
     QPixmap pixmap( rect.width(), rect.height());
@@ -41,7 +38,6 @@ void MapperWidget::paintEvent( QPaintEvent *event ) {
     {
         QPainter screenPainter( &pixmap );
         int alpha = 64;
-        QTextOption textOption;
         QFont font;
         QPen pen;
 
@@ -51,8 +47,6 @@ void MapperWidget::paintEvent( QPaintEvent *event ) {
 
         // go each individual screen
         foreach ( QScreen *screen, QApplication::screens()) {
-            int index;
-
             // fill screen rect
             screenPainter.fillRect( screen->geometry(), QColor::fromRgb( 0, 0, 0, alpha ));
             alpha += 64;
@@ -61,12 +55,11 @@ void MapperWidget::paintEvent( QPaintEvent *event ) {
                 alpha = 64;
 
             // paint screen index
-            index = QApplication::screens().indexOf( screen ) + 1;
-            textOption.setAlignment( Qt::AlignCenter );
+            const int index = QApplication::screens().indexOf( screen ) + 1;
             screenPainter.setPen( QColor::fromRgb( 255, 255, 255, 255 ));
             font.setPointSize( screen->geometry().height() / 2 );
             screenPainter.setFont( font );
-            screenPainter.drawText( screen->geometry(), QString( "%1" ).arg( index ), textOption );
+            screenPainter.drawText( screen->geometry(), QString( "%1" ).arg( index ), { Qt::AlignCenter } );
         }
 
         // paint widget rect
@@ -77,7 +70,7 @@ void MapperWidget::paintEvent( QPaintEvent *event ) {
         pen.setWidth( 4 );
         screenPainter.setPen( pen );
         screenPainter.drawRect( this->screenMapper()->widgetRect );
-        screenPainter.drawText( this->screenMapper()->widgetRect, "W", textOption );
+        screenPainter.drawText( this->screenMapper()->widgetRect, "W", { Qt::AlignCenter } );
     }
 
     // resize and paint pixmap

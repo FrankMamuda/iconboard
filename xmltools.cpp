@@ -61,9 +61,9 @@ void XMLTools::write( Modes mode, bool force ) {
     QString path, savedData, newData;
 
 #ifdef QT_DEBUG
-    QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
+    const QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
 #else
-    QDir configDir( QDir::homePath() + "/.iconBoard/" );
+    const QDir configDir( QDir::homePath() + "/.iconBoard/" );
 #endif
 
     if ( !configDir.exists())
@@ -84,7 +84,6 @@ void XMLTools::write( Modes mode, bool force ) {
         break;
 
     case NoMode:
-    default:
         qCritical() << this->tr( "error - invalid mode" );
         return;
     }
@@ -104,7 +103,7 @@ void XMLTools::write( Modes mode, bool force ) {
     // switch mode
     switch ( mode ) {
     case Variables:
-        foreach ( VariableEntry var, Variable::instance()->list ) {
+        foreach ( const VariableEntry &var, Variable::instance()->list ) {
             stream.writeEmptyElement( "variable" );
             stream.writeAttribute( "key", var.key());
 
@@ -130,9 +129,8 @@ void XMLTools::write( Modes mode, bool force ) {
         int y;
 
         for ( y = 0; y < FolderManager::instance()->count(); y++ ) {
-            FolderView *folderView;
+            FolderView *folderView( FolderManager::instance()->at( y ));
 
-            folderView = FolderManager::instance()->at( y );
             if ( folderView == nullptr )
                 continue;
 
@@ -181,9 +179,8 @@ void XMLTools::write( Modes mode, bool force ) {
         }
 
         for ( y = 0; y < FolderManager::instance()->iconCount(); y++ ) {
-            DesktopIcon *desktopIcon;
+            DesktopIcon *desktopIcon( FolderManager::instance()->iconAt( y ));
 
-            desktopIcon = FolderManager::instance()->iconAt( y );
             if ( desktopIcon == nullptr )
                 continue;
 
@@ -255,7 +252,6 @@ void XMLTools::write( Modes mode, bool force ) {
         break;
 
     case NoMode:
-    default:
         qCritical() << this->tr( "error - invalid mode" );
         return;
     }
@@ -318,9 +314,9 @@ void XMLTools::read( Modes mode ) {
     QDomElement element, childElement;
 
 #ifdef QT_DEBUG
-    QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
+    const QDir configDir( QDir::homePath() + "/.iconBoardDebug/" );
 #else
-    QDir configDir( QDir::homePath() + "/.iconBoard/" );
+    const QDir configDir( QDir::homePath() + "/.iconBoard/" );
 #endif
 
     if ( !configDir.exists())
@@ -341,7 +337,6 @@ void XMLTools::read( Modes mode ) {
         break;
 
     case NoMode:
-    default:
         qCritical() << this->tr( "error - invalid mode" );
         return;
     }

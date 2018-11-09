@@ -123,6 +123,7 @@ void TrayIcon::iconActivated( QSystemTrayIcon::ActivationReason reason ) {
                 parentWidget->hide();
             break;
         }
+        break;
 
     case QSystemTrayIcon::Context:
         this->actionMap[Widgets]->setEnabled( Variable::instance()->isDisabled( "app_lock" ));
@@ -140,7 +141,9 @@ void TrayIcon::iconActivated( QSystemTrayIcon::ActivationReason reason ) {
         this->contextMenu()->exec( QCursor::pos());
         break;
 
-    default:
+    case Unknown:
+    case DoubleClick:
+    case MiddleClick:
         break;
     }
 }

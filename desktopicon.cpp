@@ -87,7 +87,7 @@ DesktopIcon::~DesktopIcon() {
  * @param size
  */
 void DesktopIcon::adjustFrame() {
-    QFontMetrics fm( this->font());
+    const QFontMetrics fm( this->font());
     this->setFixedSize( static_cast<int>( this->iconSize() * this->textWidth()), this->iconSize() + fm.height());
 }
 
@@ -105,10 +105,10 @@ void DesktopIcon::setupPreview() {
  * @brief DesktopIcon::loadIcon
  */
 void DesktopIcon::setIcon() {
-    int scale = static_cast<int>( this->iconSize() - this->padded() * 2 );
+    const int scale = static_cast<int>( this->iconSize() - this->padded() * 2 );
 
     if ( this->customIcon().isEmpty()) {
-        QFileInfo info( this->target());
+        const QFileInfo info( this->target());
         QIcon icon;
 
         if ( !info.exists()) {
@@ -155,7 +155,7 @@ void DesktopIcon::setupFrame() {
     this->installEventFilter( this );
 
     // set up preview
-    QFileInfo info( this->target());
+    const QFileInfo info( this->target());
     if ( this->preview == nullptr ) {
         this->preview = new FolderView( this, info.absoluteFilePath(), FolderView::Preview );
         this->setupPreview();
@@ -168,13 +168,13 @@ void DesktopIcon::setupFrame() {
  * @param event
  */
 void DesktopIcon::paintEvent( QPaintEvent *event ) {
-    QColor white( 255, 255, 255, 196 );
+    const QColor white( 255, 255, 255, 196 );
     QPixmap pixmap( this->iconSize(), this->iconSize());
     QPainter painter( this );
-    qreal width = this->iconSize() * this->textWidth();
-    qreal offset = ( width - this->iconSize()) / 2.0;
-    int hOfs = static_cast<int>( this->iconSize() * this->hOffset());
-    int vOfs = static_cast<int>( this->iconSize() * this->vOffset());
+    const qreal width = this->iconSize() * this->textWidth();
+    const qreal offset = ( width - this->iconSize()) / 2.0;
+    const int hOfs = static_cast<int>( this->iconSize() * this->hOffset());
+    const int vOfs = static_cast<int>( this->iconSize() * this->vOffset());
 
     pixmap.fill( Qt::transparent );
     {
@@ -211,8 +211,8 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
 
         // draw folder icon
         if ( !this->icon().isNull()) {
-            int pd = static_cast<int>( this->padded());
-            int scale = this->iconSize() - pd * 2;
+            const int pd = static_cast<int>( this->padded());
+            const int scale = this->iconSize() - pd * 2;
 
             QPixmap pm( this->icon().pixmap( QSize( scale, scale ), this->m_move ? QIcon::Disabled : QIcon::Normal ));
             painter.drawPixmap( static_cast<int>( pd + offset ) + hOfs, pd + vOfs, scale, scale, pm );
@@ -222,10 +222,10 @@ void DesktopIcon::paintEvent( QPaintEvent *event ) {
     }
 
     // draw text
-    QFontMetrics fm( this->font());
+    const QFontMetrics fm( this->font());
     if ( !this->title().isEmpty() && this->isTitleVisible()) {
-        QRectF textRect( 0, this->iconSize(), width, fm.height());
-        QString displayText( fm.elidedText( this->title(), Qt::ElideRight, static_cast<int>( textRect.width())));
+        const QRectF textRect( 0, this->iconSize(), width, fm.height());
+        const QString displayText( fm.elidedText( this->title(), Qt::ElideRight, static_cast<int>( textRect.width())));
 
         painter.setPen( Qt::black );
         painter.drawText( textRect.adjusted( 0, 2, 2, 0 ), Qt::AlignCenter, displayText );

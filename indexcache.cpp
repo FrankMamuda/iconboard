@@ -69,9 +69,8 @@ IndexCache::IndexCache( QObject *parent ) : QObject( parent ), m_valid( false ),
     }
 
     // read data
-    if ( !this->read()) {
+    if ( !this->read())
         qFatal( this->tr( "failed to read cache" ).toUtf8().constData());
-    }
 
     this->setValid( true );
 
@@ -124,8 +123,6 @@ bool IndexCache::read() {
  * @return
  */
 bool IndexCache::write( const QString &iconName, int iconScale, const QString &theme, const QString &fileName ) {
-    QString alias;
-
     // failsafe
     if ( !this->isValid())
         return false;
@@ -141,7 +138,7 @@ bool IndexCache::write( const QString &iconName, int iconScale, const QString &t
     }
 
     // generate alias
-    alias = QString( "%1_%2_%3" ).arg( iconName ).arg( theme ).arg( iconScale );
+    const QString alias( QString( "%1_%2_%3" ).arg( iconName ).arg( theme ).arg( iconScale ));
 
     // check for duplicates
     if ( this->contains( alias ))
@@ -185,14 +182,13 @@ void IndexCache::shutdown() {
  * @return
  */
 MatchList IndexCache::matchList( const QString &iconName, const QString &theme ) const {
-    QSet<QString> iconIndex;
     int recursionLevel = 2;
     bool ok;
     Match iconMatch;
     MatchList matchList;
 
     // get icon index
-    iconIndex = IconIndex::instance()->iconIndex( iconName, theme );
+    const QSet<QString>iconIndex( IconIndex::instance()->iconIndex( iconName, theme ));
 
     // don't bother if no matches
     if ( iconIndex.isEmpty())
@@ -214,7 +210,6 @@ MatchList IndexCache::matchList( const QString &iconName, const QString &theme )
  * @return
  */
 Match IndexCache::readIconFile( const QString &fileName, bool &ok, int recursionLevel ) const {
-    QString buffer;
     QFile file;
     bool binary = false;
     Match iconMatch( fileName );
@@ -234,7 +229,7 @@ Match IndexCache::readIconFile( const QString &fileName, bool &ok, int recursion
         return iconMatch;
 
     // convert to text in case it is an svg or a symbolic link
-    buffer = QString( file.readAll().constData());
+    const QString buffer( file.readAll().constData());
     file.close();
 
     // test if file is binary
@@ -251,7 +246,7 @@ Match IndexCache::readIconFile( const QString &fileName, bool &ok, int recursion
         if ( buffer.startsWith( "<svg" ) || buffer.startsWith( "<?xml" )) {
             iconMatch.scale = this->parseSVG( buffer );
         } else {
-            QFileInfo info( file );
+            const QFileInfo info( file );
             QDir dir;
             QString link;
             int pos = 0, numCdUps = 0;
@@ -278,9 +273,6 @@ Match IndexCache::readIconFile( const QString &fileName, bool &ok, int recursion
         if ( pixmap.load( fileName ))
             iconMatch.scale = pixmap.width();
     }
-
-    // clean up
-    buffer.clear();
 
     // check scale
     if ( iconMatch.scale > 0 )
@@ -395,10 +387,9 @@ Match IndexCache::bestMatch( const QString &iconName, int scale, const QString &
  */
 QIcon IndexCache::icon( const QString &iconName, int scale, const QString &theme ) {
     Match match;
-    QString alias;
 
     // check if icon is already cache
-    alias = QString( "%1_%2_%3" ).arg( iconName ).arg( theme ).arg( scale );
+    const QString alias( QString( "%1_%2_%3" ).arg( iconName ).arg( theme ).arg( scale ));
     if ( this->contains( alias ))
         return QIcon( this->indexEntry( alias ).fileName );
 

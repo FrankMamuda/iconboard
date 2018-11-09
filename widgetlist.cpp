@@ -41,6 +41,7 @@ WidgetList::WidgetList( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::W
     settingsDialog( new Settings( this )),
     themeDialog( new ThemeEditor( this )),
     aboutDialog( new About( this )) {
+
     // init ui
     this->ui->setupUi( this );
 
@@ -95,21 +96,23 @@ void WidgetList::on_widgetList_doubleClicked( const QModelIndex & ) {
 void WidgetList::on_actionAdd_triggered() {
     QMenu menu, *subMenu;
 #ifdef Q_OS_WIN
-    QWidget *widget = reinterpret_cast<QWidget*>( FolderManager::instance()->desktop );
+    QWidget *widget( reinterpret_cast<QWidget*>( FolderManager::instance()->desktop ));
 #else
     QWidget *widget = nullptr;
 #endif
 
     // add folder widget lambda
     menu.addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder widget" ), [ this, widget ]() {
-        QDir dir( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
+        const QDir dir( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
+
         if ( dir.exists()) {
-            FolderView *folderView;
-            folderView = new FolderView( widget, dir.absolutePath());
+            FolderView *folderView( new FolderView( widget, dir.absolutePath()));
+
             folderView->show();
             folderView->resetStyleSheet();
             folderView->sort();
             this->ui->widgetList->reset();
+
             FolderManager::instance()->add( folderView );
         }
     } );
@@ -120,17 +123,19 @@ void WidgetList::on_actionAdd_triggered() {
 
     // addIcon lambda
     auto addIcon = [ this, widget ]( const QString &path ) {
-        DesktopIcon *desktopIcon;
-        desktopIcon = new DesktopIcon( widget, path );
+        DesktopIcon *desktopIcon( new DesktopIcon( widget, path ));
+
         desktopIcon->setupFrame();
         desktopIcon->show();
+
         FolderManager::instance()->add( desktopIcon );
     };
 
     // add icon widget lambda with FILE as its targer
     subMenu->addAction( IconCache::instance()->icon( "application-x-zerosize", 16 ), this->tr( "File target" ), [ this, addIcon ]() {
-        QString fileName( QFileDialog::getOpenFileName( this, this->tr( "Select file" ), "" ));
-        QFileInfo info( fileName );
+        const QString fileName( QFileDialog::getOpenFileName( this, this->tr( "Select file" ), "" ));
+        const QFileInfo info( fileName );
+
         if ( info.exists())
             addIcon( info.absoluteFilePath());
 
@@ -155,19 +160,16 @@ void WidgetList::on_actionRemove_triggered() {
     QMessageBox msgBox;
     FolderView *folderView;
     DesktopIcon *desktopIcon;
-    int state, index;
-
-    index = this->ui->widgetList->currentIndex().row();
+    const int index = this->ui->widgetList->currentIndex().row();
 
     // display warning
     msgBox.setText( this->tr( "Do you really want to remove this widget?" ));
     msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::No );
     msgBox.setDefaultButton( QMessageBox::Yes );
     msgBox.setIcon( QMessageBox::Warning );
-    state = msgBox.exec();
 
     // check options
-    switch ( state ) {
+    switch ( msgBox.exec()) {
     case QMessageBox::Yes:
         if ( index >= FolderManager::instance()->count()) {
             desktopIcon = FolderManager::instance()->iconAt( index - FolderManager::instance()->count());
@@ -192,9 +194,7 @@ void WidgetList::on_actionRemove_triggered() {
  */
 void WidgetList::on_actionShow_triggered() {
     QWidget *widget;
-    int index;
-
-    index = this->ui->widgetList->currentIndex().row();
+    const int index = this->ui->widgetList->currentIndex().row();
 
     // TODO: set checkable
     if ( index >= FolderManager::instance()->count())
@@ -218,9 +218,7 @@ void WidgetList::on_actionShow_triggered() {
 void WidgetList::on_actionMap_triggered() {
     ScreenMapper mapperDialog;
     QWidget *widget;
-    int index;
-
-    index = this->ui->widgetList->currentIndex().row();
+    int index = this->ui->widgetList->currentIndex().row();
 
     if ( index >= FolderManager::instance()->count())
         widget = qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count()));

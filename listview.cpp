@@ -89,7 +89,6 @@ void ListView::dropEvent( QDropEvent *event ) {
     this->connect( menu.addAction( IconCache::instance()->icon( "insert-link", 16 ), this->tr( "Link" )), &QAction::triggered, [this, event]() {
         QString target;
         FolderView *folderView;
-        QModelIndex index;
 
         // get parent widget
         folderView = qobject_cast<FolderView*>( this->parentWidget());
@@ -102,7 +101,7 @@ void ListView::dropEvent( QDropEvent *event ) {
         target = folderView->rootPath();
 
         // get item under cursor
-        index = this->indexAt( event->pos());
+        const QModelIndex index( this->indexAt( event->pos()));
 
         // get drop target full path
         if ( index.isValid())
@@ -116,8 +115,8 @@ void ListView::dropEvent( QDropEvent *event ) {
 
         // go through dropEvent fileNames
         if ( event->mimeData()->hasUrls()) {
-            foreach ( QUrl url, event->mimeData()->urls()) {
-                QString filePath( url.toLocalFile());
+            foreach ( const QUrl &url, event->mimeData()->urls()) {
+                const QString filePath( url.toLocalFile());
                 QString link( target + "/" + QFileInfo( filePath ).fileName());
 
 #ifdef Q_OS_WIN

@@ -35,9 +35,7 @@ ScreenMapper::ScreenMapper( QWidget *parent ) : QDialog( parent ), ui( new Ui::S
 
     // go each individual screen
     for ( y = 0; y < QApplication::screens().count(); y++ ) {
-        QScreen *screen;
-
-        screen = QApplication::screens().at( y );
+        QScreen *screen( QApplication::screens().at( y ));
         this->ui->comboScreens->addItem( QString( "%1: \"%2\"" ).arg( y + 1 ).arg( screen->name().remove( "\\" ).remove( "." )));
     }
 }

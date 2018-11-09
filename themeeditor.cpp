@@ -38,6 +38,7 @@
 ThemeEditor::ThemeEditor( QWidget *parent, Modes mode, const QString &styleSheet ) : QDialog( parent ), ui( new Ui::ThemeEditor ),
     model( new ThemeDemoModel( this )), toolBar( new QToolBar( this )), m_mode( mode ),
     label( new QLabel()), themeSelector( new QComboBox()) {
+
     // set up view
     this->ui->setupUi( this );
     this->ui->title->setAutoFillBackground( true );
@@ -86,14 +87,12 @@ ThemeEditor::ThemeEditor( QWidget *parent, Modes mode, const QString &styleSheet
 
         // rename
         this->connect( this->toolBar->addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename" )), &QAction::triggered, [this]() {
-            QString name;
-
             if ( this->baseTheme()->builtIn()) {
                 QMessageBox::information( this, this->tr( "Cannot rename theme" ), this->tr( "Cannot rename built-in theme \"%1\"" ).arg( this->baseTheme()->name()));
                 return;
             }
 
-            name = this->baseTheme()->name();
+            const QString name( this->baseTheme()->name());
             this->saveAs();
             Themes::instance()->remove( name );
             this->populateThemes( this->baseTheme()->name());
@@ -226,8 +225,7 @@ void ThemeEditor::save() {
  * @brief ThemeEditor::saveAs
  */
 void ThemeEditor::saveAs() {
-    QString name;
-    name = QInputDialog::getText( this->parentWidget(), this->tr( "Save theme" ), this->tr( "Name:" ), QLineEdit::Normal );
+    const QString name( QInputDialog::getText( this->parentWidget(), this->tr( "Save theme" ), this->tr( "Name:" ), QLineEdit::Normal ));
 
     if ( name.isEmpty()) {
         QMessageBox::warning( this, this->tr( "Cannot save theme" ), this->tr( "Empty theme name" ));

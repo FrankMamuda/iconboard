@@ -125,15 +125,12 @@ void ProxyModel::updateModel( const QString &fileName, const QIcon &icon, const 
  * @return
  */
 QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
-    QString fileName;
-    int iconSize;
-
     if ( this->isStopping())
         return QVariant();
 
     if ( role == QFileSystemModel::FileIconRole ) {
-        fileName = index.data( QFileSystemModel::FilePathRole ).toString();
-        iconSize = this->view->iconSize();
+        const QString fileName( index.data( QFileSystemModel::FilePathRole ).toString());
+        const int iconSize = this->view->iconSize();
 
         if ( this->cache.contains( fileName ))
             return this->cache[fileName];
@@ -151,17 +148,10 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
         QPersistentModelIndex persistentIndex( index );
         QtConcurrent::run( this->threadPool, [ this, fileName, persistentIndex, iconSize ] {
 #endif
-            QIcon icon;
-
             if ( this->isStopping())
                 return;
 
-            /*
-            QFileInfo info( fileName );
-            if ( !info.isReadable())
-                return;*/
-
-            icon = IconCache::instance()->iconForFilename( fileName, iconSize );
+            const QIcon icon( IconCache::instance()->iconForFilename( fileName, iconSize ));
             if ( !icon.isNull() || this->isStopping()) {
 #ifdef ALT_PROXY_MODE
                 emit this->iconFound( fileName, icon );
@@ -173,12 +163,10 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
     } else if ( role == Qt::DisplayRole ) {
 #ifdef Q_OS_WIN
         // TODO: make this a static function (duplicate in IconCache)
-        QRegularExpression re( "^([A-Z]):\\/$" );
-        QRegularExpressionMatch match;
+        const QRegularExpression re( "^([A-Z]):\\/$" );
+        QString fileName( index.data( QFileSystemModel::FilePathRole ).toString());
 
-        fileName = index.data( QFileSystemModel::FilePathRole ).toString();
-
-        match = re.match( fileName );
+        const QRegularExpressionMatch match( re.match( fileName ));
         if ( match.hasMatch())
             return match.captured( 1 ) + this->tr( " drive" );
 
@@ -202,17 +190,16 @@ QVariant ProxyModel::data( const QModelIndex &index, int role ) const {
  */
 bool ProxyModel::lessThan( const QModelIndex &left, const QModelIndex &right ) const {
     if ( this->sortColumn() == 0 ) {
-        QFileInfo leftInfo, rightInfo;
         FileSystemModel *fileSystemModel;
-        bool compare, value;
+        bool value;
 
         fileSystemModel = qobject_cast<FileSystemModel*>( this->sourceModel());
         if ( fileSystemModel == nullptr || this->view == nullptr )
             return QSortFilterProxyModel::lessThan( left, right );
 
-        compare = this->view->sortOrder() == Qt::AscendingOrder ? true : false;
-        leftInfo  = fileSystemModel->fileInfo( left );
-        rightInfo = fileSystemModel->fileInfo( right );
+        const bool compare = this->view->sortOrder() == Qt::AscendingOrder;
+        const QFileInfo leftInfo( fileSystemModel->fileInfo( left ));
+        const QFileInfo rightInfo( fileSystemModel->fileInfo( right ));
 
         if ( this->view->directoriesFirst()) {
             if ( !leftInfo.isDir() && rightInfo.isDir())

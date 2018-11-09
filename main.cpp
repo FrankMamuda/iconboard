@@ -46,7 +46,7 @@
  *    GitHub page
  *    release beta
  *    remove widgets from task switcher (ALT+TAB) (not an issue on W7)
- *    no tray icon with system icon theme
+ *    performance issues in FolderView (first show)
  *
  *  [NOT URGENT]
  *  [to be implemented/fixed in future versions]
@@ -92,8 +92,6 @@
  *
  *  [BACKPORT]
  *    variables
- *    garbage manager for singletons
- *
  */
 
 // default message handler
@@ -107,7 +105,7 @@ static const QtMessageHandler QT_DEFAULT_MESSAGE_HANDLER = qInstallMessageHandle
  */
 void Main::messageFilter( QtMsgType type, const QMessageLogContext &context, const QString &msg ) {
     QFile logFile;
-    QString output( msg );
+    const QString output( msg );
 
     // display message as is
     (*QT_DEFAULT_MESSAGE_HANDLER)( type, context, msg );
@@ -147,7 +145,7 @@ QSize Main::currentResolution() {
  * @return
  */
 QSize Main::targetResolution() {
-    QSize targetResolution( Variable::instance()->value<QSize>( "app_targetResolution" ));
+    const QSize targetResolution( Variable::instance()->value<QSize>( "app_targetResolution" ));
 
     if ( targetResolution.isEmpty() || !targetResolution.isValid())
         return Main::instance()->currentResolution();
@@ -162,8 +160,6 @@ QSize Main::targetResolution() {
  * @return
  */
 int main( int argc, char *argv[] ) {
-    QString themeName;
-
     // set console output pattern
     qSetMessagePattern( "%{if-category}%{category}: %{endif}%{function}: %{message}" );
 
@@ -217,7 +213,7 @@ int main( int argc, char *argv[] ) {
     IconCache::instance()->iconForFilename( QDir::currentPath(), 0 );
 
     // setup icons
-    themeName = Variable::instance()->string( "ui_iconTheme" );
+    const QString themeName( Variable::instance()->string( "ui_iconTheme" ));
     if ( !themeName.isEmpty() && QString::compare( "system", themeName )) {
         QFile file( IconIndex::instance()->path() + "/" + themeName + "/" + "index.theme" );
         if ( file.exists()) {
@@ -278,9 +274,8 @@ Main::Main( QObject *parent ) : QObject( parent ), m_initialized( false ), m_rel
  * @param value
  */
 void Main::iconThemeChanged( QVariant value ) {
-    QString themeName;
+    const QString themeName( value.toString());
 
-    themeName = value.toString();
     if ( themeName.isEmpty())
         return;
 

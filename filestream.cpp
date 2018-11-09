@@ -54,12 +54,8 @@ bool FileStream::seek( FileStream::Origin origin, qint64 position ) {
     if ( !this->isOpen() || position > this->m_file.size())
         return false;
 
-    if ( this->m_file.pos() < position ) {
-        if ( this->skipRawData( position - this->m_file.pos()) != -1 )
-            return true;
-        else
-            return false;
-    }
+    if ( this->m_file.pos() < position )
+         return this->skipRawData( static_cast<int>( position - this->m_file.pos())) != -1;
 
     switch ( origin ) {
     case Start:

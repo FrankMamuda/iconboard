@@ -37,7 +37,7 @@ Themes::Themes( QObject *parent ) : QObject( parent ) {
     this->add( "system", "", true );
 
     // add dark and light styleSheets (built-in)
-    foreach ( const QString name, BuiltInThemes::Names ) {
+    foreach ( const QString &name, BuiltInThemes::Names ) {
         QFile styleSheet;
 
         styleSheet.setFileName( QString( ":/styleSheets/%1.qss" ).arg( name ));
