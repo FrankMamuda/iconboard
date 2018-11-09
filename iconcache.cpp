@@ -33,6 +33,7 @@
 #include <commoncontrols.h>
 #include <shellapi.h>
 #include <winuser.h>
+#define MIME_TYPE_CACHE
 #endif
 #include "main.h"
 
@@ -261,7 +262,12 @@ QPixmap IconCache::extractPixmap( const QString &fileName, int scale ) {
         flags |= SHGFI_USEFILEATTRIBUTES;
 
     // win32 icon cache
+#ifdef MIME_TYPE_CACHE
+    const QMimeDatabase db;
+    const QString cachedFile( IndexCache::instance()->path() + "/" + db.mimeTypeForFile( fileName, QMimeDatabase::MatchContent ).iconName() + "_" + QString::number( scale ) + ".png" );
+#else
     QString cachedFile( this->fileNameForHash( hashForFile( fileName ), scale ));
+#endif
     if ( !cachedFile.isEmpty()) {
         if ( cache.load( cachedFile ))
             return cache;

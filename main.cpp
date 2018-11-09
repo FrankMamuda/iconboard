@@ -47,6 +47,7 @@
  *    release beta
  *    remove widgets from task switcher (ALT+TAB) (not an issue on W7)
  *    performance issues in FolderView (first show)
+ *    make a system icon theme by extraction icons for mimetypes from shell
  *
  *  [NOT URGENT]
  *  [to be implemented/fixed in future versions]
@@ -179,7 +180,7 @@ int main( int argc, char *argv[] ) {
     // might fix random "ShGetFileInfoBackground() timed out" bug
 #ifdef Q_OS_WIN
 #if ( QT_VERSION <= QT_VERSION_CHECK( 5, 8, 0 ))
-    QFileInfo( QCoreApplication::applicationFilePath());
+    QFileInfo( qApp->applicationFilePath());
 #endif
 #endif
 
