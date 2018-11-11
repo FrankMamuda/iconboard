@@ -25,6 +25,7 @@
 #include "themes.h"
 #include "settings.h"
 #include "about.h"
+#include "variable.h"
 #include "themeeditor.h"
 #include "widgetlist.h"
 #include <QMenu>

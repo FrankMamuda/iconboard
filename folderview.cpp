@@ -775,10 +775,18 @@ void FolderView::setupFrame() {
     this->installEventFilter( this );
 
     // set appropriate window flags
+    const Qt::WindowType hint =
+        #ifdef Q_OS_LINUX
+            Qt::SplashScreen
+        #else
+            Qt::FramelessWindowHint
+        #endif
+            ;
+
     if ( this->mode() == Folder )
-        this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::Tool );
+        this->setWindowFlags( this->windowFlags() | hint | Qt::WindowStaysOnBottomHint | Qt::Tool );
     else if ( this->mode() == Preview ) {
-        this->setWindowFlags( Qt::FramelessWindowHint | Qt::Tool );
+        this->setWindowFlags( hint | Qt::Tool );
         this->setWindowModality( Qt::NonModal );
     }
 

@@ -103,23 +103,26 @@ void XMLTools::write( Modes mode, bool force ) {
     // switch mode
     switch ( mode ) {
     case Variables:
-        foreach ( const VariableEntry &var, Variable::instance()->list ) {
-            stream.writeEmptyElement( "variable" );
-            stream.writeAttribute( "key", var.key());
+        foreach ( const QSharedPointer<Var> &var, Variable::instance()->list ) {
+            if ( var->key().isEmpty() || var->flags() & Var::Flag::NoSave )
+                continue;
 
-            if ( !var.value().canConvert<QString>()) {
+            stream.writeEmptyElement( "variable" );
+            stream.writeAttribute( "key", var->key());
+
+            if ( !var->value().canConvert<QString>()) {
                 QByteArray array;
                 QBuffer buffer(&array);
 
                 buffer.open( QIODevice::WriteOnly );
                 QDataStream out( &buffer );
 
-                out << var.value();
+                out << var->value();
                 buffer.close();
 
                 stream.writeAttribute( "binary", QString( array.toBase64()));
             } else {
-                stream.writeAttribute( "value", var.value().toString());
+                stream.writeAttribute( "value", var->value().toString());
             }
         }
         break;

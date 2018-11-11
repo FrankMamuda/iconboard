@@ -30,21 +30,18 @@
 #include "iconindex.h"
 #include "iconcache.h"
 #include "main.h"
+#include "variable.h"
 
 /**
  * @brief Settings::Settings
  * @param parent
  */
-Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings ), signalMapper( new QSignalMapper( this )) {
+Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings ) {
     const QDir dir( IconIndex::instance()->path());
 
     // set up ui
     this->ui->setupUi( this );
     this->ui->closeButton->setIcon( IconCache::instance()->icon( "dialog-close", 16 ));
-
-    // connect for updates
-    this->connect( Variable::instance(), SIGNAL( valueChanged( QString )), this, SLOT( externalValueChanged( QString )));
-    this->connect( this->signalMapper, SIGNAL( mapped( QString )), this, SLOT( internalValueChanged( QString )));
 
     // find all icon dirs
     this->ui->iconTheme->addItem( this->tr( "System default" ), "system" );
@@ -57,14 +54,14 @@ Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings 
     }
 
     // first bind vars and set initial values
-    this->bind( "ui_displaySymlinkIcon", this->ui->displaySymlinkIcon );
-    this->bind( "ui_iconTheme", this->ui->iconTheme );
-    this->bind( "app_lockToResolution", this->ui->lockToResolution );
+    Variable::instance()->bind( "ui_displaySymlinkIcon", this->ui->displaySymlinkIcon );
+    Variable::instance()->bind( "ui_iconTheme", this->ui->iconTheme );
+    Variable::instance()->bind( "app_lockToResolution", this->ui->lockToResolution );
     Variable::instance()->bind( "app_lockToResolution", this, SLOT( lockToResolutionValueChanged( QVariant )));
     this->setResolutionToolTip();
 
 #ifdef Q_OS_WIN
-    this->bind( "app_runOnStartup", this->ui->runOnStartup );
+    Variable::instance()->bind( "app_runOnStartup", this->ui->runOnStartup );
 
     // bind runOnStarup variable, to write out settings value
     Variable::instance()->bind( "app_runOnStartup", this, SLOT( runOnStartupValueChanged( QVariant )));
@@ -78,124 +75,19 @@ Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings 
 /**
  * @brief Settings::~Settings
  */
-Settings::~Settings(){
+Settings::~Settings() {
+    // FIXME: non-specific
     this->disconnect( Variable::instance(), SIGNAL( valueChanged( QString )));
-    this->disconnect( this->signalMapper, SIGNAL( mapped( QString )));
+
+    Variable::instance()->unbind( "ui_displaySymlinkIcon", this->ui->displaySymlinkIcon );
+    Variable::instance()->unbind( "ui_iconTheme", this->ui->iconTheme );
+    Variable::instance()->unbind( "app_lockToResolution", this->ui->lockToResolution );
+
+#ifdef Q_OS_WIN
+    Variable::instance()->unbind( "app_runOnStartup", this->ui->runOnStartup );
+#endif
+
     delete this->ui;
-}
-
-/**
- * @brief Settings::bind
- * @param variable
- * @param widget
- */
-void Settings::bind( const QString &key, QWidget *widget ) {
-    this->boundVariables[key] = widget;
-    this->setValue( key, false );
-
-    // determine widget type
-    // TODO: expand to other widget types in future
-    if ( !QString::compare( widget->metaObject()->className(), "QCheckBox" )) {
-        QCheckBox *checkBox;
-        checkBox = qobject_cast<QCheckBox*>( widget );
-
-        // connect for further updates
-        if ( checkBox != nullptr ) {
-            this->connect( checkBox, SIGNAL( stateChanged( int )), this->signalMapper, SLOT( map()));
-            signalMapper->setMapping( checkBox, key );
-        }
-    } else if ( !QString::compare( widget->metaObject()->className(), "QSpinBox" )) {
-        QSpinBox *spinBox;
-        spinBox = qobject_cast<QSpinBox*>( widget );
-
-        // connect for further updates
-        if ( spinBox != nullptr ) {
-            this->connect( spinBox, SIGNAL( valueChanged( int )), this->signalMapper, SLOT( map()));
-            signalMapper->setMapping( spinBox, key );
-        }
-    } else if ( !QString::compare( widget->metaObject()->className(), "QComboBox" )) {
-        QComboBox *comboBox;
-        comboBox = qobject_cast<QComboBox*>( widget );
-
-        // connect for further updates
-        if ( comboBox != nullptr ) {
-            this->connect( comboBox, SIGNAL( currentIndexChanged( int )), this->signalMapper, SLOT( map()));
-            signalMapper->setMapping( comboBox, key );
-        }
-    } else {
-        qWarning() << "unsupported container" << widget->metaObject()->className();
-    }
-}
-
-/**
- * @brief Settings::setValue
- * @param key
- */
-void Settings::setValue( const QString &key, bool internal ) {
-    QWidget *widget;
-
-    if ( !this->boundVariables.contains( key ))
-        return;
-
-    // get widget and block it's signals
-    widget = this->boundVariables[key];
-    widget->blockSignals( true );
-
-    // determine widget type
-    if ( !QString::compare( widget->metaObject()->className(), "QCheckBox" )) {
-        QCheckBox *checkBox;
-
-        checkBox = qobject_cast<QCheckBox*>( widget );
-
-        if ( checkBox != nullptr ) {
-            if ( internal )
-                Variable::instance()->setValue<bool>( key, checkBox->isChecked(), true );
-            else
-                checkBox->setChecked( Variable::instance()->isEnabled( key ));
-        }
-    } else if ( !QString::compare( widget->metaObject()->className(), "QSpinBox" )) {
-        QSpinBox *spinBox;
-
-        spinBox = qobject_cast<QSpinBox*>( widget );
-
-        if ( spinBox != nullptr ) {
-            if ( internal )
-                Variable::instance()->setValue<int>( key, spinBox->value(), true );
-            else
-                spinBox->setValue( Variable::instance()->integer( key ));
-        }
-    } else if ( !QString::compare( widget->metaObject()->className(), "QComboBox" )) {
-        QComboBox *comboBox;
-
-        comboBox = qobject_cast<QComboBox*>( widget );
-
-        if ( comboBox != nullptr ) {
-            if ( comboBox->currentIndex() != -1 ) {
-                if ( internal )
-                    Variable::instance()->setValue( key, comboBox->currentData(), true );
-                else {
-                    int y;
-                    for ( y = 0; y < comboBox->count(); y++ ) {
-                        if ( comboBox->itemData( y ) == Variable::instance()->value<QVariant>( key )) {
-                            comboBox->setCurrentIndex( y );
-                            break;
-                        }
-                    }
-                }
-            } else {
-                qWarning() << "empty comboBox for variable" << key;
-            }
-        }
-    } else {
-        qWarning() << "unsupported container" << widget->metaObject()->className();
-    }
-
-    // force update
-    if ( internal )
-        Variable::instance()->updateConnections( key, Variable::instance()->value<QVariant>( key ));
-
-    // unblock signals
-    widget->blockSignals( false );
 }
 
 /**

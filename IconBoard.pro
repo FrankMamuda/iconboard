@@ -103,7 +103,8 @@ HEADERS += \
     variable.h \
     widgetlist.h \
     widgetmodel.h \
-    xmltools.h
+    xmltools.h \
+    widget.h
 
 win32:SOURCES +=
 win32:HEADERS +=

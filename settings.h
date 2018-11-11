@@ -21,9 +21,8 @@
 //
 // includes
 //
-#include <QSignalMapper>
 #include <QDialog>
-#include "variable.h"
+#include <QVariant>
 
 /**
  * @brief The Ui namespace
@@ -42,12 +41,8 @@ class Settings : public QDialog {
 public:
     explicit Settings( QWidget *parent = nullptr );
     ~Settings();
-    void bind( const QString &key, QWidget *widget );
-    void setValue( const QString &key, bool internal = false );
 
 private slots:
-    void internalValueChanged( const QString &key ) { this->setValue( key, true ); }
-    void externalValueChanged( const QString &key ) { this->setValue( key, false ); }
     void on_closeButton_clicked();
     void runOnStartupValueChanged( QVariant value );
     void lockToResolutionValueChanged( QVariant value );
@@ -55,6 +50,4 @@ private slots:
 
 private:
     Ui::Settings *ui;
-    QMap<QString, QWidget*>boundVariables;
-    QSignalMapper *signalMapper;
 };
