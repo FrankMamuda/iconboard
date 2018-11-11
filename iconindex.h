@@ -44,8 +44,8 @@ public:
     ~IconIndex() {}
     QString path() const { return m_path; }
     QString defaultTheme() const { return m_defaultTheme; }
-    bool build( const QString &themeName = QString::null );
-    QSet<QString> iconIndex( const QString &iconName, const QString &theme = QString::null ) const;
+    bool build( const QString &themeName = QString() );
+    QSet<QString> iconIndex( const QString &iconName, const QString &theme = QString() ) const;
     void setDefaultTheme( const QString &theme ) { this->m_defaultTheme = theme; }
 
 public slots:

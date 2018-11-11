@@ -93,20 +93,19 @@ void WidgetList::on_widgetList_doubleClicked( const QModelIndex & ) {
 /**
  * @brief WidgetList::on_actionAdd_triggered
  */
+#include <QDebug>
 void WidgetList::on_actionAdd_triggered() {
     QMenu menu, *subMenu;
-#ifdef Q_OS_WIN
-    QWidget *widget( reinterpret_cast<QWidget*>( FolderManager::instance()->desktop ));
-#else
-    QWidget *widget = nullptr;
-#endif
 
     // add folder widget lambda
-    menu.addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder widget" ), [ this, widget ]() {
+    menu.addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder widget" ), [ this ]() {
         const QDir dir( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
 
         if ( dir.exists()) {
-            FolderView *folderView( new FolderView( widget, dir.absolutePath()));
+            FolderView *folderView( new FolderView( nullptr, dir.absolutePath()));
+
+            if ( folderView == nullptr )
+                qDebug() << "bad folder";
 
             folderView->show();
             folderView->resetStyleSheet();
@@ -122,8 +121,8 @@ void WidgetList::on_actionAdd_triggered() {
     subMenu = menu.addMenu( this->tr( "Icon widget" ));
 
     // addIcon lambda
-    auto addIcon = [ this, widget ]( const QString &path ) {
-        DesktopIcon *desktopIcon( new DesktopIcon( widget, path ));
+    auto addIcon = []( const QString &path ) {
+        DesktopIcon *desktopIcon( new DesktopIcon( nullptr, path ));
 
         desktopIcon->setupFrame();
         desktopIcon->show();

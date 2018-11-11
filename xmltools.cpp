@@ -367,11 +367,7 @@ void XMLTools::read( Modes mode ) {
                 bool caseSensitive = false;
 
                 childNode = element.firstChild();
-#ifdef Q_OS_WIN
-                widget = new FolderView(( QWidget* )FolderManager::instance()->desktop, element.attribute( "rootPath" ));
-#else
                 widget = new FolderView( nullptr, element.attribute( "rootPath" ));
-#endif
                 widgetGeometry = widget->geometry();
 
                 styleSheet = element.attribute( "styleSheet" );
@@ -431,17 +427,13 @@ void XMLTools::read( Modes mode ) {
                 DesktopIcon *desktopIcon;
                 QString target, text;
                 bool isVisible = true;
-                QPoint position;
                 QRect geometry, vGeom, pGeom;
                 int iconSize = Icon::IconSize;
                 qreal padding = Icon::Padding;
                 QWidget *widget = nullptr;
-                QString customIcon = QString::null;
-
+                QString customIcon = QString();
                 childNode = element.firstChild();
-#ifdef Q_OS_WIN
-                widget = reinterpret_cast<QWidget*>( FolderManager::instance()->desktop );
-#endif
+
                 if ( element.hasAttribute( "iconSize" ))
                     iconSize = element.attribute( "iconSize" ).toInt();
 
@@ -465,8 +457,6 @@ void XMLTools::read( Modes mode ) {
                         if ( !QString::compare( childElement.tagName(), "position" )) {
                             geometry.setX( childElement.attribute( "x" ).toInt());
                             geometry.setY( childElement.attribute( "y" ).toInt());
-                        //} else if ( !QString::compare( childElement.tagName(), "iconSize" )) {
-                        //    desktopIcon->setIconSize( text.toInt());
                         } else if ( !QString::compare( childElement.tagName(), "previewIconSize" )) {
                             desktopIcon->setPreviewIconSize( text.toInt());
                         } else if ( !QString::compare( childElement.tagName(), "gridSize" )) {

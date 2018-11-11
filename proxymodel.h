@@ -42,7 +42,7 @@ class FolderView;
  * @brief The ProxyIcon struct
  */
 struct ProxyIcon {
-    explicit ProxyIcon( const QString &f = QString::null, const QIcon &i = QIcon(), const QModelIndex &n = QModelIndex()) : fileName( f ), icon( i ), index( n ) {}
+    explicit ProxyIcon( const QString &f = QString(), const QIcon &i = QIcon(), const QModelIndex &n = QModelIndex()) : fileName( f ), icon( i ), index( n ) {}
     QString fileName;
     QIcon icon;
     QModelIndex index;

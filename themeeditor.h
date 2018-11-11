@@ -63,7 +63,7 @@ public:
         Full,
         Custom
     };
-    explicit ThemeEditor( QWidget *parent = nullptr, Modes mode = Full, const QString &styleSheet = QString::null );
+    explicit ThemeEditor( QWidget *parent = nullptr, Modes mode = Full, const QString &styleSheet = QString() );
     ~ThemeEditor();
     Modes mode() const { return this->m_mode; }
     QString currentStyleSheet() const { return this->ui->styleSheetEditor->toPlainText(); }
@@ -77,7 +77,7 @@ private slots:
     void save();
     void saveAs();
     void saveChangesPrompt();
-    void populateThemes( const QString &name = QString::null );
+    void populateThemes( const QString &name = QString() );
 
 private:
     Ui::ThemeEditor *ui;

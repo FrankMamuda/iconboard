@@ -92,7 +92,7 @@ IconSettings::IconSettings( QWidget *parent ) : QDialog(parent), ui( new Ui::Ico
             this->ui->iconWidgetDemo->setCustomIcon( info.absoluteFilePath());
     } );
     this->connect( this->ui->resetButton, &QPushButton::clicked, [ this ]() {
-        this->ui->iconWidgetDemo->setCustomIcon( QString::null );
+        this->ui->iconWidgetDemo->setCustomIcon( QString() );
     } );
 
     // NOTE: for now

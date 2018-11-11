@@ -48,7 +48,9 @@
  * @param parent
  * @param rootPath
  */
-FolderView::FolderView( QWidget *parent, const QString &rootPath, Modes mode ) : QWidget( parent ), ui( new Ui::FolderView ), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ), m_mode( mode ), preview( nullptr ) {
+FolderView::FolderView( QWidget *parent, const QString &rootPath, Modes mode ) :
+    QWidget( parent ),
+    ui( new Ui::FolderView ), gesture( NoGesture ), currentGrabArea( NoArea ), m_sortOrder( Qt::AscendingOrder ), m_dirsFirst( true ), m_caseSensitive( false ), m_mode( mode ), preview( nullptr ) {
     const QDir dir( rootPath );
     QFile styleSheet;
 
@@ -209,18 +211,18 @@ void FolderView::displayContextMenu( const QPoint &point ) {
 
     // lock
     if ( Variable::instance()->isEnabled( "app_lock" )) {
-        this->connect( menu.addAction( IconCache::instance()->icon( "object-unlocked", 16 ), this->tr( "Unlock widgets" )), &QAction::triggered, [this]() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "object-unlocked", 16 ), this->tr( "Unlock widgets" )), &QAction::triggered, []() {
             Variable::instance()->disable( "app_lock" );
         } );
     } else {
-        this->connect( menu.addAction( IconCache::instance()->icon( "object-locked", 16 ), this->tr( "Lock widgets" )), &QAction::triggered, [this]() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "object-locked", 16 ), this->tr( "Lock widgets" )), &QAction::triggered, []() {
             Variable::instance()->enable( "app_lock" );
         } );
 
         menu.addSeparator();
 
         // change directory lambda
-        this->connect( menu.addAction( IconCache::instance()->icon( "inode-directory", 16 ), this->tr( "Change directory" )), &QAction::triggered, [this]() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "inode-directory", 16 ), this->tr( "Change directory" )), &QAction::triggered, [ this ]() {
             QDir dir;
 
             dir.setPath( QFileDialog::getExistingDirectory( this->parentWidget(), this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
@@ -358,15 +360,15 @@ void FolderView::displayContextMenu( const QPoint &point ) {
 
 #ifdef QT_DEBUG
         menu.addSeparator();
-        this->connect( menu.addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, [this]() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, []() {
             Main::instance()->shutdown();
         } );
         menu.addSeparator();
-        this->connect( menu.addAction( this->tr( "Schedule reload batch" )), &QAction::triggered, [this]() {
+        this->connect( menu.addAction( this->tr( "Schedule reload batch" )), &QAction::triggered, []() {
             for ( int y = 0; y < 10; y++ )
                 Main::instance()->scheduleReload();
         } );
-        this->connect( menu.addAction( this->tr( "Instant reload" )), &QAction::triggered, [this]() {
+        this->connect( menu.addAction( this->tr( "Instant reload" )), &QAction::triggered, []() {
             Main::instance()->scheduleReload();
         } );
 #endif
@@ -647,7 +649,7 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
             DWORD curentThread, foregroundThread;
 
             curentThread = GetCurrentThreadId();
-            foregroundThread = GetWindowThreadProcessId( GetForegroundWindow(), NULL );
+            foregroundThread = GetWindowThreadProcessId( GetForegroundWindow(), nullptr );
 
             // steal input thread form foreground
             AttachThreadInput( foregroundThread, curentThread, TRUE );
@@ -723,7 +725,6 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
                     updatedGeometry.setLeft( this->mousePos.x());
                     break;
 
-                default:
                 case NoArea:
                     break;
                 }
@@ -830,7 +831,7 @@ void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint
     IContextMenu *contextMenu;
     HMENU popupMenu;
 
-    const int result = static_cast<const int>( SHParseDisplayName( path.c_str(), 0, &itemIdList, 0, 0 ));
+    const int result = static_cast<const int>( SHParseDisplayName( path.c_str(), nullptr, &itemIdList, 0, nullptr ));
     if ( result < 0 || itemIdList == nullptr )
         return;
 
@@ -838,7 +839,7 @@ void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint
     if ( result2 < 0 || shellFolder == nullptr )
         return;
 
-    if ( static_cast<const int>( shellFolder->GetUIObjectOf( parentWindow, 1, reinterpret_cast<const ITEMIDLIST **>( &idChild ), IID_IContextMenu, 0, reinterpret_cast<void**>( &contextMenu ))) < 0 )
+    if ( static_cast<const int>( shellFolder->GetUIObjectOf( parentWindow, 1, reinterpret_cast<const ITEMIDLIST **>( &idChild ), IID_IContextMenu, nullptr, reinterpret_cast<void**>( &contextMenu ))) < 0 )
         return;
 
     popupMenu = CreatePopupMenu();
@@ -848,7 +849,7 @@ void FolderView::openShellContextMenuForObject( const std::wstring &path, QPoint
     if ( static_cast<const int>( contextMenu->QueryContextMenu( popupMenu, 0, 1, 0x7FFF, CMF_NORMAL )) >= 0 ) {
         int command;
 
-        command = TrackPopupMenuEx( popupMenu, TPM_RETURNCMD, pos.x(), pos.y(), parentWindow, NULL );
+        command = TrackPopupMenuEx( popupMenu, TPM_RETURNCMD, pos.x(), pos.y(), parentWindow, nullptr );
         if ( command > 0 ) {
             CMINVOKECOMMANDINFOEX info;
 
@@ -879,7 +880,7 @@ void FolderView::on_view_customContextMenuRequested( const QPoint &pos ) {
         return;
 
 #ifdef Q_OS_WIN
-    FolderView::openShellContextMenuForObject( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()).utf16()), QCursor::pos(), ( HWND )this->winId());
+    FolderView::openShellContextMenuForObject( reinterpret_cast<const wchar_t *>( QDir::toNativeSeparators( this->model->data( this->proxyModel->mapToSource( index ), QFileSystemModel::FilePathRole ).toString()).utf16()), QCursor::pos(), reinterpret_cast<HWND>( this->winId()));
     this->ui->view->selectionModel()->clear();
 #else
     // TODO: context menu in other environments

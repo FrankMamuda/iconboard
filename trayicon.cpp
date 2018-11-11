@@ -74,7 +74,7 @@ TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
     this->connect( this->actionMap[About], SIGNAL( triggered( bool )), parentWidget, SLOT( showAboutDialog()));
 
     // exit action
-    this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, this, [ this ]() { Main::instance()->shutdown(); });
+    this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, this, []() { Main::instance()->shutdown(); });
 
 #ifdef QT_DEBUG
     // set another icon to distinguish release from debug build

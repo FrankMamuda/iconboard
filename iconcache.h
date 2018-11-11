@@ -32,7 +32,7 @@ class IconCache final : public QObject {
 public:
     static IconCache *instance() { static IconCache *instance( new IconCache()); return instance; }
     ~IconCache() {}
-    QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString::null );
+    QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString() );
     QIcon thumbnail( const QString &fileName, int scale, bool upscale = false );
     QIcon addSymlinkLabel( const QIcon &icon, int originalSize );
     QIcon iconForFilename( const QString &fileName, int scale, bool upscale = false );

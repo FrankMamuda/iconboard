@@ -75,7 +75,7 @@ QSize FolderDelegate::sizeHint( const QStyleOptionViewItem &option, const QModel
  * @param text
  */
 ListItem FolderDelegate::textItemForIndex( const QStyleOptionViewItem &option, const QModelIndex &index ) const {
-    QString line[this->textLineCount()];
+    QVector<QString> line( this->textLineCount());
     int y, numLines = 0;
     QListView *view( qobject_cast<QListView*>( this->parent()));
     ListItem item;

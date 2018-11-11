@@ -29,6 +29,7 @@
 //
 class FolderView;
 class DesktopWidget;
+class DesktopIcon;
 
 /**
  * @brief The FolderManager class
@@ -37,15 +38,12 @@ class FolderManager final : public QObject {
     Q_OBJECT
 
 public:
-    ~FolderManager();
+    ~FolderManager() = default;
     static FolderManager *instance() { static FolderManager *instance( new FolderManager()); return instance; }
     int count() const;
     int iconCount() const;
     FolderView *at( int index ) const;
     DesktopIcon *iconAt( int index ) const;
-#ifdef Q_OS_WIN
-    DesktopWidget *desktop;
-#endif
     QList<FolderView*> previews;
 
 public slots:

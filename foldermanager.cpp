@@ -22,20 +22,13 @@
 #include "foldermanager.h"
 #include "folderview.h"
 #include "main.h"
-#ifdef Q_OS_WIN
-#include "desktopwidget.h"
-#endif
 #include <QDebug>
 
 /**
  * @brief FolderManager::FolderManager
  * @param parent
  */
-FolderManager::FolderManager( QObject *parent ) : QObject( parent )
-#ifdef Q_OS_WIN
-  , desktop( new DesktopWidget )
-#endif
-{
+FolderManager::FolderManager( QObject *parent ) : QObject( parent ) {
     // announce
 #ifdef QT_DEBUG
     qInfo() << this->tr( "initializing" );
@@ -43,15 +36,6 @@ FolderManager::FolderManager( QObject *parent ) : QObject( parent )
 
     // add to garbage collector
     GarbageMan::instance()->add( this );
-}
-
-/**
- * @brief FolderManager::~FolderManager
- */
-FolderManager::~FolderManager() {
-#ifdef Q_OS_WIN
-    delete this->desktop;
-#endif
 }
 
 /**

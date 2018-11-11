@@ -36,7 +36,7 @@ const static QStringList Names = QStringList() << "dark" << "light";
  */
 class Theme {
 public:
-    explicit Theme( const QString &name = QString::null, const QString &styleSheet = QString::null, bool builtIn = true ) : m_name( name ), m_styleSheet( styleSheet ), m_builtIn( builtIn ) {}
+    explicit Theme( const QString &name = QString(), const QString &styleSheet = QString(), bool builtIn = true ) : m_name( name ), m_styleSheet( styleSheet ), m_builtIn( builtIn ) {}
     QString name() const { return this->m_name; }
     QString styleSheet() const { return this->m_styleSheet; }
     bool builtIn() const { return this->m_builtIn; }

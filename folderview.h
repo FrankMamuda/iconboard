@@ -81,7 +81,7 @@ public:
     };
     Q_ENUMS( Modes )
 
-    explicit FolderView( QWidget *parent = nullptr, const QString &rootPath = QString::null, Modes mode = Folder );
+    explicit FolderView( QWidget *parent = nullptr, const QString &rootPath = QString(), Modes mode = Folder );
     ~FolderView();
 
     // properties

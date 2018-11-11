@@ -22,7 +22,6 @@
 // includes
 //
 #include "folderview.h"
-
 #include <QEvent>
 #include <QIcon>
 #include <QWidget>
@@ -38,6 +37,11 @@ namespace Icon {
     const static int IconSize = 48;
     const static qreal Padding = 0.125;
 };
+
+//
+// classes
+//
+class FolderView;
 
 /**
  * @brief The DesktopIcon class
@@ -71,7 +75,7 @@ public:
     };
     Q_ENUMS( Shapes )
 
-    explicit DesktopIcon( QWidget *parent = nullptr, const QString &target = QString::null, qreal padding = Icon::Padding, int iconSize = Icon::IconSize, const QString &customIcon = QString::null );
+    explicit DesktopIcon( QWidget *parent = nullptr, const QString &target = QString(), qreal padding = Icon::Padding, int iconSize = Icon::IconSize, const QString &customIcon = QString() );
     ~DesktopIcon();
     QString target() const { return this->m_target; }
     QIcon icon() const { return this->m_icon; }

@@ -31,7 +31,7 @@
  */
 class VariableEntry {
 public:
-    VariableEntry( const QString &key = QString::null, const QVariant &defaultValue = QVariant()) : m_key( key ), m_value( defaultValue ), m_defaultValue( defaultValue ) {}
+    VariableEntry( const QString &key = QString(), const QVariant &defaultValue = QVariant()) : m_key( key ), m_value( defaultValue ), m_defaultValue( defaultValue ) {}
     QString key() const { return this->m_key; }
     QVariant value() const { return this->m_value; }
     QVariant defaultValue() const { return this->m_defaultValue; }
