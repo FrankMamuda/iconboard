@@ -76,9 +76,6 @@ Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings 
  * @brief Settings::~Settings
  */
 Settings::~Settings() {
-    // FIXME: non-specific
-    this->disconnect( Variable::instance(), SIGNAL( valueChanged( QString )));
-
     Variable::instance()->unbind( "ui_displaySymlinkIcon", this->ui->displaySymlinkIcon );
     Variable::instance()->unbind( "ui_iconTheme", this->ui->iconTheme );
     Variable::instance()->unbind( "app_lockToResolution", this->ui->lockToResolution );
@@ -103,7 +100,7 @@ void Settings::on_closeButton_clicked() {
  */
 void Settings::runOnStartupValueChanged( QVariant value ) {
 #ifdef QT_DEBUG
-    qDebug() << "runOnStartupValueChanged change to" << value.toBool();
+    qDebug() << "runOnStartupValueChanged changed to" << value.toBool();
 #else
     QSettings settings( "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat );
 

@@ -146,7 +146,7 @@ void DesktopIcon::setupFrame() {
     // set up frame
     this->setAutoFillBackground( true );
     this->setMouseTracking( true );
-    this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::Window );
+    this->setWindowFlags( this->windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnBottomHint | Qt::Tool );
     this->setAttribute( Qt::WA_TranslucentBackground );
     this->setAttribute( Qt::WA_NoSystemBackground );
     this->setAttribute( Qt::WA_Hover );

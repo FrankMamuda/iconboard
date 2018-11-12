@@ -45,9 +45,8 @@
  *    cleanup
  *    GitHub page
  *    release beta
- *    remove widgets from task switcher (ALT+TAB) (not an issue on W7)
  *    performance issues in FolderView (first show)
- *    make a system icon theme by extraction icons for mimetypes from shell
+ *    make a system icon theme by extracting icons for mimetypes from shell
  *
  *  [NOT URGENT]
  *  [to be implemented/fixed in future versions]
@@ -91,8 +90,6 @@
  *    resize/move issues
  *    application bundle icon
  *
- *  [BACKPORT]
- *    variables (from ketoevent, to get rid of deprecated signal mapper)
  */
 
 // default message handler
@@ -233,9 +230,13 @@ int main( int argc, char *argv[] ) {
 
     // clean up on exit
     qApp->connect( qApp, &QApplication::aboutToQuit, []() {
+        Variable::instance()->unbind( "app_lock" );
+
         GarbageMan::instance()->clear();
         delete GarbageMan::instance();
-        delete Variable::instance();
+
+        // fixes segfault on newer qt versions
+        Variable::instance()->deleteLater();
     } );
 
     return app.exec();
