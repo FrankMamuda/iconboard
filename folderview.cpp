@@ -209,20 +209,22 @@ void FolderView::displayContextMenu( const QPoint &point ) {
     if ( this->mode() == Preview )
         return;
 
+    // TODO: set icons
+
     // lock
     if ( Variable::instance()->isEnabled( "app_lock" )) {
-        this->connect( menu.addAction( IconCache::instance()->icon( "object-unlocked", 16 ), this->tr( "Unlock widgets" )), &QAction::triggered, []() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "object-unlocked", ":/icons/lock", 16 ), this->tr( "Unlock widgets" )), &QAction::triggered, []() {
             Variable::instance()->disable( "app_lock" );
         } );
     } else {
-        this->connect( menu.addAction( IconCache::instance()->icon( "object-locked", 16 ), this->tr( "Lock widgets" )), &QAction::triggered, []() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "object-locked", ":/icons/unlock", 16 ), this->tr( "Lock widgets" )), &QAction::triggered, []() {
             Variable::instance()->enable( "app_lock" );
         } );
 
         menu.addSeparator();
 
         // change directory lambda
-        this->connect( menu.addAction( IconCache::instance()->icon( "inode-directory", 16 ), this->tr( "Change directory" )), &QAction::triggered, [ this ]() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "inode-directory", ":/icons/folder", 16 ), this->tr( "Change directory" )), &QAction::triggered, [ this ]() {
             QDir dir;
 
             dir.setPath( QFileDialog::getExistingDirectory( this->parentWidget(), this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
@@ -236,7 +238,7 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         } );
 
         // rename view lambda
-        this->connect( menu.addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename view" )), &QAction::triggered, [this]() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "edit-rename", ":/icons/rename", 16 ), this->tr( "Rename view" )), &QAction::triggered, [this]() {
             QString title;
             bool ok;
 
@@ -246,7 +248,7 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         } );
 
         // close view
-        menu.addAction( IconCache::instance()->icon( "view-close", 16 ), this->tr( "Hide" ), this, SLOT( hide()));
+        menu.addAction( IconCache::instance()->icon( "view-close", ":/icons/remove", 16 ), this->tr( "Hide" ), this, SLOT( hide()));
 
         // add separator
         menu.addSeparator();
@@ -259,10 +261,10 @@ void FolderView::displayContextMenu( const QPoint &point ) {
             QAction *actionListMode;
 
             // create appearance menu
-            appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Appearance" ));
+            appearanceMenu = menu.addMenu( IconCache::instance()->icon( "color-picker", ":/icons/clear", 16 ), this->tr( "Appearance" ));
 
             // icon size
-            appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
+            appearanceMenu->addAction( IconCache::instance()->icon( "transform-scale", ":/icons/scale", 16 ), this->tr( "Set icon size" ), this, SLOT( setIconSize()));
 
             //
             // begin THEME menu
@@ -271,10 +273,10 @@ void FolderView::displayContextMenu( const QPoint &point ) {
                 QMenu *themeMenu;
 
                 // add theme menu
-                themeMenu = appearanceMenu->addMenu( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme" ));
+                themeMenu = appearanceMenu->addMenu( IconCache::instance()->icon( "color-picker", ":/icons/themes", 16 ), this->tr( "Theme" ));
 
                 // custom styleSheet lambda
-                this->connect( themeMenu->addAction( IconCache::instance()->icon( "document-edit", 16 ), this->tr( "Custom stylesheet" )), &QAction::triggered, [this]() {
+                this->connect( themeMenu->addAction( IconCache::instance()->icon( "document-edit", ":/icons/edit", 16 ), this->tr( "Custom stylesheet" )), &QAction::triggered, [this]() {
                     ThemeEditor dialog( this, ThemeEditor::Custom, this->currentStyleSheet());
                     int result;
 
@@ -315,20 +317,22 @@ void FolderView::displayContextMenu( const QPoint &point ) {
             QAction *actionSortOrder, *actionDirsFirst, *actionCaseSensitive;
 
             // sort menu
-            sortMenu = menu.addMenu( IconCache::instance()->icon( "format-list-ordered", 16 ), this->tr( "Sort" ));
+            sortMenu = menu.addMenu( IconCache::instance()->icon( "format-list-ordered", ":/icons/sort", 16 ), this->tr( "Sort" ));
 
             // sort order lambda
-            actionSortOrder = sortMenu->addAction( IconCache::instance()->icon( "view-sort-ascending", 16 ), this->tr( "Ascending order" ));
+            actionSortOrder = sortMenu->addAction( this->tr( "Ascending order" ));
             actionSortOrder->setCheckable( true );
             actionSortOrder->setChecked( this->sortOrder() == Qt::AscendingOrder );
-            this->connect( actionSortOrder, &QAction::triggered, [this]() {
+            actionSortOrder->setIcon( this->sortOrder() == Qt::AscendingOrder ? IconCache::instance()->icon( "view-sort-ascending", ":/icons/ascending", 16 ) : IconCache::instance()->icon( "view-sort-descending", ":/icons/descending", 16 ));
+            this->connect( actionSortOrder, &QAction::triggered, [ this, actionSortOrder ]() {
                 this->proxyModel->waitForThreads();
                 this->setSortOrder( this->sortOrder() == Qt::AscendingOrder ? Qt::DescendingOrder : Qt::AscendingOrder );
+                actionSortOrder->setIcon( this->sortOrder() == Qt::AscendingOrder ? IconCache::instance()->icon( "view-sort-ascending", ":/icons/ascending", 16 ) : IconCache::instance()->icon( "view-sort-descending", ":/icons/descending", 16 ));
                 this->sort();
             } );
 
             // directories first sort
-            actionDirsFirst = sortMenu->addAction( this->tr( "Directories first" ));
+            actionDirsFirst = sortMenu->addAction( IconCache::instance()->icon( "inode-directory", ":/icons/folder", 16 ), this->tr( "Directories first" ));
             actionDirsFirst->setCheckable( true );
             actionDirsFirst->setChecked( this->directoriesFirst());
             this->connect( actionDirsFirst, &QAction::triggered, [this]() {
@@ -338,7 +342,7 @@ void FolderView::displayContextMenu( const QPoint &point ) {
             } );
 
             // case sensitive sort
-            actionCaseSensitive = sortMenu->addAction( this->tr( "Case sensitive" ));
+            actionCaseSensitive = sortMenu->addAction( QIcon( ":/icons/rename" ), this->tr( "Case sensitive" ));
             actionCaseSensitive->setCheckable( true );
             this->connect( actionCaseSensitive, &QAction::triggered, [this]() {
                 this->proxyModel->waitForThreads();
@@ -351,7 +355,7 @@ void FolderView::displayContextMenu( const QPoint &point ) {
         menu.addSeparator();
 
         // read only lambda
-        actionReadOnly = menu.addAction( IconCache::instance()->icon( "folder-locked", 16 ), this->tr( "Read only" ));
+        actionReadOnly = menu.addAction( IconCache::instance()->icon( "folder-locked", ":/icons/lock", 16 ), this->tr( "Read only" ));
         actionReadOnly->setCheckable( true );
         actionReadOnly->setChecked( this->isReadOnly());
         this->connect( actionReadOnly, &QAction::triggered, [this]() {
@@ -360,15 +364,15 @@ void FolderView::displayContextMenu( const QPoint &point ) {
 
 #ifdef QT_DEBUG
         menu.addSeparator();
-        this->connect( menu.addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, []() {
+        this->connect( menu.addAction( IconCache::instance()->icon( "application-exit", ":/icons/close", 16 ), this->tr( "Exit" )), &QAction::triggered, []() {
             Main::instance()->shutdown();
         } );
         menu.addSeparator();
-        this->connect( menu.addAction( this->tr( "Schedule reload batch" )), &QAction::triggered, []() {
+        this->connect( menu.addAction( QIcon( ":/icons/restore" ), this->tr( "Schedule reload batch" )), &QAction::triggered, []() {
             for ( int y = 0; y < 10; y++ )
                 Main::instance()->scheduleReload();
         } );
-        this->connect( menu.addAction( this->tr( "Instant reload" )), &QAction::triggered, []() {
+        this->connect( menu.addAction( QIcon( ":/icons/restore" ), this->tr( "Instant reload" )), &QAction::triggered, []() {
             Main::instance()->scheduleReload();
         } );
 #endif
@@ -460,7 +464,7 @@ void FolderView::makeThumbnail() {
             this->thumbnail = pixmap.scaled( 48, 48 );
         }
 #else
-        const QIcon icon( IconCache::instance()->icon( "inode-folder", 16 ));
+        const QIcon icon( IconCache::instance()->icon( "inode-folder", ":/icons/folder", 16 ));
 
         // draw folder icon
         if ( !icon.isNull()) {
@@ -558,6 +562,9 @@ bool FolderView::eventFilter( QObject *object, QEvent *event ) {
             this->close();
         }
     }
+
+    //if ( event->type() == QEvent::WindowActivate && this->mode() == Folder )
+    //    this->lower();
 
     // filter mouse events
     if ( event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease ||

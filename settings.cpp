@@ -41,7 +41,7 @@ Settings::Settings( QWidget *parent ) : QDialog( parent ), ui( new Ui::Settings 
 
     // set up ui
     this->ui->setupUi( this );
-    this->ui->closeButton->setIcon( IconCache::instance()->icon( "dialog-close", 16 ));
+    this->ui->closeButton->setIcon( IconCache::instance()->icon( "dialog-close", ":/icons/close", 16 ));
 
     // find all icon dirs
     this->ui->iconTheme->addItem( this->tr( "System default" ), "system" );

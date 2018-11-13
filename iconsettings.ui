@@ -203,12 +203,20 @@
        <property name="text">
         <string>Select custom icon</string>
        </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/image</normaloff>:/icons/image</iconset>
+       </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="resetButton">
        <property name="text">
         <string>Reset icon</string>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/restore</normaloff>:/icons/restore</iconset>
        </property>
       </widget>
      </item>
@@ -559,19 +567,21 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>DesktopIcon</class>
-   <extends>QWidget</extends>
-   <header>desktopicon.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>BackgroundFrame</class>
    <extends>QFrame</extends>
    <header>backgroundframe.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>DesktopIcon</class>
+   <extends>QWidget</extends>
+   <header>desktopicon.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

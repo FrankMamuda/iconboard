@@ -32,13 +32,13 @@ class IconCache final : public QObject {
 public:
     static IconCache *instance() { static IconCache *instance( new IconCache()); return instance; }
     ~IconCache() {}
-    QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString() );
+    QIcon icon( const QString &iconName, int scale = 0, const QString theme = QString(), const QString &fallback = QString());
+    QIcon icon( const QString &iconName, const QString &fallback = QString(), int scale = 0 ) { return this->icon( iconName, scale, QString(), fallback ); }
     QIcon thumbnail( const QString &fileName, int scale, bool upscale = false );
     QIcon addSymlinkLabel( const QIcon &icon, int originalSize );
     QIcon iconForFilename( const QString &fileName, int scale, bool upscale = false );
 #ifdef Q_OS_WIN
     QPixmap extractPixmap( const QString &fileName, int scale );
-    void preLoadWindowsIcons();
     QString getDriveIconName( const QString &path ) const;
 #endif
     quint32 checksum( const char *data, size_t len ) const;

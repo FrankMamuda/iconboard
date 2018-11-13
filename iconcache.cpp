@@ -57,7 +57,7 @@ IconCache::IconCache( QObject *parent ) : QObject( parent ) {
  * @param themeName
  * @return
  */
-QIcon IconCache::icon( const QString &iconName, int scale, const QString theme ) {
+QIcon IconCache::icon( const QString &iconName, int scale, const QString theme, const QString &fallback ) {
     QIcon icon;
     QString themeName( theme );
 
@@ -78,9 +78,29 @@ QIcon IconCache::icon( const QString &iconName, int scale, const QString theme )
 
         // handle missing icons
         if ( icon.isNull()) {
-            icon = IndexCache::instance()->icon( "application-x-zerosize", scale, themeName );
-            if ( icon.isNull())
-                return QIcon();
+            /* here we read fallback icons from either cache or actual files */
+            const QString cachedName( IndexCache::instance()->path() + "/" + alias + ".png" );
+            const QPixmap pixmap( cachedName );
+
+            // first check cache, then try the actual file
+            if ( pixmap.isNull() && !fallback.isEmpty()) {
+                // write out icons with known sizes
+                if ( scale > 0 ) {
+                    QPixmap fallbackIcon( QIcon( fallback ).pixmap( scale, scale ));
+                    fallbackIcon.save( cachedName );
+                    icon = QIcon( fallbackIcon );
+                } else {
+                    icon = QIcon( fallback );
+                }
+            } else {
+                icon = QIcon( pixmap );
+            }
+
+            if ( icon.isNull()) {
+                icon = IndexCache::instance()->icon( "application-x-zerosize", scale, themeName );
+                if ( icon.isNull())
+                    return QIcon();
+            }
         }
 
         // add icon to cache
@@ -460,7 +480,6 @@ QString IconCache::getDriveIconName( const QString &path ) const {
  * @brief IconCache::iconForFilename
  * @return
  */
-// TODO: const?
 QIcon IconCache::iconForFilename( const QString &fileName, int scale, bool upscale ) {
     const QFileInfo info( fileName );
     const QFileInfo target( info.symLinkTarget());
@@ -501,8 +520,12 @@ QIcon IconCache::iconForFilename( const QString &fileName, int scale, bool upsca
     }
 
     // get icon for mimetype
-    if ( icon.isNull())
-        icon = this->icon( iconName, scale );
+    if ( icon.isNull()) {
+        if ( isDir )
+            icon = this->icon( iconName, ":/icons/folder_scalable", scale );
+        else
+            icon = this->icon( iconName, scale );
+    }
 #ifdef Q_OS_WIN
     // if mimetype icon fails (no custom icon theme, for example), get win32 shell icon
     if ( icon.isNull()) {
@@ -526,87 +549,3 @@ QIcon IconCache::iconForFilename( const QString &fileName, int scale, bool upsca
     // return the icon
     return icon;
 }
-
-/**
- * @brief IconCache::preLoadWindowsIcons since win32 does not have icons by default, we load these from system resources
- */
-#ifdef Q_OS_WIN
-void IconCache::preLoadWindowsIcons() {
-    // icon struct
-    typedef struct WindowsIcon_s {
-        const char *name;
-        int index;
-        int scale;
-    } WindowsIcon_t;
-
-    // icons in imageres.dll
-    const WindowsIcon_t imageresDllIcons[] = {
-        // tray menu
-        { "view-list-icons", 148, 16 }, // "Widget List"
-        { "configure", 68, 16 }, // "Settings"
-        { "color-picker", 70, 16 }, // "Theme editor"
-        { "help-about", 81, 16 }, // "About"
-        { "application-exit", 98, 16 }, // "Exit"
-
-        // settings, about, widget list, etc.
-        { "dialog-close", 98, 16 }, // close icon
-
-        // style editor
-        { "document-save", 28, 16 }, // "Save"
-        { "document-save-as", 29, 16 }, // "Save as"
-        { "edit-rename", 94, 16 }, // "Rename"
-        { "document-revert", 86, 16 }, // "Remove"
-        { "edit-delete", 89, 16 }, // "Delete"
-        { "view-preview", 168, 16 }, // "Preview" tab
-        { "inode-directory", 4, 48 }, // Folder icon
-
-        // widget list
-        { "list-remove", 89, 16 }, // "Remove"
-        { "visibility", 4, 16 }, // "Show/Hide"
-
-        // folderView context
-        { "view-close", 98, 16 }, // "Hide"
-        { "document-edit", 70, 16 }, // "Custom stylesheet"
-        { "inode-directory", 4, 16 }, // "Change directory"
-    };
-
-    // icons in shell32.dll
-    const WindowsIcon_t shellDllIcons[] = {
-        // widget list
-        { "list-add", 319, 16 }, // "Add"
-    };
-
-    // icon extractor lambda
-    auto pixmapFromDll = [=]( const wchar_t *dllName, const WindowsIcon_t list[], int count ) {
-        int y;
-        HMODULE hMod;
-
-        // open library
-        hMod = GetModuleHandle( dllName );
-        if ( hMod == NULL )
-            hMod = LoadLibrary( dllName );
-
-        if ( hMod == NULL )
-            return;
-
-        // go through icon list
-        for ( y = 0; y < count; y++ ) {
-            // get icons
-#if defined(UNICODE)
-            const QPixmap pixmap( QtWin::fromHICON( reinterpret_cast<HICON>( LoadImage( hMod, reinterpret_cast<LPWSTR>( static_cast<ULONG_PTR>( static_cast<WORD>( list[y].index ))), IMAGE_ICON, list[y].scale, list[y].scale, LR_DEFAULTCOLOR | LR_SHARED ))));
-#elif
-            const QPixmap pixmap( QtWin::fromHICON( reinterpret_cast<HICON>( LoadImage( hMod, reinterpret_cast<LPSTR>( static_cast<ULONG_PTR>( static_cast<WORD>( list[y].index ))), IMAGE_ICON, list[y].scale, list[y].scale, LR_DEFAULTCOLOR | LR_SHARED ))));
-#endif
-            if ( !pixmap.isNull())
-                this->add( QString( "%1_%2_%3" ).arg( list[y].name ).arg( IconIndex::instance()->defaultTheme()).arg( list[y].scale ), QIcon( pixmap ));
-        }
-
-        // close libarary
-        FreeLibrary( hMod );
-    };
-
-    // load icons from system libraries
-    pixmapFromDll( L"imageres.dll", imageresDllIcons, sizeof( imageresDllIcons ) / sizeof( WindowsIcon_t ));
-    pixmapFromDll( L"shell32.dll", shellDllIcons, sizeof( shellDllIcons ) / sizeof( WindowsIcon_t ) );
-}
-#endif

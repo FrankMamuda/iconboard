@@ -103,10 +103,9 @@ static const QtMessageHandler QT_DEFAULT_MESSAGE_HANDLER = qInstallMessageHandle
  */
 void Main::messageFilter( QtMsgType type, const QMessageLogContext &context, const QString &msg ) {
     QFile logFile;
-    const QString output( msg );
 
     // display message as is
-    (*QT_DEFAULT_MESSAGE_HANDLER)( type, context, msg );
+    ( *QT_DEFAULT_MESSAGE_HANDLER )( type, context, msg );
 
     // quit app on fatal errors
     if ( type == QtFatalMsg ) {
@@ -125,7 +124,7 @@ void Main::messageFilter( QtMsgType type, const QMessageLogContext &context, con
             logFile.open( QIODevice::WriteOnly | QIODevice::Append );
 
         QTextStream steam( &logFile );
-        steam << output << endl;
+        steam << msg << endl;
         logFile.close();
     }
 }
@@ -219,11 +218,6 @@ int main( int argc, char *argv[] ) {
             IconIndex::instance()->setDefaultTheme( themeName );
         }
     }
-#ifdef Q_OS_WIN
-    else {
-        IconCache::instance()->preLoadWindowsIcons();
-    }
-#endif
 
     // read config
     Main::instance()->readConfiguration();

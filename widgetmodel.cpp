@@ -67,6 +67,20 @@ QVariant WidgetModel::data( const QModelIndex &index, int role ) const {
     }
         break;
 
+    case Qt::FontRole:
+    {
+        QFont font;
+        font.setBold( true );
+        bool isVisible;
+
+        if ( index.row() >= FolderManager::instance()->count())
+            isVisible = FolderManager::instance()->iconAt( index.row() - FolderManager::instance()->count())->isVisible();
+        else
+            isVisible = FolderManager::instance()->at( index.row())->isVisible();
+
+        return isVisible ? font : QFont();
+    }
+
     case Qt::DisplayRole:
         if ( index.row() >= FolderManager::instance()->count())
             return FolderManager::instance()->iconAt( index.row() - FolderManager::instance()->count())->title() + " (icon)";

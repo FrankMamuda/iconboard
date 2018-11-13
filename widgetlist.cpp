@@ -32,6 +32,7 @@
 #include "iconcache.h"
 #include "main.h"
 #include "ui_widgetlist.h"
+#include <QItemSelectionModel>
 
 /**
  * @brief WidgetList::WidgetList
@@ -49,16 +50,35 @@ WidgetList::WidgetList( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::W
     this->ui->widgetList->setModel( this->model );
 
     // set up icons
-    this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add", 16 ));
-    this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove", 16 ));
-    this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid", 16 ));
-    this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility", 16 ));
-    this->ui->buttonClose->setIcon( IconCache::instance()->icon( "dialog-close", 16 ));
+    this->ui->actionAdd->setIcon( IconCache::instance()->icon( "list-add", ":/icons/add", 16 ));
+    this->ui->actionRemove->setIcon( IconCache::instance()->icon( "list-remove", ":/icons/remove", 16 ));
+    this->ui->actionMap->setIcon( IconCache::instance()->icon( "view-grid", ":/icons/find", 16 ));
+    this->ui->actionShow->setIcon( IconCache::instance()->icon( "visibility", ":/icons/visibility", 16 ));
+    this->ui->buttonClose->setIcon( IconCache::instance()->icon( "dialog-close", ":/icons/close", 16 ));
 
 #ifndef QT_DEBUG
     // not available in release
     this->ui->toolBar->removeAction( this->ui->actionMap );
 #endif
+
+    // setup hide/show button
+    this->ui->actionShow->setCheckable( true );
+    this->ui->actionShow->setChecked( false );
+    this->connect( this->ui->widgetList->selectionModel(), &QItemSelectionModel::currentChanged, [ this ]( const QModelIndex &current, const QModelIndex & ) {
+        const int index = current.row();
+        bool isVisible;
+        const QWidget *widget = ( index >= FolderManager::instance()->count()) ?
+                    qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count())) :
+                    qobject_cast<QWidget*>( FolderManager::instance()->at( index ));
+
+        isVisible = ( widget == nullptr ) ? false : widget->isVisible();
+
+        this->ui->actionShow->setChecked( isVisible );
+        this->ui->actionMap->setEnabled( isVisible );
+        this->ui->actionShow->setText( isVisible ? this->tr( "Hide" ) : this->tr( "Show" ));
+    } );
+    //if ( this->model->rowCount())
+    //    this->ui->widgetList->selectionModel()->select( this->model->index( 0, 0 ), QItemSelectionModel::Select );
 }
 
 /**
@@ -93,7 +113,6 @@ void WidgetList::on_widgetList_doubleClicked( const QModelIndex & ) {
 /**
  * @brief WidgetList::on_actionAdd_triggered
  */
-#include <QDebug>
 void WidgetList::on_actionAdd_triggered() {
     QMenu menu, *subMenu;
 
@@ -105,7 +124,7 @@ void WidgetList::on_actionAdd_triggered() {
             FolderView *folderView( new FolderView( nullptr, dir.absolutePath()));
 
             if ( folderView == nullptr )
-                qDebug() << "bad folder";
+                return;
 
             folderView->show();
             folderView->resetStyleSheet();
@@ -143,6 +162,9 @@ void WidgetList::on_actionAdd_triggered() {
     // add icon widget lambda with FOLDER as its targer
     subMenu->addAction( IconCache::instance()->icon( "inode-folder", 16 ), this->tr( "Folder target" ), [ this, addIcon ]() {
         QDir dir( QFileDialog::getExistingDirectory( this, this->tr( "Select directory" ), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks ));
+
+        // FIXME: adds on cancel anyway
+
         if ( dir.exists())
             addIcon( dir.absolutePath());
     } );
@@ -192,14 +214,10 @@ void WidgetList::on_actionRemove_triggered() {
  * @brief WidgetList::on_actionShow_triggered
  */
 void WidgetList::on_actionShow_triggered() {
-    QWidget *widget;
     const int index = this->ui->widgetList->currentIndex().row();
-
-    // TODO: set checkable
-    if ( index >= FolderManager::instance()->count())
-        widget = qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count()));
-    else
-        widget = qobject_cast<QWidget*>( FolderManager::instance()->at( index ));
+    QWidget *widget = ( index >= FolderManager::instance()->count()) ?
+                qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count())) :
+                qobject_cast<QWidget*>( FolderManager::instance()->at( index ));
 
     if ( widget == nullptr )
         return;
@@ -216,13 +234,10 @@ void WidgetList::on_actionShow_triggered() {
  */
 void WidgetList::on_actionMap_triggered() {
     ScreenMapper mapperDialog;
-    QWidget *widget;
-    int index = this->ui->widgetList->currentIndex().row();
-
-    if ( index >= FolderManager::instance()->count())
-        widget = qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count()));
-    else
-        widget = qobject_cast<QWidget*>( FolderManager::instance()->at( index ));
+    const int index = this->ui->widgetList->currentIndex().row();
+    const QWidget *widget = ( index >= FolderManager::instance()->count()) ?
+                qobject_cast<QWidget*>( FolderManager::instance()->iconAt( index - FolderManager::instance()->count())) :
+                qobject_cast<QWidget*>( FolderManager::instance()->at( index ));
 
     if ( widget == nullptr )
         return;

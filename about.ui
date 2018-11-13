@@ -98,7 +98,7 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;This application is distributed under the following license:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Copyright (C) 2017 Zvaigžņu Planetārijs&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Copyright (C) 2017-2018 Factory #12&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
@@ -120,8 +120,8 @@ p, li { white-space: pre-wrap; }
         <string>About Qt</string>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>:/icons/about.png</normaloff>:/icons/about.png</iconset>
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/info</normaloff>:/icons/info</iconset>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -140,8 +140,8 @@ p, li { white-space: pre-wrap; }
         <string>Close</string>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>:/icons/close.png</normaloff>:/icons/close.png</iconset>
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/close</normaloff>:/icons/close</iconset>
        </property>
        <property name="default">
         <bool>true</bool>

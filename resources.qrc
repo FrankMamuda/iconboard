@@ -3,6 +3,30 @@
         <file alias="launcher_96">launcher_96.png</file>
         <file alias="link">icons/link.svg</file>
         <file alias="launcher_debug_96">launcher_debug_96.png</file>
+        <file alias="add">icons/add.png</file>
+        <file alias="close">icons/close.png</file>
+        <file alias="find">icons/find.png</file>
+        <file alias="info">icons/info.png</file>
+        <file alias="remove">icons/remove.png</file>
+        <file alias="settings">icons/settings.png</file>
+        <file alias="themes">icons/themes.png</file>
+        <file alias="image">icons/image.png</file>
+        <file alias="restore">icons/restore.png</file>
+        <file alias="widgets">icons/widgets.png</file>
+        <file alias="lock">icons/lock.png</file>
+        <file alias="unlock">icons/unlock.png</file>
+        <file alias="visibility">icons/visibility.png</file>
+        <file alias="rename">icons/rename.png</file>
+        <file alias="clear">icons/clear.png</file>
+        <file alias="edit">icons/edit.png</file>
+        <file alias="warning">icons/warning.png</file>
+        <file alias="folder">icons/folder.png</file>
+        <file alias="ascending">icons/ascending.png</file>
+        <file alias="descending">icons/descending.png</file>
+        <file alias="sort">icons/sort.png</file>
+        <file alias="scale">icons/scale.png</file>
+        <file alias="save">icons/save.png</file>
+        <file alias="folder_scalable">icons/folder_scalable.svg</file>
     </qresource>
     <qresource prefix="/styleSheets">
         <file>dark.qss</file>

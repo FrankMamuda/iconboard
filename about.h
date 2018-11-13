@@ -43,8 +43,8 @@ class About : public QDialog {
 public:
     explicit About( QWidget *parent = nullptr ) : QDialog( parent ), ui( new Ui::About ) {
         this->ui->setupUi( this );
-        this->ui->aboutQt->setIcon( IconCache::instance()->icon( "help-about", 16 ));
-        this->ui->exitButton->setIcon( IconCache::instance()->icon( "dialog-close", 16 ));
+        this->ui->aboutQt->setIcon( IconCache::instance()->icon( "help-about", ":/icons/info", 16 ));
+        this->ui->exitButton->setIcon( IconCache::instance()->icon( "dialog-close", ":/icons/close", 16 ));
     }
     ~About() { delete this->ui; }
 

@@ -60,10 +60,10 @@ ThemeEditor::ThemeEditor( QWidget *parent, Modes mode, const QString &styleSheet
     this->ui->tabWidget->setTabText( 0, this->tr( "Preview" ));
     this->ui->tabWidget->setTabIcon( 0, IconCache::instance()->icon( "view-preview", 16 ));
     this->ui->tabWidget->setTabText( 1, this->tr( "Editor" ));
-    this->ui->tabWidget->setTabIcon( 1, IconCache::instance()->icon( "color-picker", 16 ));
+    this->ui->tabWidget->setTabIcon( 1, IconCache::instance()->icon( "color-picker", ":/icons/themes", 16 ));
 
     // set window icon
-    this->setWindowIcon( IconCache::instance()->icon( "color-picker" ));
+    this->setWindowIcon( IconCache::instance()->icon( "color-picker", ":/icons/themes" ));
 
     // set up toolBar
     if ( this->mode() == Full ) {
@@ -80,13 +80,13 @@ ThemeEditor::ThemeEditor( QWidget *parent, Modes mode, const QString &styleSheet
         //
 
         // save
-        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "document-save", 16 ), this->tr( "Save" )), SIGNAL( triggered( bool )), this, SLOT( save()));
+        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "document-save", ":/icons/save", 16 ), this->tr( "Save" )), SIGNAL( triggered( bool )), this, SLOT( save()));
 
         // save as
-        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "document-save-as", 16 ), this->tr( "Save as" )), SIGNAL( triggered( bool )), this, SLOT( saveAs()));
+        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "document-save-as", ":/icons/save", 16 ), this->tr( "Save as" )), SIGNAL( triggered( bool )), this, SLOT( saveAs()));
 
         // rename
-        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "edit-rename", 16 ), this->tr( "Rename" )), &QAction::triggered, [this]() {
+        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "edit-rename", ":/icons/rename", 16 ), this->tr( "Rename" )), &QAction::triggered, [this]() {
             if ( this->baseTheme()->builtIn()) {
                 QMessageBox::information( this, this->tr( "Cannot rename theme" ), this->tr( "Cannot rename built-in theme \"%1\"" ).arg( this->baseTheme()->name()));
                 return;
@@ -99,12 +99,12 @@ ThemeEditor::ThemeEditor( QWidget *parent, Modes mode, const QString &styleSheet
         } );
 
         // revert
-        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "document-revert", 16 ), this->tr( "Revert" )), &QAction::triggered, [this]() {
+        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "document-revert", ":/icons/restore", 16 ), this->tr( "Revert" )), &QAction::triggered, [this]() {
             this->setEditorStyleSheet( this->baseTheme()->styleSheet());
         } );
 
         // remove
-        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "edit-delete", 16 ), this->tr( "Remove" )), &QAction::triggered, [this]() {
+        this->connect( this->toolBar->addAction( IconCache::instance()->icon( "edit-delete", ":/icons/remove", 16 ), this->tr( "Remove" )), &QAction::triggered, [this]() {
             if ( this->baseTheme()->builtIn()) {
                 QMessageBox::information( this, this->tr( "Cannot remove theme" ), this->tr( "Cannot remove built-in theme \"%1\"" ).arg( this->baseTheme()->name()));
                 return;
@@ -149,6 +149,8 @@ ThemeEditor::ThemeEditor( QWidget *parent, Modes mode, const QString &styleSheet
         this->ui->stackedWidget->setCurrentIndex( 0 );
         this->ui->stackedWidget->setFixedHeight( this->ui->buttonBox->height());
     }
+
+    this->ui->closeButton->setIcon( IconCache::instance()->icon( "dialog-close", ":/icons/close", 16 ));
 }
 
 /**
@@ -251,7 +253,7 @@ QVariant ThemeDemoModel::data( const QModelIndex &index, int role ) const {
         return this->tr( "Folder %1" ).arg( index.row() + 1 );
 
     if ( role == Qt::DecorationRole )
-        return IconCache::instance()->icon( "inode-directory", 48 );
+        return IconCache::instance()->icon( "inode-directory", ":/icons/folder_scalable", 48 );
 
     return QVariant();
 }

@@ -50,14 +50,14 @@ TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
     }
 
     // show widget list action
-    this->actionMap[Widgets] = this->contextMenu()->addAction( IconCache::instance()->icon( "view-list-icons", 16 ), this->tr( "Widget list" ), parentWidget, SLOT( show()));
+    this->actionMap[Widgets] = this->contextMenu()->addAction( IconCache::instance()->icon( "view-list-icons", ":/icons/widgets", 16 ), this->tr( "Widget list" ), parentWidget, SLOT( show()));
 
     // show settings dialog action
-    this->actionMap[Settings] = this->contextMenu()->addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Settings" ));
+    this->actionMap[Settings] = this->contextMenu()->addAction( IconCache::instance()->icon( "configure", ":/icons/settings", 16 ), this->tr( "Settings" ));
     this->connect( this->actionMap[Settings], SIGNAL( triggered( bool )), parentWidget, SLOT( showSettingsDialog()));
 
     // show theme editor dialog action
-    this->actionMap[Themes] = this->contextMenu()->addAction( IconCache::instance()->icon( "color-picker", 16 ), this->tr( "Theme editor" ));
+    this->actionMap[Themes] = this->contextMenu()->addAction( IconCache::instance()->icon( "color-picker", ":/icons/themes", 16 ), this->tr( "Theme editor" ));
     this->connect( this->actionMap[Themes], SIGNAL( triggered( bool )), parentWidget, SLOT( showThemeDialog()));
 
     this->contextMenu()->addSeparator();
@@ -71,11 +71,11 @@ TrayIcon::TrayIcon( QObject *parent ) : QSystemTrayIcon( parent ) {
     this->contextMenu()->addSeparator();
 
     // show about dialog action
-    this->actionMap[About] = this->contextMenu()->addAction( IconCache::instance()->icon( "help-about", 16 ), this->tr( "About" ));
+    this->actionMap[About] = this->contextMenu()->addAction( IconCache::instance()->icon( "help-about", ":/icons/info", 16 ), this->tr( "About" ));
     this->connect( this->actionMap[About], SIGNAL( triggered( bool )), parentWidget, SLOT( showAboutDialog()));
 
     // exit action
-    this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "application-exit", 16 ), this->tr( "Exit" )), &QAction::triggered, this, []() { Main::instance()->shutdown(); });
+    this->connect( this->contextMenu()->addAction( IconCache::instance()->icon( "application-exit", ":/icons/close", 16 ), this->tr( "Exit" )), &QAction::triggered, this, []() { Main::instance()->shutdown(); });
 
 #ifdef QT_DEBUG
     // set another icon to distinguish release from debug build
@@ -132,10 +132,10 @@ void TrayIcon::iconActivated( QSystemTrayIcon::ActivationReason reason ) {
         this->actionMap[Themes]->setEnabled( Variable::instance()->isDisabled( "app_lock" ));
 
         if ( Variable::instance()->isEnabled( "app_lock" )) {
-            this->actionMap[Lock]->setIcon( IconCache::instance()->icon( "object-unlocked", 16 ));
+            this->actionMap[Lock]->setIcon( IconCache::instance()->icon( "object-unlocked", ":/icons/unlock", 16 ));
             this->actionMap[Lock]->setText( this->tr( "Unlock widgets" ));
         } else {
-            this->actionMap[Lock]->setIcon( IconCache::instance()->icon( "object-locked", 16 ));
+            this->actionMap[Lock]->setIcon( IconCache::instance()->icon( "object-locked", ":/icons/lock", 16 ));
             this->actionMap[Lock]->setText( this->tr( "Lock widgets" ));
         }
 

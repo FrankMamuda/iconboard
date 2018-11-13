@@ -68,7 +68,7 @@ DesktopIcon::DesktopIcon( QWidget *parent, const QString &target, qreal padding,
     // set icon from target file or folder
     this->setCustomIcon( this->customIcon());
     if ( this->icon().isNull())
-        qWarning() << this->tr( "invalid icon" );
+        qWarning() << this->tr( "invalid icon for target \"%1\"" ).arg( target );
 
     // adjust frame size
     this->adjustFrame();
@@ -112,11 +112,12 @@ void DesktopIcon::setIcon() {
         QIcon icon;
 
         if ( !info.exists()) {
-            icon = IconCache::instance()->icon( "messagebox_warning", scale );
+            icon = IconCache::instance()->icon( "messagebox_warning", ":/icons/warning", scale );
             this->setTitle( this->tr( "Desktop icon" ));
         } else {
             this->setTitle( info.fileName());
 #ifdef Q_OS_WIN
+            // TODO: find a way to default to built-in directory icon if no custom icon is set
             if ( info.isDir())
                 icon = IconCache::instance()->extractPixmap( info.absoluteFilePath(), scale );
             else
@@ -282,7 +283,7 @@ bool DesktopIcon::eventFilter( QObject *object, QEvent *event ) {
                 // context menu
                 if ( mouseEvent->button() == Qt::RightButton && !Variable::instance()->isEnabled( "app_lock" )) {
                     QMenu menu;
-                    menu.addAction( IconCache::instance()->icon( "configure", 16 ), this->tr( "Configure" ), [ this ]() {
+                    menu.addAction( IconCache::instance()->icon( "configure", ":/icons/settings", 16 ), this->tr( "Configure" ), [ this ]() {
                         IconSettings iconSettings;
                         iconSettings.setIcon( this );
                         iconSettings.exec();
