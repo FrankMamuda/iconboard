@@ -75,6 +75,10 @@ WidgetList::WidgetList( QWidget *parent ) : QMainWindow( parent ), ui( new Ui::W
 
         this->ui->actionShow->setChecked( isVisible );
         this->ui->actionMap->setEnabled( isVisible );
+
+        // FIXME: this does not work
+        //this->ui->actionRemove->setEnabled( index >= 0 );
+
         this->ui->actionShow->setText( isVisible ? this->tr( "Hide" ) : this->tr( "Show" ));
     } );
     //if ( this->model->rowCount())
@@ -179,8 +183,6 @@ void WidgetList::on_actionAdd_triggered() {
  */
 void WidgetList::on_actionRemove_triggered() {
     QMessageBox msgBox;
-    FolderView *folderView;
-    DesktopIcon *desktopIcon;
     const int index = this->ui->widgetList->currentIndex().row();
 
     // display warning
@@ -193,11 +195,19 @@ void WidgetList::on_actionRemove_triggered() {
     switch ( msgBox.exec()) {
     case QMessageBox::Yes:
         if ( index >= FolderManager::instance()->count()) {
-            desktopIcon = FolderManager::instance()->iconAt( index - FolderManager::instance()->count());
+            DesktopIcon *desktopIcon( FolderManager::instance()->iconAt( index - FolderManager::instance()->count()));
+
+            if ( desktopIcon == nullptr )
+                return;
+
             desktopIcon->hide();
             FolderManager::instance()->remove( desktopIcon );
         } else {
-            folderView = FolderManager::instance()->at( index );
+            FolderView *folderView( FolderManager::instance()->at( index ));
+
+            if ( folderView == nullptr )
+                return;
+
             folderView->hide();
             FolderManager::instance()->remove( folderView );
         }
